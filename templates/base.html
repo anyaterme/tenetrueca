@@ -1,0 +1,31 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}TRUEC@{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <header class="site-header">
+    <div class="site-shell site-header__inner">
+      <a class="brand" href="{% url 'home' %}" aria-label="TRUEC@ inicio">TRUEC@</a>
+      <nav class="site-nav" aria-label="Principal">
+        <a href="#">Catalogo</a>
+        <a href="#">Puntos limpios</a>
+        <a href="#">FAQ</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="site-shell">
+      <p>Cabildo de Tenerife · Plataforma de economia circular TRUEC@</p>
+    </div>
+  </footer>
+</body>
+</html>
