@@ -8,34 +8,92 @@
   <link rel="stylesheet" href="{% static 'css/backoffice.css' %}">
 {% endblock %}
 
-{% block content %}
-  <div class="staff-shell site-shell">
-    <aside class="staff-nav" aria-label="Operaciones de personal">
-      <p class="staff-nav__title">Gestión TRUEC@</p>
-      <nav>
-        {% if can_moderate_publications %}
-          <a href="{% url 'moderation:queue' %}"{% if staff_section == 'moderation' %} class="is-active" aria-current="page"{% endif %}>Moderación</a>
-        {% endif %}
-        {% if can_receive_objects %}
-          <a href="{% url 'inventory:reception_queue' %}"{% if staff_section == 'reception' %} class="is-active" aria-current="page"{% endif %}>Recepción</a>
-          <a href="{% url 'inventory:reception_queue' %}"{% if staff_section == 'pickup' %} class="is-active" aria-current="page"{% endif %}>Recogidas QR</a>
-        {% endif %}
-      </nav>
-    </aside>
-    <section class="staff-content">
-      <nav class="breadcrumbs" aria-label="Migas de pan">
-        <a href="{% url 'home' %}">Inicio</a>
-        <span aria-hidden="true">›</span>
-        <span>{% block staff_breadcrumb %}Gestión{% endblock %}</span>
-      </nav>
-      <header class="staff-content__header">
-        <div>
-          <h1>{% block staff_title %}Gestión{% endblock %}</h1>
-          <div class="staff-content__subtitle">{% block staff_subtitle %}{% endblock %}</div>
+{% block body %}
+  <div class="staff-app">
+    <aside class="staff-nav" aria-label="Navegación del backoffice">
+      <a class="staff-brand" href="{% url 'backoffice:dashboard' %}" aria-label="TRUEC@ Backoffice, inicio">
+        <img class="staff-brand__logo" src="{% static 'img/brand/trueca-horizontal.png' %}" alt="TRUEC@" width="796" height="187">
+        <img class="staff-brand__icon" src="{% static 'img/brand/trueca-icon.png' %}" alt="" width="400" height="400">
+        <span class="staff-brand__copy"><small>Backoffice</small></span>
+      </a>
+
+      <div class="staff-nav__group">
+        <p class="staff-nav__title">Operación</p>
+        <nav>
+          <a href="{% url 'backoffice:dashboard' %}"{% if staff_section == 'dashboard' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="home" %}<span>Resumen</span></a>
+          {% if can_moderate_publications %}
+            <a href="{% url 'moderation:queue' %}"{% if staff_section == 'moderation' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="moderation" %}<span>Moderación</span></a>
+          {% endif %}
+          {% if can_receive_objects %}
+            <a href="{% url 'inventory:reception_queue' %}"{% if staff_section == 'reception' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="package" %}<span>Recepción</span></a>
+            <a href="{% url 'backoffice:pickup_queue' %}"{% if staff_section == 'pickup' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="qr" %}<span>Recogidas QR</span></a>
+          {% endif %}
+        </nav>
+      </div>
+
+      {% if can_manage_users or can_manage_staff %}
+        <div class="staff-nav__group">
+          <p class="staff-nav__title">Administración</p>
+          <nav>
+            {% if can_manage_users %}<a href="{% url 'backoffice:user_list' %}"{% if staff_section == 'users' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="users" %}<span>Usuarios</span></a>{% endif %}
+            {% if can_manage_staff %}<a href="{% url 'backoffice:team_list' %}"{% if staff_section == 'team' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="team" %}<span>Equipo</span></a>{% endif %}
+          </nav>
         </div>
-        <div class="staff-content__actions">{% block staff_actions %}{% endblock %}</div>
+      {% endif %}
+
+      <div class="staff-nav__footer">
+        <a href="{% url 'home' %}">{% include "components/backoffice_icon.html" with name="external" %}<span>Ver web pública</span></a>
+      </div>
+    </aside>
+
+    <div class="staff-workspace">
+      <header class="staff-topbar">
+        {% if can_manage_users %}
+          <form class="staff-global-search" method="get" action="{% url 'backoffice:user_list' %}" role="search">
+            <label class="visually-hidden" for="staff-global-search">Buscar usuarios</label>
+            <span class="staff-global-search__field">{% include "components/backoffice_icon.html" with name="search" %}<input id="staff-global-search" name="q" type="search" placeholder="Buscar usuario por nombre, email o NIF…"></span>
+            <button type="submit">Buscar</button>
+          </form>
+        {% else %}
+          <span class="staff-topbar__context">Gestión operativa</span>
+        {% endif %}
+        <div class="staff-topbar__spacer"></div>
+        {% if staff_centers %}
+          <span class="staff-center-summary">{% include "components/backoffice_icon.html" with name="building" %}<span>{% if staff_centers|length == 1 %}{{ staff_centers.0.name }}{% else %}{{ staff_centers|length }} centros asignados{% endif %}</span>{% include "components/backoffice_icon.html" with name="chevron-down" class_name="staff-center-summary__chevron" %}</span>
+        {% endif %}
+        <a class="staff-account" href="{% url 'profile' %}">
+          <span class="staff-account__avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
+          <span class="staff-account__copy"><strong>{{ user.get_full_name|default:user.email }}</strong><small>{% if user.is_superuser %}Administración{% elif can_manage_staff %}Gestión funcional{% elif can_moderate_publications %}Moderación{% else %}Operaciones{% endif %}</small></span>
+        </a>
+        <form class="staff-logout" method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit">{% include "components/backoffice_icon.html" with name="log-out" %}<span>Salir</span></button>
+        </form>
       </header>
-      {% block staff_content %}{% endblock %}
-    </section>
+
+      <main id="main" class="staff-main" tabindex="-1">
+        {% include "components/messages.html" %}
+        <section class="staff-content staff-content--{{ staff_section }}">
+          <nav class="breadcrumbs" aria-label="Migas de pan">
+            <a href="{% url 'backoffice:dashboard' %}">Backoffice</a>
+            {% if staff_section != 'dashboard' %}<span aria-hidden="true">›</span><span>{% block staff_breadcrumb %}Gestión{% endblock %}</span>{% endif %}
+          </nav>
+          <header class="staff-content__header">
+            <div>
+              {% block staff_eyebrow %}{% endblock %}
+              <h1>{% block staff_title %}Gestión{% endblock %}</h1>
+              <div class="staff-content__subtitle">{% block staff_subtitle %}{% endblock %}</div>
+            </div>
+            <div class="staff-content__actions">{% block staff_actions %}{% endblock %}</div>
+          </header>
+          {% block staff_content %}{% endblock %}
+        </section>
+      </main>
+    </div>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+  <script src="{% static 'js/backoffice_staff.js' %}" defer></script>
 {% endblock %}

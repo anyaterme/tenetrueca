@@ -1,0 +1,26 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Recogidas QR · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Recogidas QR{% endblock %}
+{% block staff_title %}Recogidas activas{% endblock %}
+{% block staff_subtitle %}<p>Localiza una reserva y valida su entrega mediante el flujo QR.</p>{% endblock %}
+
+{% block staff_content %}
+  <form class="staff-filter staff-filter--compact" method="get">
+    <div class="form-field"><label for="pickup-search">Reserva, objeto o usuario</label><div class="form-field__control"><input id="pickup-search" type="search" name="q" value="{{ query }}" placeholder="Buscar…"></div></div>
+    <div class="staff-filter__actions"><button class="button button--primary" type="submit">Buscar</button>{% if query %}<a href="{% url 'backoffice:pickup_queue' %}">Limpiar</a>{% endif %}</div>
+  </form>
+  <div class="staff-results-heading"><h2>{{ page_obj.paginator.count }} recogida{{ page_obj.paginator.count|pluralize }}</h2></div>
+  {% if page_obj.object_list %}
+    <div class="staff-panel backoffice-table-wrap">
+      <table class="backoffice-table">
+        <thead><tr><th>Objeto</th><th>Usuario</th><th>Centro</th><th>Caduca</th><th><span class="visually-hidden">Acción</span></th></tr></thead>
+        <tbody>{% for reservation in page_obj.object_list %}<tr><td><strong>{{ reservation.inventory_item.title }}</strong><small>{{ reservation.inventory_item.reference }}</small></td><td>{{ reservation.user.get_full_name|default:reservation.user.email }}</td><td>{{ reservation.inventory_item.center }}</td><td>{{ reservation.expires_at|date:"d/m/Y H:i" }}</td><td><a class="backoffice-row-action" href="{{ reservation.staff_pickup_url }}">Abrir recogida</a></td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% include "components/staff_pagination.html" %}
+  {% else %}
+    <div class="staff-empty"><h2>No hay recogidas activas</h2><p>Las reservas pendientes de entrega aparecerán aquí.</p></div>
+  {% endif %}
+{% endblock %}
+

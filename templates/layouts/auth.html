@@ -10,7 +10,7 @@
 {% block body %}
   <main id="main" class="auth-page" tabindex="-1">
     <article class="auth-shell" aria-labelledby="auth-title">
-      <a class="auth-shell__close" href="{% url 'home' %}" aria-label="Cerrar y volver al inicio">&times;</a>
+      {% block auth_close %}<a class="auth-shell__close" href="{% url 'home' %}" aria-label="Cerrar y volver al inicio">&times;</a>{% endblock %}
 
       <section class="auth-form-panel">
         <div class="auth-form-panel__inner">

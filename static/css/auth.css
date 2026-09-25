@@ -272,6 +272,22 @@
   padding-left: 20px;
 }
 
+.auth-required-logout {
+  margin: 22px 0 0;
+  text-align: center;
+}
+
+.auth-required-logout button {
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
 .form-checkbox {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr);

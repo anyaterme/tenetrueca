@@ -1,0 +1,21 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Completar acceso · TRUEC@{% endblock %}
+{% block auth_title %}Completa tu acceso{% endblock %}
+{% block auth_subtitle %}Has sido invitado al equipo de TRUEC@ como {{ invitation.get_role_display }}.{% endblock %}
+
+{% block auth_content %}
+  <form class="auth-form" method="post" novalidate>
+    {% csrf_token %}
+    {% if requires_password %}
+      <p class="auth-information">Define una contraseña personal para acceder. El administrador no podrá verla.</p>
+      {% include "components/form_field.html" with field=form.new_password1 password_toggle=True %}
+      {% include "components/form_field.html" with field=form.new_password2 password_toggle=True %}
+      <button class="button button--primary button--block" type="submit">Establecer contraseña y continuar</button>
+    {% else %}
+      <p class="auth-information">Tu identidad se gestiona mediante el proveedor externo configurado. Confirma la invitación para habilitar tu rol local.</p>
+      <button class="button button--primary button--block" type="submit">Aceptar invitación</button>
+    {% endif %}
+  </form>
+{% endblock %}
+

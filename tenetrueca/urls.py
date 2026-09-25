@@ -28,6 +28,7 @@ urlpatterns = [
     path('politica-cookies/', cookie_policy, name='cookie_policy'),
     path('politica-privacidad/', privacy_policy, name='privacy_policy'),
     path('cuenta/', include('accounts.urls')),
+    path('backoffice/', include('backoffice.urls')),
     path('catalogo/', include('catalog.urls')),
     path('publicaciones/', include('publications.citizen_urls')),
     path('reservas/', include('reservations.urls')),

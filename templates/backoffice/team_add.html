@@ -1,0 +1,29 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Añadir miembro · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Añadir miembro{% endblock %}
+{% block staff_title %}Añadir miembro{% endblock %}
+{% block staff_subtitle %}<p>Configura el acceso inicial del nuevo miembro del equipo.</p>{% endblock %}
+
+{% block staff_content %}
+  <div class="team-form-layout">
+    <form class="staff-panel staff-form" method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="staff-form__errors" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+      {% include "components/form_field.html" with field=form.first_name %}
+      {% include "components/form_field.html" with field=form.last_name %}
+      {% include "components/form_field.html" with field=form.email %}
+      {% include "components/form_field.html" with field=form.role %}
+      {% if local_auth_enabled %}{% include "components/form_field.html" with field=form.provisioning_method %}{% else %}{{ form.provisioning_method }}{% endif %}
+      <div class="team-form-actions"><a class="button button--secondary" href="{% url 'backoffice:team_list' %}">Cancelar</a><button class="button button--primary" type="submit">Añadir miembro</button></div>
+    </form>
+    <aside class="staff-panel team-form-help"><h2>Acceso seguro</h2><p><strong>Invitación por email:</strong> la persona recibe un enlace temporal y crea su propia contraseña.</p>{% if local_auth_enabled %}<p><strong>Contraseña temporal:</strong> se genera automáticamente y se muestra una única vez. La persona deberá cambiarla en su primer acceso.</p>{% endif %}<p>Si el correo ya pertenece a una cuenta, podrás concederle acceso staff sin crear un duplicado.</p></aside>
+  </div>
+
+  {% if existing_user %}
+    <form id="existing-account-form" method="post" action="{% url 'backoffice:team_grant_existing' %}" hidden>
+      {% csrf_token %}<input type="hidden" name="user_id" value="{{ existing_user.pk }}"><input type="hidden" name="role" value="{{ form.cleaned_data.role }}"><input type="hidden" name="provisioning_method" value="{{ form.cleaned_data.provisioning_method }}">
+    </form>
+    <div id="existing-account-prompt" data-email="{{ existing_user.email }}" hidden></div>
+  {% endif %}
+{% endblock %}

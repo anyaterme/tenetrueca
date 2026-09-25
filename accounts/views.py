@@ -18,21 +18,20 @@ from accounts.forms import (
 )
 from accounts.services import MagicLinkService
 from audit.models import AuditEvent
-from core.permissions import user_can_moderate, user_can_receive
+from core.permissions import user_can_access_backoffice
 from points.services import award_registration_points, points_balance
 from publications.models import Publication, PublicationPhoto
 from reservations.models import Reservation
 
 
 def is_operations_staff(user):
-    return bool(
-        user.is_authenticated
-        and (user.is_staff or user_can_moderate(user) or user_can_receive(user))
-    )
+    return user_can_access_backoffice(user)
 
 
 def authenticated_home_url(user):
-    return reverse('profile' if is_operations_staff(user) else 'dashboard')
+    if user.must_change_password:
+        return reverse('password-change')
+    return reverse('backoffice:dashboard' if is_operations_staff(user) else 'dashboard')
 
 
 class LocalAuthenticationOnlyMixin:
@@ -147,6 +146,12 @@ class AccountPasswordResetConfirmView(LocalAuthenticationOnlyMixin, PasswordRese
     template_name = 'accounts/password_reset_confirm.html'
     success_url = reverse_lazy('password_reset_complete')
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self.user.must_change_password = False
+        self.user.save(update_fields=['must_change_password'])
+        return response
+
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/profile.html'
@@ -162,7 +167,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if is_operations_staff(request.user):
-            return redirect('profile')
+            return redirect('backoffice:dashboard')
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -242,6 +247,20 @@ class AccountPasswordChangeView(
     template_name = 'accounts/password_change.html'
     success_url = reverse_lazy('profile')
 
+    def get_template_names(self):
+        if self.request.user.must_change_password:
+            return ['accounts/password_change_required.html']
+        return super().get_template_names()
+
+    def get_success_url(self):
+        if self.request.user.must_change_password:
+            return reverse(
+                'backoffice:dashboard'
+                if is_operations_staff(self.request.user)
+                else 'dashboard'
+            )
+        return super().get_success_url()
+
     def password_is_managed_externally(self):
         return (
             settings.AUTH_PROVIDER != 'local'
@@ -270,5 +289,10 @@ class AccountPasswordChangeView(
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
+        password_change_was_required = self.request.user.must_change_password
+        response = super().form_valid(form)
+        if password_change_was_required:
+            self.request.user.must_change_password = False
+            self.request.user.save(update_fields=['must_change_password'])
         messages.success(self.request, 'Tu contraseña se ha actualizado.')
-        return super().form_valid(form)
+        return response

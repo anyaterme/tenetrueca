@@ -1,0 +1,11 @@
+Hola {{ user.first_name|default:user.email }}:
+
+{{ invited_by.get_full_name|default:invited_by.email }} te ha invitado al equipo de TRUEC@ con el rol {{ role_label }}.
+
+Completa tu acceso mediante este enlace temporal:
+{{ invitation_url }}
+
+El enlace caduca en {{ expiration_hours }} horas y solo puede utilizarse una vez.
+
+Si no esperabas esta invitación, puedes ignorar este mensaje.
+

@@ -152,14 +152,14 @@ class CitizenDashboardTests(TestCase):
 
         self.assertNotContains(response, 'Consultar motivo')
 
-    def test_staff_dashboard_redirects_to_existing_profile_and_has_no_citizen_nav(self):
+    def test_staff_dashboard_redirects_to_backoffice_and_has_no_citizen_nav(self):
         self.client.force_login(self.staff_user)
 
         dashboard_response = self.client.get(reverse('dashboard'))
-        profile_response = self.client.get(reverse('profile'))
+        backoffice_response = self.client.get(reverse('backoffice:dashboard'))
 
-        self.assertRedirects(dashboard_response, reverse('profile'))
-        self.assertNotContains(profile_response, 'citizen-mobile-nav')
+        self.assertRedirects(dashboard_response, reverse('backoffice:dashboard'))
+        self.assertNotContains(backoffice_response, 'citizen-mobile-nav')
 
     def test_empty_dashboard_offers_catalog(self):
         empty_user = get_user_model().objects.create_user(

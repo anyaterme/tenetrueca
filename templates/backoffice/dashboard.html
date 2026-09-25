@@ -1,0 +1,86 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Backoffice · TRUEC@{% endblock %}
+{% block staff_eyebrow %}<p class="staff-eyebrow">Backoffice</p>{% endblock %}
+{% block staff_title %}Buenos días, {{ dashboard_name }}{% endblock %}
+{% block staff_subtitle %}<p>Estas son las tareas que requieren atención.</p>{% endblock %}
+{% block staff_actions %}
+  {% if can_receive_objects %}<a class="button button--primary" href="{% url 'backoffice:pickup_queue' %}">{% include "components/backoffice_icon.html" with name="box" %}<span>Gestionar recogidas</span></a>{% endif %}
+{% endblock %}
+
+{% block staff_content %}
+  {% if metrics %}
+    <div class="backoffice-metrics" aria-label="Resumen de trabajo">
+      {% for metric in metrics %}
+        <a class="backoffice-metric backoffice-metric--{{ metric.tone }}" href="{{ metric.url }}">
+          <span class="backoffice-metric__icon">{% include "components/backoffice_icon.html" with name=metric.icon %}</span>
+          <span class="backoffice-metric__copy"><span class="backoffice-metric__label">{{ metric.label }}</span><strong>{{ metric.value }}</strong><span class="backoffice-metric__note">{{ metric.note }}</span></span>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="backoffice-grid">
+    <section class="staff-panel backoffice-queue" aria-labelledby="pending-work-title">
+      <div class="staff-panel__heading">
+        <span class="staff-panel__title-icon">{% include "components/backoffice_icon.html" with name="list" %}</span>
+        <div>
+          <h2 id="pending-work-title">Trabajo pendiente</h2>
+          <p class="staff-muted">Ordenado por vencimiento y antigüedad</p>
+        </div>
+      </div>
+      {% if tasks %}
+        <div class="backoffice-table-wrap">
+          <table class="backoffice-table">
+            <thead><tr><th>Tarea</th><th>Estado</th><th>Centro</th><th>Espera</th><th><span class="visually-hidden">Acción</span></th></tr></thead>
+            <tbody>
+              {% for task in tasks %}
+                <tr>
+                  <td data-label="Tarea"><span class="backoffice-task-kind">{{ task.kind_label }}</span><strong>{{ task.title }}</strong><small>{{ task.person }}</small></td>
+                  <td data-label="Estado"><span class="backoffice-status backoffice-status--{{ task.status_tone }}">{{ task.status_label }}</span></td>
+                  <td data-label="Centro">{{ task.center|default:"Por asignar" }}</td>
+                  <td data-label="Espera">{{ task.waiting_label }}</td>
+                  <td class="backoffice-table__action"><a class="backoffice-row-action" href="{{ task.url }}">{{ task.action_label }}</a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="backoffice-empty"><strong>No hay tareas pendientes</strong><span>Las nuevas operaciones aparecerán aquí.</span></div>
+      {% endif %}
+    </section>
+
+    <aside class="backoffice-aside" aria-label="Herramientas del backoffice">
+      <section class="staff-panel">
+        <div class="backoffice-panel-title"><span>{% include "components/backoffice_icon.html" with name="bolt" %}</span><h2>Acciones rápidas</h2></div>
+        <div class="backoffice-shortcuts">
+          {% if can_moderate_publications %}<a href="{% url 'moderation:queue' %}"><span class="backoffice-shortcut__icon">{% include "components/backoffice_icon.html" with name="file-check" %}</span><span class="backoffice-shortcut__copy"><strong>Revisar publicaciones</strong><span>Abrir cola de moderación</span></span><span class="backoffice-shortcut__arrow">{% include "components/backoffice_icon.html" with name="arrow-right" %}</span></a>{% endif %}
+          {% if can_receive_objects %}<a href="{% url 'inventory:reception_queue' %}"><span class="backoffice-shortcut__icon">{% include "components/backoffice_icon.html" with name="plus-circle" %}</span><span class="backoffice-shortcut__copy"><strong>Nueva recepción</strong><span>Registrar entrada física</span></span><span class="backoffice-shortcut__arrow">{% include "components/backoffice_icon.html" with name="arrow-right" %}</span></a>{% endif %}
+          {% if can_manage_users %}<a href="{% url 'backoffice:user_list' %}"><span class="backoffice-shortcut__icon">{% include "components/backoffice_icon.html" with name="user-search" %}</span><span class="backoffice-shortcut__copy"><strong>Buscar usuario</strong><span>Cuenta y actividad</span></span><span class="backoffice-shortcut__arrow">{% include "components/backoffice_icon.html" with name="arrow-right" %}</span></a>{% endif %}
+          {% if can_manage_staff %}<a href="{% url 'backoffice:team_list' %}"><span class="backoffice-shortcut__icon">{% include "components/backoffice_icon.html" with name="team" %}</span><span class="backoffice-shortcut__copy"><strong>Gestionar equipo</strong><span>Roles y accesos</span></span><span class="backoffice-shortcut__arrow">{% include "components/backoffice_icon.html" with name="arrow-right" %}</span></a>{% endif %}
+        </div>
+      </section>
+
+      <section class="staff-panel">
+        <div class="backoffice-panel-title"><span>{% include "components/backoffice_icon.html" with name="clock" %}</span><h2>Actividad reciente</h2></div>
+        {% if recent_activity %}
+          <ol class="backoffice-activity">
+            {% for event in recent_activity %}
+              <li><span class="backoffice-activity__avatar" aria-hidden="true">{% if event.actor %}{{ event.actor.first_name|default:event.actor.email|first|upper }}{% else %}S{% endif %}</span><div><strong>{% if event.actor %}{{ event.actor.get_full_name|default:event.actor.email }}{% else %}Sistema{% endif %}</strong> {{ event.display_action }}<time datetime="{{ event.created_at|date:'c' }}">{{ event.created_at|timesince }} atrás</time></div></li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <p class="staff-muted">Todavía no hay actividad operativa registrada.</p>
+        {% endif %}
+      </section>
+
+      {% if assigned_centers %}
+        <section class="staff-panel">
+          <div class="backoffice-panel-title"><span>{% include "components/backoffice_icon.html" with name="map-pin" %}</span><h2>Ámbito operativo</h2></div>
+          <ul class="backoffice-centers">{% for center in assigned_centers %}<li><strong>{{ center.name }}</strong><span>{{ center.get_operational_status_display }}</span></li>{% endfor %}</ul>
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

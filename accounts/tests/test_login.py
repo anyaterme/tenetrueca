@@ -99,7 +99,7 @@ class LoginTests(TestCase):
 
         self.assertRedirects(response, reverse('dashboard'))
 
-    def test_staff_keeps_existing_post_login_destination(self):
+    def test_staff_is_redirected_to_backoffice_after_login(self):
         staff_user = get_user_model().objects.create_user(
             email='staff@example.com',
             first_name='Staff',
@@ -112,7 +112,7 @@ class LoginTests(TestCase):
             {'username': staff_user.email, 'password': self.password},
         )
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse('backoffice:dashboard'))
 
     def test_login_post_requires_csrf(self):
         csrf_client = Client(enforce_csrf_checks=True)

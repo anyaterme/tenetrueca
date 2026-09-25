@@ -1,0 +1,25 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Usuarios · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Usuarios{% endblock %}
+{% block staff_title %}Usuarios{% endblock %}
+{% block staff_subtitle %}<p>Consulta las cuentas ciudadanas y su estado de acceso.</p>{% endblock %}
+{% block staff_actions %}{% if perms.accounts.add_user %}<a class="button button--primary" href="{% url 'admin:accounts_user_add' %}">Crear usuario</a>{% endif %}{% endblock %}
+
+{% block staff_content %}
+  <form class="staff-filter staff-filter--compact" method="get">
+    <div class="form-field"><label for="user-search">Nombre, email o NIF/NIE</label><div class="form-field__control"><input id="user-search" type="search" name="q" value="{{ query }}" placeholder="Buscar usuario…"></div></div>
+    <div class="form-field"><label for="user-status">Estado</label><div class="form-field__control"><select id="user-status" name="status"><option value="">Todos</option>{% for value, label in status_choices %}<option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div></div>
+    <div class="staff-filter__actions"><button class="button button--primary" type="submit">Aplicar</button>{% if query or selected_status %}<a href="{% url 'backoffice:user_list' %}">Limpiar</a>{% endif %}</div>
+  </form>
+  <div class="staff-results-heading"><h2>{{ page_obj.paginator.count }} usuario{{ page_obj.paginator.count|pluralize }}</h2></div>
+  {% if page_obj.object_list %}
+    <div class="staff-panel backoffice-table-wrap">
+      <table class="backoffice-table"><thead><tr><th>Usuario</th><th>Estado</th><th>Centro habitual</th><th>Alta</th><th><span class="visually-hidden">Acción</span></th></tr></thead><tbody>
+        {% for account in page_obj.object_list %}<tr><td><strong>{{ account.get_full_name|default:account.email }}</strong><small>{{ account.email }}</small></td><td><span class="backoffice-account-state backoffice-account-state--{{ account.account_status }}">{{ account.get_account_status_display }}</span></td><td>{{ account.habitual_recycling_center|default:"No indicado" }}</td><td>{{ account.date_joined|date:"d/m/Y" }}</td><td>{% if perms.accounts.change_user %}<a class="backoffice-row-action" href="{% url 'admin:accounts_user_change' account.pk %}">Gestionar</a>{% else %}<span class="staff-muted">Consulta</span>{% endif %}</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    {% include "components/staff_pagination.html" %}
+  {% else %}<div class="staff-empty"><h2>No hay usuarios con estos filtros</h2><p>Prueba con otros criterios de búsqueda.</p></div>{% endif %}
+{% endblock %}
+

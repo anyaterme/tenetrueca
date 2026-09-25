@@ -1,0 +1,7 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Invitación no válida · TRUEC@{% endblock %}
+{% block auth_title %}Este enlace ya no es válido{% endblock %}
+{% block auth_subtitle %}La invitación ha caducado, ya fue utilizada o ha sido reemplazada.{% endblock %}
+{% block auth_content %}<p class="auth-information">Solicita al administrador del equipo una nueva invitación.</p><p class="auth-secondary-action"><a href="{% url 'login' %}">Volver a iniciar sesión</a></p>{% endblock %}
+

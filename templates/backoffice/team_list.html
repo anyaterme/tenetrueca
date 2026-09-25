@@ -1,0 +1,49 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Equipo · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Equipo{% endblock %}
+{% block staff_title %}Equipo{% endblock %}
+{% block staff_subtitle %}<p>Gestiona quién puede acceder al backoffice y con qué rol.</p>{% endblock %}
+{% block staff_actions %}<a class="button button--primary" href="{% url 'backoffice:team_add' %}">Añadir miembro</a>{% endblock %}
+
+{% block staff_content %}
+  <form class="staff-filter team-filter" method="get">
+    <div class="form-field"><label for="team-search">Nombre, apellidos o email</label><div class="form-field__control"><input id="team-search" type="search" name="q" value="{{ query }}" placeholder="Buscar miembro…"></div></div>
+    <div class="form-field"><label for="team-role">Rol</label><div class="form-field__control"><select id="team-role" name="role"><option value="">Todos</option>{% for value, label in role_choices %}<option value="{{ value }}"{% if selected_role == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div></div>
+    <div class="form-field"><label for="team-status">Estado</label><div class="form-field__control"><select id="team-status" name="status"><option value="">Todos</option><option value="active"{% if selected_status == 'active' %} selected{% endif %}>Activo</option><option value="inactive"{% if selected_status == 'inactive' %} selected{% endif %}>Inactivo</option></select></div></div>
+    <div class="staff-filter__actions"><button class="button button--primary" type="submit">Aplicar filtros</button>{% if query or selected_role or selected_status %}<a href="{% url 'backoffice:team_list' %}">Limpiar</a>{% endif %}</div>
+  </form>
+
+  <div class="staff-results-heading"><h2>{{ paginator.count }} miembro{{ paginator.count|pluralize }}</h2>{% if paginator.num_pages > 1 %}<span>Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>{% endif %}</div>
+  {% if page_obj.object_list %}
+    <div class="staff-panel backoffice-table-wrap team-desktop-list">
+      <table class="backoffice-table team-table">
+        <thead><tr><th>Miembro</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+        <tbody>
+          {% for member in page_obj.object_list %}
+            <tr>
+              <td><strong>{{ member.get_full_name|default:member.email }}</strong><small>{{ member.email }}</small></td>
+              <td><span class="backoffice-chip">{{ member.staff_role_label }}</span></td>
+              <td><span class="backoffice-account-state{% if member.is_active %} backoffice-account-state--active{% else %} backoffice-account-state--deactivated{% endif %}">{% if member.is_active %}Activo{% else %}Inactivo{% endif %}</span></td>
+              <td>{% if member.last_login %}{{ member.last_login|date:"d/m/Y H:i" }}{% else %}<span class="staff-muted">Nunca</span>{% endif %}</td>
+              <td class="team-actions-cell"><details class="team-actions"><summary aria-label="Acciones para {{ member.get_full_name|default:member.email }}">•••</summary><div><a href="{% url 'backoffice:team_detail' member.pk %}">Ver / Editar</a>{% if member.pk != user.pk %}{% if member.is_active %}<form method="post" action="{% url 'backoffice:team_deactivate' member.pk %}" data-confirm-title="Desactivar acceso" data-confirm-text="Este miembro perderá inmediatamente el acceso a su sesión.">{% csrf_token %}<button type="submit">Desactivar acceso</button></form>{% else %}<form method="post" action="{% url 'backoffice:team_reactivate' member.pk %}">{% csrf_token %}<button type="submit">Reactivar acceso</button></form>{% endif %}{% if not member.is_superuser %}<form method="post" action="{% url 'backoffice:team_remove' member.pk %}" data-confirm-title="Retirar acceso staff" data-confirm-text="La cuenta se conservará, pero dejará de acceder al backoffice.">{% csrf_token %}<button class="is-danger" type="submit">Retirar acceso staff</button></form>{% endif %}{% endif %}</div></details></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="team-mobile-list">
+      {% for member in page_obj.object_list %}
+        <article class="team-member-card">
+          <div class="team-member-card__heading"><div><strong>{{ member.get_full_name|default:member.email }}</strong><span>{{ member.email }}</span></div><span class="backoffice-account-state{% if member.is_active %} backoffice-account-state--active{% else %} backoffice-account-state--deactivated{% endif %}">{% if member.is_active %}Activo{% else %}Inactivo{% endif %}</span></div>
+          <dl><div><dt>Rol</dt><dd>{{ member.staff_role_label }}</dd></div><div><dt>Último acceso</dt><dd>{% if member.last_login %}{{ member.last_login|date:"d/m/Y H:i" }}{% else %}Nunca{% endif %}</dd></div></dl>
+          <a class="backoffice-row-action" href="{% url 'backoffice:team_detail' member.pk %}">Ver / Editar</a>
+        </article>
+      {% endfor %}
+    </div>
+    {% include "components/staff_pagination.html" %}
+  {% else %}
+    <div class="staff-empty"><h2>No hay miembros con estos filtros</h2><p>Prueba con otros criterios o añade un nuevo miembro.</p><a class="button button--primary" href="{% url 'backoffice:team_add' %}">Añadir miembro</a></div>
+  {% endif %}
+{% endblock %}

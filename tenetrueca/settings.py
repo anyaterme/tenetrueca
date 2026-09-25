@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'backoffice',
     'core',
     'accounts',
     'content',
@@ -43,6 +44,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'accounts.middleware.ForcePasswordChangeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -129,6 +131,7 @@ AUTH_API_TIMEOUT = 5
 MAGIC_LOGIN_ENABLED = True
 MAGIC_LOGIN_EXPIRATION_MINUTES = 30
 MAGIC_LOGIN_COOLDOWN_SECONDS = 60
+STAFF_INVITATION_EXPIRATION_HOURS = 48
 TERMS_CONSENT_VERSION = '1.0'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'profile'

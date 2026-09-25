@@ -51,6 +51,7 @@ class User(AbstractUser):
         default=AuthSource.LOCAL,
         db_index=True,
     )
+    must_change_password = models.BooleanField(default=False)
     preferences = models.JSONField(default=dict, blank=True)
     consent_version = models.CharField(max_length=50, blank=True)
     consent_accepted_at = models.DateTimeField(null=True, blank=True)
@@ -69,6 +70,9 @@ class User(AbstractUser):
     objects = UserManager()
 
     class Meta:
+        permissions = [
+            ('manage_staff', 'Puede gestionar miembros del equipo'),
+        ]
         constraints = [
             models.UniqueConstraint(Lower('email'), name='accounts_user_email_ci_unique'),
             models.UniqueConstraint(Lower('username'), name='accounts_user_username_ci_unique'),

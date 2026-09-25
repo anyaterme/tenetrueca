@@ -1,0 +1,41 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}{{ member.get_full_name|default:member.email }} · Equipo · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Equipo / {{ member.get_full_name|default:member.email }}{% endblock %}
+{% block staff_title %}{{ member.get_full_name|default:member.email }}{% endblock %}
+{% block staff_subtitle %}<p>{{ member.email }}</p>{% endblock %}
+
+{% block staff_content %}
+  <div class="team-detail-grid">
+    <div class="team-detail-main">
+      <section class="staff-panel">
+        <div class="staff-panel__heading"><div><h2>Datos y rol</h2><p class="staff-muted">Los cambios de privilegios se aplican inmediatamente.</p></div><span class="backoffice-account-state{% if member.is_active %} backoffice-account-state--active{% else %} backoffice-account-state--deactivated{% endif %}">{% if member.is_active %}Activo{% else %}Inactivo{% endif %}</span></div>
+        <form class="staff-form team-edit-form" method="post" novalidate>
+          {% csrf_token %}
+          {% include "components/form_field.html" with field=form.first_name %}
+          {% include "components/form_field.html" with field=form.last_name %}
+          {% include "components/form_field.html" with field=form.email %}
+          {% include "components/form_field.html" with field=form.role %}
+          <button class="button button--primary" type="submit">Guardar cambios</button>
+        </form>
+      </section>
+
+      <section class="staff-panel">
+        <h2>Actividad</h2>
+        {% if activity %}<ol class="team-audit-list">{% for event in activity %}<li><span class="team-audit-list__mark" aria-hidden="true"></span><div><strong>{{ event.get_action_display }}</strong><p>{% if event.actor %}Por {{ event.actor.get_full_name|default:event.actor.email }}{% else %}Por el sistema{% endif %}</p><time datetime="{{ event.created_at|date:'c' }}">{{ event.created_at|date:"d/m/Y H:i" }}</time></div></li>{% endfor %}</ol>{% else %}<p class="staff-muted">No hay actividad registrada para este miembro.</p>{% endif %}
+      </section>
+    </div>
+
+    <aside class="team-detail-aside">
+      <section class="staff-panel">
+        <h2>Resumen</h2>
+        <dl class="team-summary"><div><dt>Estado</dt><dd>{% if member.is_active %}Activo{% else %}Inactivo{% endif %}</dd></div><div><dt>Rol</dt><dd>{{ current_role_label }}</dd></div><div><dt>Miembro desde</dt><dd>{{ staff_since|date:"d/m/Y" }}</dd></div><div><dt>Último acceso</dt><dd>{% if member.last_login %}{{ member.last_login|date:"d/m/Y H:i" }}{% else %}Nunca{% endif %}</dd></div>{% if pending_invitation %}<div><dt>Invitación</dt><dd>Pendiente hasta {{ pending_invitation.expires_at|date:"d/m/Y H:i" }}</dd></div>{% endif %}</dl>
+      </section>
+
+      <section class="staff-panel team-access-actions">
+        <h2>Acceso</h2>
+        {% if member.pk == user.pk %}<p class="staff-muted">Tu propio acceso administrativo está protegido.</p>{% else %}{% if member.is_active %}<form method="post" action="{% url 'backoffice:team_deactivate' member.pk %}" data-confirm-title="Desactivar acceso" data-confirm-text="Se cerrarán las sesiones activas de este miembro.">{% csrf_token %}<button class="button button--secondary button--block" type="submit">Desactivar acceso</button></form>{% else %}<form method="post" action="{% url 'backoffice:team_reactivate' member.pk %}">{% csrf_token %}<button class="button button--secondary button--block" type="submit">Reactivar acceso</button></form>{% endif %}{% if not member.is_superuser %}<form method="post" action="{% url 'backoffice:team_remove' member.pk %}" data-confirm-title="Retirar acceso staff" data-confirm-text="La cuenta se conservará, pero perderá el acceso al backoffice.">{% csrf_token %}<button class="button team-danger-button button--block" type="submit">Retirar acceso staff</button></form>{% endif %}{% endif %}
+      </section>
+    </aside>
+  </div>
+{% endblock %}
