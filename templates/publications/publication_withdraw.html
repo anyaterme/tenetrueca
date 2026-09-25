@@ -1,0 +1,23 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+
+{% block title %}Retirar publicación · TRUEC@{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}">{% endblock %}
+{% block account_breadcrumb_label %}Retirar publicación{% endblock %}
+{% block account_title %}Retirar publicación{% endblock %}
+{% block account_subtitle %}<p>{{ publication.title }}</p>{% endblock %}
+
+{% block account_content %}
+  <div class="publication-withdrawal">
+    <h2>Confirma la retirada</h2>
+    <p>La propuesta dejará de continuar en el proceso de revisión. Esta acción quedará registrada.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "components/form_field.html" with field=form.reason %}
+      <div class="publication-form__actions">
+        <button class="button publication-button--danger" type="submit">Retirar publicación</button>
+        <a href="{% url 'publications:detail' publication.pk %}">Cancelar</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

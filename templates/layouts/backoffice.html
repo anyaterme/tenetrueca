@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}body--backoffice{% endblock %}
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+  <link rel="stylesheet" href="{% static 'css/backoffice.css' %}">
+{% endblock %}
+
+{% block content %}
+  <div class="staff-shell site-shell">
+    <aside class="staff-nav" aria-label="Operaciones de personal">
+      <p class="staff-nav__title">Gestión TRUEC@</p>
+      <nav>
+        {% if can_moderate_publications %}
+          <a href="{% url 'moderation:queue' %}"{% if staff_section == 'moderation' %} class="is-active" aria-current="page"{% endif %}>Moderación</a>
+        {% endif %}
+        {% if can_receive_objects %}
+          <a href="{% url 'inventory:reception_queue' %}"{% if staff_section == 'reception' %} class="is-active" aria-current="page"{% endif %}>Recepción</a>
+        {% endif %}
+      </nav>
+    </aside>
+    <section class="staff-content">
+      <nav class="breadcrumbs" aria-label="Migas de pan">
+        <a href="{% url 'home' %}">Inicio</a>
+        <span aria-hidden="true">›</span>
+        <span>{% block staff_breadcrumb %}Gestión{% endblock %}</span>
+      </nav>
+      <header class="staff-content__header">
+        <div>
+          <h1>{% block staff_title %}Gestión{% endblock %}</h1>
+          <div class="staff-content__subtitle">{% block staff_subtitle %}{% endblock %}</div>
+        </div>
+        <div class="staff-content__actions">{% block staff_actions %}{% endblock %}</div>
+      </header>
+      {% block staff_content %}{% endblock %}
+    </section>
+  </div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+
+{% block title %}{{ publication.title }} · TRUEC@{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}">{% endblock %}
+{% block account_breadcrumb_label %}Detalle de publicación{% endblock %}
+{% block account_title %}{{ publication.title }}{% endblock %}
+{% block account_subtitle %}<p>Consulta el estado y los siguientes pasos de tu propuesta.</p>{% endblock %}
+{% block account_actions %}
+  {% if can_edit %}<a class="button button--primary" href="{% url 'publications:edit' publication.pk %}">Editar</a>{% endif %}
+{% endblock %}
+
+{% block account_content %}
+  <div class="publication-detail-status">
+    <span class="publication-status publication-status--{{ publication.status }}">{{ publication.get_status_display }}</span>
+    <p>
+      {% if publication.status == 'draft' %}Completa la información y envíala cuando esté lista.
+      {% elif publication.status == 'pending_review' %}Nuestro equipo revisará la propuesta antes de aceptar físicamente el objeto.
+      {% elif publication.status == 'changes_requested' %}Revisa las indicaciones, edita la publicación y envíala de nuevo.
+      {% elif publication.status == 'approved' %}La propuesta está aprobada. La disponibilidad pública requiere todavía recepción y validación física.
+      {% elif publication.status == 'rejected' %}La propuesta no ha superado la revisión.
+      {% else %}Esta publicación ha sido retirada y ya no continúa en el proceso.{% endif %}
+    </p>
+  </div>
+
+  {% if publication.citizen_feedback %}
+    <section class="publication-feedback publication-feedback--detail" aria-labelledby="feedback-title">
+      <h2 id="feedback-title">Indicaciones de revisión</h2>
+      <p>{{ publication.citizen_feedback.notes|default:publication.citizen_feedback.reason_code }}</p>
+    </section>
+  {% endif %}
+
+  <div class="publication-detail-grid">
+    <section aria-labelledby="publication-photos-title">
+      <h2 id="publication-photos-title">Fotografías</h2>
+      {% if publication.citizen_photos %}
+        <div class="publication-photo-grid publication-photo-grid--detail">
+          {% for photo in publication.citizen_photos %}
+            <figure><img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:publication.title }}" width="480" height="360"></figure>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="publication-detail__empty">No has añadido fotografías.</p>
+      {% endif %}
+    </section>
+    <section class="publication-detail-data" aria-labelledby="publication-data-title">
+      <h2 id="publication-data-title">Datos de la propuesta</h2>
+      <dl>
+        <div><dt>Categoría</dt><dd>{% if publication.category.parent %}{{ publication.category.parent.name }} / {% endif %}{{ publication.category.name }}</dd></div>
+        <div><dt>Creada</dt><dd>{{ publication.created_at|date:"j \d\e F \d\e Y" }}</dd></div>
+        {% if publication.submitted_at %}<div><dt>Último envío</dt><dd>{{ publication.submitted_at|date:"j \d\e F \d\e Y, H:i" }}</dd></div>{% endif %}
+      </dl>
+      <h3>Descripción</h3>
+      <div>{{ publication.description|linebreaks }}</div>
+    </section>
+  </div>
+
+  <div class="publication-detail-actions">
+    <a href="{% url 'publications:list' %}">Volver a mis publicaciones</a>
+    {% if can_withdraw %}<a class="publication-action--danger" href="{% url 'publications:withdraw' publication.pk %}">Retirar publicación</a>{% endif %}
+  </div>
+{% endblock %}

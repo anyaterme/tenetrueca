@@ -1,0 +1,28 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Crear una cuenta · TRUEC@{% endblock %}
+{% block auth_title %}Crear una cuenta{% endblock %}
+{% block auth_subtitle %}Únete a la comunidad de intercambio sostenible de Tenerife.{% endblock %}
+
+{% block auth_content %}
+  <form class="auth-form auth-form--registration" method="post" action="{% url 'register' %}" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="form-errors" role="alert">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    <div class="form-grid form-grid--two">
+      {% include "components/form_field.html" with field=form.first_name %}
+      {% include "components/form_field.html" with field=form.last_name %}
+    </div>
+    {% include "components/form_field.html" with field=form.username icon="@" %}
+    {% include "components/form_field.html" with field=form.email icon="@" %}
+    {% include "components/form_field.html" with field=form.nif_nie %}
+    {% include "components/form_field.html" with field=form.password1 password_toggle=True %}
+    {% include "components/form_field.html" with field=form.password2 password_toggle=True %}
+    {% include "components/form_field.html" with field=form.accept_terms %}
+    {% include "components/button.html" with label="Crear una cuenta" button_type="submit" block=True extra_class="auth-submit" %}
+  </form>
+  <p class="auth-secondary-action">¿Ya tienes cuenta? <a href="{% url 'login' %}">Iniciar sesión</a></p>
+{% endblock %}

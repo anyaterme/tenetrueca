@@ -1,0 +1,53 @@
+{% extends "layouts/account.html" %}
+
+{% block title %}Mi perfil · TRUEC@{% endblock %}
+{% block account_breadcrumb_label %}Mi perfil{% endblock %}
+{% block account_title %}Mi perfil{% endblock %}
+{% block account_subtitle %}<p>Aquí puedes consultar la información principal de tu cuenta.</p>{% endblock %}
+{% block account_actions %}
+  {% url 'profile-edit' as edit_url %}
+  {% include "components/button.html" with label="Editar perfil" href=edit_url leading_icon="✎" %}
+{% endblock %}
+
+{% block account_content %}
+  {% url 'profile-edit' as edit_url %}
+  <div class="profile-sections">
+    <section class="profile-section" aria-labelledby="personal-data-title">
+      <header class="profile-section__header">
+        <span class="profile-section__icon profile-section__icon--personal" aria-hidden="true">○</span>
+        <div>
+          <h2 id="personal-data-title">Datos personales</h2>
+          <p>Información básica asociada a tu cuenta.</p>
+        </div>
+      </header>
+      <dl class="profile-rows">
+        {% include "components/profile_row.html" with label="Nombre" value=user.first_name empty_label="No informado" %}
+        {% include "components/profile_row.html" with label="Apellidos" value=user.last_name empty_label="No informado" %}
+        {% include "components/profile_row.html" with label="NIF/NIE" value=user.nif_nie empty_label="No informado" %}
+        {% if user.phone %}
+          {% include "components/profile_row.html" with label="Teléfono" value=user.phone empty_label="No informado" action_label="Editar" action_url=edit_url %}
+        {% else %}
+          {% include "components/profile_row.html" with label="Teléfono" value=user.phone empty_label="No informado" action_label="Añadir" action_url=edit_url %}
+        {% endif %}
+      </dl>
+    </section>
+
+    <section class="profile-section" aria-labelledby="account-data-title">
+      <header class="profile-section__header">
+        <span class="profile-section__icon profile-section__icon--account" aria-hidden="true">◇</span>
+        <div>
+          <h2 id="account-data-title">Información de cuenta</h2>
+          <p>Datos relacionados con tu actividad en TRUEC@.</p>
+        </div>
+      </header>
+      <dl class="profile-rows">
+        {% include "components/profile_row.html" with label="Correo electrónico" value=user.email empty_label="No informado" %}
+        {% include "components/profile_row.html" with label="Punto limpio habitual" value=user.habitual_recycling_center empty_label="Sin seleccionar" action_label="Cambiar" action_url=edit_url %}
+      </dl>
+      <div class="profile-guidance">
+        <span aria-hidden="true">i</span>
+        <p>Mantener tu información actualizada nos ayuda a ofrecerte una mejor experiencia y a facilitar la gestión de tus intercambios.</p>
+      </div>
+    </section>
+  </div>
+{% endblock %}

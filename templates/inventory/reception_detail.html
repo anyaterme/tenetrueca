@@ -1,0 +1,58 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Recibir {{ publication.title }} · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Recepción de objeto{% endblock %}
+{% block staff_title %}{{ publication.title }}{% endblock %}
+{% block staff_subtitle %}<p>Contrasta el objeto entregado con la publicación aprobada.</p>{% endblock %}
+{% block staff_actions %}<a class="button button--secondary" href="{% url 'inventory:reception_queue' %}">Volver a recepción</a>{% endblock %}
+
+{% block staff_content %}
+  <div class="review-grid">
+    <div class="review-main">
+      <section class="staff-panel" aria-labelledby="reception-data-title">
+        <div class="staff-panel__heading"><h2 id="reception-data-title">Publicación aprobada</h2><span class="publication-status publication-status--approved">Aprobada</span></div>
+        <dl class="review-data">
+          <div><dt>Persona</dt><dd>{{ publication.submitter.get_full_name|default:publication.submitter.email }}</dd></div>
+          <div><dt>Correo</dt><dd>{{ publication.submitter.email }}</dd></div>
+          <div><dt>Categoría</dt><dd>{% if publication.category.parent %}{{ publication.category.parent.name }} / {% endif %}{{ publication.category.name }}</dd></div>
+          <div><dt>Aprobación</dt><dd>{{ publication.approved_at|date:"d/m/Y H:i" }}</dd></div>
+        </dl>
+        <h3>Descripción</h3>
+        <div>{{ publication.description|linebreaks }}</div>
+      </section>
+      <section class="staff-panel" aria-labelledby="reception-photos-title">
+        <h2 id="reception-photos-title">Fotografías de referencia</h2>
+        {% if publication.staff_photos %}<div class="staff-photo-grid">{% for photo in publication.staff_photos %}<figure><img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:publication.title }}" width="480" height="360"></figure>{% endfor %}</div>{% else %}<p class="staff-muted">La publicación no tiene fotografías.</p>{% endif %}
+      </section>
+    </div>
+    <aside class="review-sidebar">
+      <section class="staff-panel" aria-labelledby="inspection-title">
+        <h2 id="inspection-title">Inspección física</h2>
+        {% if accepted_item %}
+          <div class="staff-success"><strong>Objeto aceptado</strong><p>Referencia {{ accepted_item.reference }} · {{ accepted_item.center.name }}</p><a href="{% url 'catalog:detail' reference=accepted_item.reference %}">Ver en el catálogo</a></div>
+        {% else %}
+          <form class="staff-form" method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="staff-form__errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            {% include "components/form_field.html" with field=form.center %}
+            {% include "components/form_field.html" with field=form.decision %}
+            {% include "components/form_field.html" with field=form.condition %}
+            {% include "components/form_field.html" with field=form.internal_location %}
+            {% include "components/form_field.html" with field=form.notes %}
+            <button class="button button--primary" type="submit">Registrar inspección</button>
+          </form>
+        {% endif %}
+      </section>
+      <section class="staff-panel" aria-labelledby="reception-history-title">
+        <h2 id="reception-history-title">Historial de recepción</h2>
+        {% if publication.staff_inspections %}
+          <ol class="staff-history">
+            {% for inspection in publication.staff_inspections %}
+              <li><strong>{{ inspection.get_decision_display }}</strong><span>{{ inspection.inspected_at|date:"d/m/Y H:i" }} · {{ inspection.center.name }} · {{ inspection.operator.email }}</span><p>{{ inspection.get_condition_display }}{% if inspection.notes %} · {{ inspection.notes }}{% endif %}</p></li>
+            {% endfor %}
+          </ol>
+        {% else %}<p class="staff-muted">Todavía no hay inspecciones registradas.</p>{% endif %}
+      </section>
+    </aside>
+  </div>
+{% endblock %}

@@ -1,0 +1,7 @@
+Hola {{ user.first_name|default:user.email }},
+
+Usa este enlace para iniciar sesión en TRUEC@:
+{{ magic_url }}
+
+El enlace caduca en {{ expiration_minutes }} minutos y sólo se puede utilizar una vez.
+Si no lo solicitaste, puedes ignorar este correo.

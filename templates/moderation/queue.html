@@ -1,0 +1,62 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Cola de moderación · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Moderación{% endblock %}
+{% block staff_title %}Cola de moderación{% endblock %}
+{% block staff_subtitle %}<p>Revisa las propuestas enviadas antes de su entrega física.</p>{% endblock %}
+
+{% block staff_content %}
+  <form class="staff-filter" method="get" action="{% url 'moderation:queue' %}">
+    {% include "components/form_field.html" with field=filter_form.status %}
+    {% include "components/form_field.html" with field=filter_form.center %}
+    {% include "components/form_field.html" with field=filter_form.date_from %}
+    {% include "components/form_field.html" with field=filter_form.date_to %}
+    {% include "components/form_field.html" with field=filter_form.ordering %}
+    <div class="staff-filter__actions">
+      <button class="button button--primary" type="submit">Aplicar filtros</button>
+      {% if request.GET %}<a href="{% url 'moderation:queue' %}">Limpiar</a>{% endif %}
+    </div>
+  </form>
+
+  <div class="staff-results-heading">
+    <h2>{{ paginator.count }} {% if paginator.count == 1 %}publicación{% else %}publicaciones{% endif %}</h2>
+    {% if paginator.num_pages > 1 %}<span>Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>{% endif %}
+  </div>
+
+  {% if page_obj.object_list %}
+    <div class="staff-list">
+      {% for publication in page_obj.object_list %}
+        <article class="staff-row">
+          <a class="staff-row__media" href="{% url 'moderation:detail' publication.pk %}" aria-label="Revisar {{ publication.title }}">
+            {% if publication.staff_photos %}
+              <img src="{% url 'publication_photo' photo_id=publication.staff_photos.0.pk %}" alt="{{ publication.staff_photos.0.alt_text|default:publication.title }}" loading="lazy" width="240" height="180">
+            {% else %}
+              <span aria-hidden="true">{{ publication.category.name|first|upper }}</span>
+            {% endif %}
+          </a>
+          <div class="staff-row__content">
+            <div class="staff-row__heading">
+              <div>
+                <p class="staff-row__eyebrow">{% if publication.category.parent %}{{ publication.category.parent.name }} / {% endif %}{{ publication.category.name }}</p>
+                <h3><a href="{% url 'moderation:detail' publication.pk %}">{{ publication.title }}</a></h3>
+              </div>
+              <span class="publication-status publication-status--{{ publication.status }}">{{ publication.get_status_display }}</span>
+            </div>
+            <dl class="staff-row__meta">
+              <div><dt>Enviada por</dt><dd>{{ publication.submitter.get_full_name|default:publication.submitter.email }}</dd></div>
+              <div><dt>Fecha</dt><dd>{{ publication.submitted_at|date:"d/m/Y H:i" }}</dd></div>
+              <div><dt>Punto habitual</dt><dd>{{ publication.submitter.habitual_recycling_center|default:"No indicado" }}</dd></div>
+            </dl>
+            <a class="staff-row__link" href="{% url 'moderation:detail' publication.pk %}">Abrir revisión <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+    {% include "components/staff_pagination.html" %}
+  {% else %}
+    <div class="staff-empty" role="status">
+      <h2>No hay publicaciones con estos filtros</h2>
+      <p>La cola se actualizará cuando haya nuevas propuestas para revisar.</p>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+<div class="profile-row">
+  <dt>{{ label }}</dt>
+  <dd{% if not value %} class="profile-row__empty"{% endif %}>{{ value|default:empty_label }}</dd>
+  {% if action_label and action_url %}
+    <a class="profile-row__action" href="{{ action_url }}">{{ action_label }}</a>
+  {% endif %}
+</div>

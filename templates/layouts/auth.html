@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}body--auth{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block body %}
+  <main id="main" class="auth-page" tabindex="-1">
+    <article class="auth-shell" aria-labelledby="auth-title">
+      <a class="auth-shell__close" href="{% url 'home' %}" aria-label="Cerrar y volver al inicio">&times;</a>
+
+      <section class="auth-form-panel">
+        <div class="auth-form-panel__inner">
+          <img
+            class="auth-compact-brand"
+            src="{% static 'img/brand/trueca-horizontal.png' %}"
+            alt="TRUEC@, intercambio sostenible en Tenerife"
+            width="796"
+            height="187"
+          >
+          <p class="auth-kicker">{% block auth_kicker %}TRUEC@{% endblock %}</p>
+          <h1 id="auth-title" class="auth-title">{% block auth_title %}{% endblock %}</h1>
+          <p class="auth-subtitle">{% block auth_subtitle %}{% endblock %}</p>
+          {% include "components/messages.html" %}
+          {% block auth_content %}{% endblock %}
+        </div>
+      </section>
+
+      <aside class="auth-brand-panel" aria-label="TRUEC@, intercambio sostenible en Tenerife">
+        <a class="brand-lockup" href="{% url 'home' %}" aria-label="TRUEC@, volver al inicio">
+          <img
+            class="brand-lockup__logo"
+            src="{% static 'img/brand/trueca-horizontal.png' %}"
+            alt="TRUEC@, intercambio sostenible en Tenerife"
+            width="796"
+            height="187"
+          >
+        </a>
+        <div class="auth-brand-panel__copy">
+          <h2>Damos una segunda vida a las cosas</h2>
+          <p>Personas, recursos y comunidad por un Tenerife más sostenible.</p>
+        </div>
+        <img
+          class="auth-brand-panel__illustration"
+          src="{% static 'img/auth-circular-exchange.png' %}"
+          alt="Dos personas intercambian una caja con objetos reutilizables"
+          width="1672"
+          height="941"
+        >
+        <div class="institution-lockup" aria-label="Cabildo de Tenerife. Un territorio más sostenible">
+          <span class="institution-lockup__cabildo">Cabildo<br>de Tenerife</span>
+          <span class="institution-lockup__divider" aria-hidden="true"></span>
+          <span class="institution-lockup__claim">Un territorio más sostenible</span>
+        </div>
+      </aside>
+    </article>
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/auth.js' %}" defer></script>
+{% endblock %}

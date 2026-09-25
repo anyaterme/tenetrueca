@@ -1,0 +1,32 @@
+{% extends "layouts/account.html" %}
+
+{% block title %}Editar perfil · TRUEC@{% endblock %}
+{% block account_breadcrumb_label %}Editar perfil{% endblock %}
+{% block account_title %}Editar perfil{% endblock %}
+{% block account_subtitle %}<p>Actualiza tus datos de contacto y tu punto limpio habitual.</p>{% endblock %}
+
+{% block account_content %}
+  <div class="locked-fields" aria-label="Datos no editables">
+    <div>
+      <span>Correo electrónico</span>
+      <strong>{{ user.email }}</strong>
+      <p>El correo asociado a la cuenta no se modifica desde el perfil.</p>
+    </div>
+    {% if user.nif_nie %}
+      <div>
+        <span>NIF/NIE</span>
+        <strong>{{ user.nif_nie }}</strong>
+        <p>Una vez informado, no puede modificarse desde el área personal.</p>
+      </div>
+    {% endif %}
+  </div>
+  <form class="account-form" method="post" action="{% url 'profile-edit' %}" novalidate>
+    {% csrf_token %}
+    {% for field in form %}{% include "components/form_field.html" with field=field %}{% endfor %}
+    <div class="account-actions">
+      {% include "components/button.html" with label="Guardar cambios" button_type="submit" %}
+      {% url 'profile' as profile_url %}
+      {% include "components/button.html" with label="Cancelar" href=profile_url variant="secondary" %}
+    </div>
+  </form>
+{% endblock %}

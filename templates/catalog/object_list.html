@@ -1,0 +1,111 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+
+{% block title %}Catálogo de objetos · TRUEC@{% endblock %}
+{% block body_class %}catalog-page{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  <link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+{% endblock %}
+
+{% block content %}
+<form class="catalog-search" method="get" action="{% url 'catalog:list' %}" role="search">
+  <header class="catalog-heading">
+    <div class="site-shell catalog-heading__inner">
+      <div class="catalog-heading__content">
+        <p class="catalog-kicker">Catálogo de reutilización</p>
+        <h1>Objetos con otra vida, cerca de ti</h1>
+        <p>Encuentra objetos disponibles en los Puntos Limpios de Tenerife.</p>
+        <div class="catalog-searchbar">
+          <label class="visually-hidden" for="{{ filter_form.q.id_for_label }}">{{ filter_form.q.label }}</label>
+          <span class="catalog-searchbar__icon" aria-hidden="true"></span>
+          {{ filter_form.q }}
+          <button class="button button--primary" type="submit">Buscar</button>
+        </div>
+        {{ filter_form.q.errors }}
+      </div>
+      <div class="catalog-heading__visual" aria-hidden="true">
+        <img src="{% static 'img/auth-circular-exchange.png' %}" alt="" width="1665" height="953">
+      </div>
+    </div>
+  </header>
+
+  <div class="catalog-filter-section">
+    <div class="site-shell catalog-filters">
+      <div class="catalog-filter">
+        <label for="{{ filter_form.center.id_for_label }}">{{ filter_form.center.label }}</label>
+        {{ filter_form.center }}
+        {{ filter_form.center.errors }}
+      </div>
+      <div class="catalog-filter">
+        <label for="{{ filter_form.category.id_for_label }}">{{ filter_form.category.label }}</label>
+        {{ filter_form.category }}
+        {{ filter_form.category.errors }}
+      </div>
+      <div class="catalog-filter">
+        <label for="{{ filter_form.subcategory.id_for_label }}">{{ filter_form.subcategory.label }}</label>
+        {{ filter_form.subcategory }}
+        {{ filter_form.subcategory.errors }}
+      </div>
+      <div class="catalog-filter__actions">
+        <button class="catalog-filter__apply" type="submit">Aplicar filtros</button>
+        {% if has_filters %}<a href="{% url 'catalog:list' %}">Limpiar filtros</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</form>
+
+<section class="catalog-results" aria-labelledby="catalog-results-title">
+  <div class="site-shell">
+
+    <div class="catalog-results__summary">
+      <h2 id="catalog-results-title">
+        {% if paginator.count %}{{ paginator.count }} objeto{{ paginator.count|pluralize }} disponible{{ paginator.count|pluralize }}{% else %}Objetos disponibles{% endif %}
+      </h2>
+      {% if paginator.num_pages > 1 %}<p>Página {{ page_obj.number }} de {{ paginator.num_pages }}</p>{% endif %}
+    </div>
+
+    {% if page_obj.object_list %}
+      <div class="catalog-grid">
+        {% for object in page_obj.object_list %}
+          {% with primary_photo=object.publication.public_photos.0 %}
+            {% include "components/object_card.html" with object=object primary_photo=primary_photo detail_url=object.get_absolute_url catalog_card=True only %}
+          {% endwith %}
+        {% endfor %}
+      </div>
+
+      {% if paginator.num_pages > 1 %}
+        <nav class="catalog-pagination" aria-label="Páginas del catálogo">
+          {% if page_obj.has_previous %}
+            <a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}" rel="prev">Anterior</a>
+          {% endif %}
+          {% for page_number in page_range %}
+            {% if page_number == paginator.ELLIPSIS %}
+              <span aria-hidden="true">{{ paginator.ELLIPSIS }}</span>
+            {% elif page_number == page_obj.number %}
+              <span class="catalog-pagination__current" aria-current="page">{{ page_number }}</span>
+            {% else %}
+              <a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_number }}">{{ page_number }}</a>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}" rel="next">Siguiente</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="catalog-empty" role="status">
+        {% if has_filters %}
+          <h2>No hay resultados para esta búsqueda</h2>
+          <p>Prueba con otros términos, categorías o puntos limpios.</p>
+          <a class="button button--secondary" href="{% url 'catalog:list' %}">Ver todo el catálogo</a>
+        {% else %}
+          <h2>Aún no hay objetos disponibles</h2>
+          <p>Los objetos aprobados aparecerán aquí cuando estén listos para intercambiar.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

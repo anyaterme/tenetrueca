@@ -8,10 +8,11 @@ class UserTests(TestCase):
 
         user = User.objects.create_user(
             email='persona@example.com',
+            username='persona',
             password='secure-pass',
             first_name='Persona',
         )
 
-        self.assertEqual(user.username, None)
+        self.assertEqual(user.username, 'persona')
         self.assertEqual(user.email, 'persona@example.com')
         self.assertTrue(user.check_password('secure-pass'))

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es">
+  <body style="margin:0;padding:24px;background:#edf5fb;color:#10264b;font-family:Arial,sans-serif">
+    <div style="max-width:560px;margin:0 auto;padding:32px;background:#fff;border:1px solid #d7e0eb;border-radius:8px">
+      <p style="margin:0 0 20px;color:#0075aa;font-weight:700">TRUEC@</p>
+      <h1 style="margin:0 0 16px;font-size:26px">Inicia sesión en TRUEC@</h1>
+      <p>Hola {{ user.first_name|default:user.email }},</p>
+      <p>Este enlace caduca en {{ expiration_minutes }} minutos y sólo se puede utilizar una vez.</p>
+      <p style="margin:28px 0">
+        <a href="{{ magic_url }}" style="display:inline-block;padding:14px 22px;border-radius:6px;background:#0075aa;color:#fff;font-weight:700;text-decoration:none">Iniciar sesión</a>
+      </p>
+      <p style="color:#617693">Si no lo solicitaste, puedes ignorar este correo.</p>
+    </div>
+  </body>
+</html>

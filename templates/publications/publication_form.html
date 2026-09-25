@@ -1,0 +1,57 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+
+{% block title %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %} · TRUEC@{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}">{% endblock %}
+{% block account_breadcrumb_label %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %}{% endblock %}
+{% block account_title %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %}{% endblock %}
+{% block account_subtitle %}<p>Describe el objeto y añade fotografías para que podamos revisarlo.</p>{% endblock %}
+
+{% block account_content %}
+  <div class="publication-process-note">
+    <span aria-hidden="true">1</span>
+    <p>Al enviarlo revisaremos la propuesta. El objeto solo llegará al catálogo después de su aprobación y validación física.</p>
+  </div>
+
+  <form class="publication-form" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <ul class="publication-form__errors" role="alert">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <div class="publication-form__section">
+      <h2>Información del objeto</h2>
+      {% include "components/form_field.html" with field=form.title %}
+      {% include "components/form_field.html" with field=form.description %}
+      <div class="publication-form__category-grid">
+        {% include "components/form_field.html" with field=form.parent_category %}
+        {% include "components/form_field.html" with field=form.category %}
+      </div>
+    </div>
+
+    <div class="publication-form__section">
+      <h2>Fotografías</h2>
+      {% if publication and publication.photos.exists %}
+        <div class="publication-photo-grid">
+          {% for photo in publication.photos.all %}
+            <figure>
+              <img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:publication.title }}" width="240" height="180">
+            </figure>
+          {% endfor %}
+        </div>
+        <div class="publication-remove-photos">
+          <p>Marca las fotografías que quieres eliminar:</p>
+          {{ form.remove_photos }}
+          {{ form.remove_photos.errors }}
+        </div>
+      {% endif %}
+      {% include "components/form_field.html" with field=form.photos %}
+    </div>
+
+    <div class="publication-form__actions">
+      <button class="button button--secondary" type="submit" name="action" value="save_draft">Guardar borrador</button>
+      <button class="button button--primary" type="submit" name="action" value="submit">Enviar a revisión</button>
+      <a href="{% if publication %}{% url 'publications:detail' publication.pk %}{% else %}{% url 'publications:list' %}{% endif %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

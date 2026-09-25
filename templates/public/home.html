@@ -1,22 +1,102 @@
-{% extends "base.html" %}
+{% extends "layouts/public.html" %}
+{% load static %}
 
-{% block title %}TRUEC@ · Tenetrueca{% endblock %}
+{% block title %}TRUEC@ · Intercambio sostenible en Tenerife{% endblock %}
+{% block body_class %}home-page{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="site-shell hero__grid">
-    <div>
-      <p class="eyebrow">Cabildo de Tenerife</p>
-      <h1>TRUEC@</h1>
-      <p class="hero__lead">Una plataforma institucional para dar una segunda vida a objetos depositados en puntos limpios.</p>
-      <div class="hero__actions" aria-label="Acciones principales">
-        <a class="button button--primary" href="#">Ver catalogo</a>
-        <a class="button button--secondary" href="#">Publicar objeto</a>
+<section class="home-hero" aria-labelledby="home-title">
+  <div class="site-shell home-hero__inner">
+    <div class="home-hero__content">
+      <p class="home-kicker">Intercambio sostenible en Tenerife</p>
+      <h1 id="home-title">Dale una segunda vida a lo que ya no usas</h1>
+      <p class="home-hero__lead">Intercambia objetos con otras personas de Tenerife de forma sencilla y gratuita</p>
+      <div class="home-hero__actions" aria-label="Acciones principales">
+        {% url 'catalog:list' as catalog_url %}
+        {% include "components/button.html" with href=catalog_url label="Explorar el catálogo" trailing_icon="→" only %}
+        {% include "components/button.html" with href=publish_url label="Publicar un objeto" leading_icon="+" variant="secondary" extra_class="home-button--publish" only %}
       </div>
+      <p class="home-hero__institution">
+        Una iniciativa del <strong>Cabildo Insular de Tenerife</strong>
+      </p>
     </div>
-    <div class="status-panel" aria-label="Estado del release">
-      <h2>Release 0</h2>
-      <p>Cimientos de dominio, permisos, auditoria, configuracion funcional y salud de la aplicacion.</p>
+  </div>
+</section>
+
+<section class="home-process" id="como-funciona" aria-labelledby="process-title">
+  <div class="site-shell">
+    <header class="home-section-heading home-section-heading--center">
+      <p class="home-kicker">Así funciona TRUEC@</p>
+      <h2 id="process-title">Intercambiar es muy fácil</h2>
+    </header>
+    <div class="home-process__grid">
+      <article class="home-step">
+        <div class="home-step__media">
+          <span class="home-step__number" aria-hidden="true">1</span>
+          <img src="{% static 'img/home/step-publish.png' %}" alt="Persona publicando la fotografía de un objeto desde su teléfono" width="1536" height="1024">
+        </div>
+        <h3>Publica</h3>
+        <p>Añade una descripción y publica lo que ya no necesitas en pocos minutos.</p>
+      </article>
+      <article class="home-step">
+        <div class="home-step__media">
+          <span class="home-step__number" aria-hidden="true">2</span>
+          <img src="{% static 'img/home/step-find.png' %}" alt="Lupa mostrando un objeto encontrado entre artículos reutilizables" width="1536" height="1024">
+        </div>
+        <h3>Encuentra</h3>
+        <p>Descubre objetos disponibles en Tenerife y encuentra aquello que te puede ser útil.</p>
+      </article>
+      <article class="home-step">
+        <div class="home-step__media">
+          <span class="home-step__number" aria-hidden="true">3</span>
+          <img src="{% static 'img/home/step-exchange.png' %}" alt="Dos personas acordando el intercambio de una caja con objetos" width="1536" height="1024">
+        </div>
+        <h3>Acuerda el intercambio</h3>
+        <p>Contacta con uno de nuestros gestores y acuerda la entrega en un punto de intercambio.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="home-catalog" id="objetos" aria-labelledby="catalog-title">
+  <div class="site-shell">
+    <header class="home-section-heading">
+      <p class="home-kicker">Objetos que buscan nuevo hogar</p>
+      <h2 id="catalog-title">Últimos objetos publicados</h2>
+    </header>
+
+    {% if featured_objects %}
+      <div class="home-object-grid">
+        {% for object in featured_objects %}
+          {% with primary_photo=object.publication.public_photos.0 %}
+            {% include "components/object_card.html" with object=object primary_photo=primary_photo detail_url=object.get_absolute_url only %}
+          {% endwith %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="home-catalog__empty">
+        <h3>Aún no hay objetos disponibles</h3>
+        <p>Sé la primera persona en dar una segunda vida a algo que ya no utilizas.</p>
+        {% include "components/button.html" with href=publish_url label="Publicar un objeto" only %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="home-final" aria-labelledby="final-title">
+  <div class="site-shell home-final__inner">
+    <div class="home-final__content">
+      <p class="home-kicker">Una Tenerife más sostenible</p>
+      <h2 id="final-title">Lo que ya no necesitas puede ser justo lo que otra persona busca</h2>
+      <p>Reducimos residuos, alargamos la vida de los objetos y construimos una comunidad más solidaria.</p>
+      {% include "components/button.html" with href=start_url label="Empieza a intercambiar" trailing_icon="→" only %}
+    </div>
+    <div class="home-final__brand" aria-hidden="true">
+      <img src="{% static 'img/brand/trueca-icon.png' %}" alt="" width="400" height="400">
     </div>
   </div>
 </section>

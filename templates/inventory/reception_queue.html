@@ -1,0 +1,54 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Recepción de objetos · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Recepción{% endblock %}
+{% block staff_title %}Recepción física de objetos{% endblock %}
+{% block staff_subtitle %}<p>Localiza una publicación aprobada y registra su inspección en el centro.</p>{% endblock %}
+
+{% block staff_content %}
+  <div class="staff-guidance">
+    <strong>Centros autorizados:</strong>
+    {% for center in allowed_centers %}{{ center.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+  </div>
+  <form class="staff-filter staff-filter--compact" method="get" action="{% url 'inventory:reception_queue' %}">
+    {% include "components/form_field.html" with field=filter_form.q %}
+    {% include "components/form_field.html" with field=filter_form.ordering %}
+    <div class="staff-filter__actions">
+      <button class="button button--primary" type="submit">Buscar</button>
+      {% if request.GET %}<a href="{% url 'inventory:reception_queue' %}">Limpiar</a>{% endif %}
+    </div>
+  </form>
+
+  <div class="staff-results-heading">
+    <h2>{{ paginator.count }} {% if paginator.count == 1 %}publicación pendiente{% else %}publicaciones pendientes{% endif %} de recepción</h2>
+  </div>
+  {% if page_obj.object_list %}
+    <div class="staff-list">
+      {% for publication in page_obj.object_list %}
+        <article class="staff-row">
+          <a class="staff-row__media" href="{% url 'inventory:reception_detail' publication.pk %}" aria-label="Recibir {{ publication.title }}">
+            {% if publication.staff_photos %}<img src="{% url 'publication_photo' photo_id=publication.staff_photos.0.pk %}" alt="{{ publication.staff_photos.0.alt_text|default:publication.title }}" loading="lazy" width="240" height="180">{% else %}<span aria-hidden="true">{{ publication.category.name|first|upper }}</span>{% endif %}
+          </a>
+          <div class="staff-row__content">
+            <div class="staff-row__heading">
+              <div>
+                <p class="staff-row__eyebrow">{% if publication.category.parent %}{{ publication.category.parent.name }} / {% endif %}{{ publication.category.name }}</p>
+                <h3><a href="{% url 'inventory:reception_detail' publication.pk %}">{{ publication.title }}</a></h3>
+              </div>
+              <span class="publication-status publication-status--approved">Aprobada</span>
+            </div>
+            <dl class="staff-row__meta">
+              <div><dt>Persona</dt><dd>{{ publication.submitter.get_full_name|default:publication.submitter.email }}</dd></div>
+              <div><dt>Aprobada</dt><dd>{{ publication.approved_at|date:"d/m/Y H:i" }}</dd></div>
+              <div><dt>Intentos previos</dt><dd>{{ publication.staff_inspections|length }}</dd></div>
+            </dl>
+            <a class="staff-row__link" href="{% url 'inventory:reception_detail' publication.pk %}">Registrar recepción <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+    {% include "components/staff_pagination.html" %}
+  {% else %}
+    <div class="staff-empty" role="status"><h2>No hay publicaciones pendientes de recepción</h2><p>Prueba con otra búsqueda o espera a que moderación apruebe nuevas propuestas.</p></div>
+  {% endif %}
+{% endblock %}

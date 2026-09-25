@@ -1,0 +1,61 @@
+{% load static %}
+<footer class="site-footer">
+  <div class="site-shell site-footer__grid">
+    <section class="site-footer__about" aria-labelledby="footer-about-title">
+      <a class="site-footer__brand" href="{% url 'home' %}" aria-label="TRUEC@, inicio">
+        <img src="{% static 'img/brand/trueca-horizontal.png' %}" alt="" width="796" height="187">
+      </a>
+      <h2 class="visually-hidden" id="footer-about-title">TRUEC@</h2>
+      <p class="site-footer__tagline">Intercambia todo lo que ya no necesitas.</p>
+      <address class="site-footer__contact">
+        <span><span aria-hidden="true">●</span> TRUEC@ · Cabildo de Tenerife</span>
+        <a href="tel:900305000"><span aria-hidden="true">☎</span> 900 305 000</a>
+        <a href="mailto:info@tenetrueca.com"><span aria-hidden="true">@</span> info@tenetrueca.com</a>
+      </address>
+    </section>
+
+    <nav class="site-footer__links" aria-labelledby="footer-links-title">
+      <h2 id="footer-links-title">Enlaces útiles</h2>
+      <a href="{% url 'legal_notice' %}">Aviso legal</a>
+      <a href="{% url 'cookie_policy' %}">Política de cookies</a>
+      <a href="{% url 'privacy_policy' %}">Política de privacidad</a>
+    </nav>
+
+    <nav class="site-footer__links" aria-labelledby="footer-help-title">
+      <h2 id="footer-help-title">Centro de ayuda</h2>
+      {% if user.is_authenticated %}
+        <a href="{% url 'profile' %}">Mi perfil</a>
+        <a href="{% url 'preferences' %}">Preferencias</a>
+      {% else %}
+        <a href="{% url 'login' %}">Iniciar sesión</a>
+        <a href="{% url 'register' %}">Crear una cuenta</a>
+      {% endif %}
+      <a href="mailto:info@tenetrueca.com">Contacta con nosotros</a>
+    </nav>
+
+    <section class="site-footer__social" aria-labelledby="footer-social-title">
+      <h2 id="footer-social-title">Síguenos</h2>
+      <div class="site-footer__social-links">
+        <a href="https://www.facebook.com/CabildoTenerife" target="_blank" rel="noopener noreferrer" aria-label="Cabildo de Tenerife en Facebook" title="Facebook">f</a>
+        <a href="https://www.instagram.com/cabildotenerife/" target="_blank" rel="noopener noreferrer" aria-label="Cabildo de Tenerife en Instagram" title="Instagram">◎</a>
+        <a href="https://x.com/CabildoTenerife" target="_blank" rel="noopener noreferrer" aria-label="Cabildo de Tenerife en X" title="X">X</a>
+        <a href="https://www.youtube.com/@CabildoTenerifeYoutube" target="_blank" rel="noopener noreferrer" aria-label="Cabildo de Tenerife en YouTube" title="YouTube">▶</a>
+      </div>
+      <a class="site-footer__cabildo" href="https://www.tenerife.es/" target="_blank" rel="noopener noreferrer">
+        <img src="{% static 'img/brand/cabildo-tenerife.png' %}" alt="" width="342" height="425">
+        <span>Cabildo de Tenerife</span>
+      </a>
+    </section>
+  </div>
+
+  <div class="site-footer__bottom">
+    <div class="site-shell site-footer__bottom-inner">
+      <p>{% now "Y" %} TRUEC@ · Cabildo de Tenerife. Todos los derechos reservados.</p>
+      <nav aria-label="Información legal">
+        <a href="{% url 'legal_notice' %}">Aviso legal</a>
+        <a href="{% url 'privacy_policy' %}">Privacidad</a>
+        <a href="{% url 'cookie_policy' %}">Cookies</a>
+      </nav>
+    </div>
+  </div>
+</footer>

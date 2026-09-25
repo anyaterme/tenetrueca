@@ -1,0 +1,34 @@
+<div class="form-field{% if field.errors %} form-field--error{% endif %}{% if password_toggle %} form-field--password{% endif %}{% if icon %} form-field--icon{% endif %}{% if field.field.widget.input_type == 'checkbox' %} form-field--checkbox{% endif %}">
+  {% if field.field.widget.input_type == 'checkbox' %}
+    <label class="form-checkbox" for="{{ field.id_for_label }}">
+      {{ field }}
+      <span>{{ field.label }}</span>
+    </label>
+  {% else %}
+    <div class="form-field__header">
+      <label class="form-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {% if field_link_url and field_link_label %}
+        <a class="form-field__link" href="{{ field_link_url }}">{{ field_link_label }}</a>
+      {% endif %}
+    </div>
+    <div class="form-field__control">
+      {% if icon %}<span class="form-field__icon" aria-hidden="true">{{ icon }}</span>{% endif %}
+      {{ field }}
+      {% if password_toggle %}
+        <button
+          class="form-field__toggle"
+          type="button"
+          aria-controls="{{ field.id_for_label }}"
+          aria-pressed="false"
+          data-password-toggle="{{ field.id_for_label }}"
+        >Mostrar</button>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if field.help_text %}<div class="form-field__help" id="{{ field.id_for_label }}-help">{{ field.help_text|safe }}</div>{% endif %}
+  {% if field.errors %}
+    <ul class="form-field__errors" id="{{ field.id_for_label }}-errors" role="alert">
+      {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+</div>

@@ -1,0 +1,86 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Revisar {{ publication.title }} · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Revisión de publicación{% endblock %}
+{% block staff_title %}{{ publication.title }}{% endblock %}
+{% block staff_subtitle %}<p>Comprueba la información aportada antes de registrar una decisión.</p>{% endblock %}
+{% block staff_actions %}<a class="button button--secondary" href="{% url 'moderation:queue' %}">Volver a la cola</a>{% endblock %}
+
+{% block staff_content %}
+  <div class="review-grid">
+    <div class="review-main">
+      <section class="staff-panel" aria-labelledby="review-data-title">
+        <div class="staff-panel__heading">
+          <h2 id="review-data-title">Propuesta ciudadana</h2>
+          <span class="publication-status publication-status--{{ publication.status }}">{{ publication.get_status_display }}</span>
+        </div>
+        <dl class="review-data">
+          <div><dt>Persona</dt><dd>{{ publication.submitter.get_full_name|default:publication.submitter.email }}</dd></div>
+          <div><dt>Correo</dt><dd>{{ publication.submitter.email }}</dd></div>
+          <div><dt>Categoría</dt><dd>{% if publication.category.parent %}{{ publication.category.parent.name }} / {% endif %}{{ publication.category.name }}</dd></div>
+          <div><dt>Envío</dt><dd>{{ publication.submitted_at|date:"d/m/Y H:i" }}</dd></div>
+        </dl>
+        <h3>Descripción</h3>
+        <div>{{ publication.description|linebreaks }}</div>
+      </section>
+
+      <section class="staff-panel" aria-labelledby="review-photos-title">
+        <h2 id="review-photos-title">Fotografías</h2>
+        {% if publication.staff_photos %}
+          <div class="staff-photo-grid">
+            {% for photo in publication.staff_photos %}
+              <figure><img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:publication.title }}" width="480" height="360"></figure>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="staff-muted">La publicación no tiene fotografías.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="review-sidebar">
+      <section class="staff-panel" aria-labelledby="decision-title">
+        <h2 id="decision-title">Decisión de moderación</h2>
+        {% if can_decide %}
+          <form class="staff-form" method="post" action="{% url 'moderation:decide' publication.pk %}" novalidate>
+            {% csrf_token %}
+            {% if decision_form.non_field_errors %}<div class="staff-form__errors" role="alert">{{ decision_form.non_field_errors }}</div>{% endif %}
+            {% include "components/form_field.html" with field=decision_form.decision %}
+            {% include "components/form_field.html" with field=decision_form.notes %}
+            <button class="button button--primary" type="submit">Registrar decisión</button>
+          </form>
+        {% else %}
+          <p class="staff-guidance">Esta revisión ya tiene una decisión. Solo las publicaciones pendientes pueden resolverse.</p>
+        {% endif %}
+      </section>
+
+      <section class="staff-panel" aria-labelledby="moderation-history-title">
+        <h2 id="moderation-history-title">Historial de decisiones</h2>
+        {% if publication.staff_decisions %}
+          <ol class="staff-history">
+            {% for decision in publication.staff_decisions %}
+              <li>
+                <strong>{{ decision.get_decision_display }}</strong>
+                <span>{{ decision.decided_at|date:"d/m/Y H:i" }} · {{ decision.reviewer.get_full_name|default:decision.reviewer.email }}</span>
+                {% if decision.notes %}<p>{{ decision.notes }}</p>{% endif %}
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <p class="staff-muted">Todavía no hay decisiones registradas.</p>
+        {% endif %}
+      </section>
+
+      {% if audit_events %}
+        <section class="staff-panel" aria-labelledby="audit-history-title">
+          <h2 id="audit-history-title">Registro de actividad</h2>
+          <ol class="staff-history staff-history--compact">
+            {% for event in audit_events %}
+              <li><strong>{{ event.action }}</strong><span>{{ event.created_at|date:"d/m/Y H:i" }}{% if event.actor %} · {{ event.actor.email }}{% endif %}</span></li>
+            {% endfor %}
+          </ol>
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

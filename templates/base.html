@@ -5,27 +5,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}TRUEC@{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'img/brand/trueca-icon.png' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main">Saltar al contenido</a>
-  <header class="site-header">
-    <div class="site-shell site-header__inner">
-      <a class="brand" href="{% url 'home' %}" aria-label="TRUEC@ inicio">TRUEC@</a>
-      <nav class="site-nav" aria-label="Principal">
-        <a href="#">Catalogo</a>
-        <a href="#">Puntos limpios</a>
-        <a href="#">FAQ</a>
-      </nav>
-    </div>
-  </header>
-  <main id="main">
-    {% block content %}{% endblock %}
-  </main>
-  <footer class="site-footer">
-    <div class="site-shell">
-      <p>Cabildo de Tenerife · Plataforma de economia circular TRUEC@</p>
-    </div>
-  </footer>
+  {% block body %}
+    {% block site_header %}{% include "components/header.html" %}{% endblock %}
+    <main id="main" tabindex="-1">
+      {% include "components/messages.html" %}
+      {% block content %}{% endblock %}
+    </main>
+    {% block site_footer %}{% include "components/footer.html" %}{% endblock %}
+  {% endblock %}
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

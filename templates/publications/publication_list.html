@@ -1,0 +1,81 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+
+{% block title %}Mis publicaciones · TRUEC@{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}">{% endblock %}
+{% block account_breadcrumb_label %}Mis publicaciones{% endblock %}
+{% block account_title %}Mis publicaciones{% endblock %}
+{% block account_subtitle %}<p>Consulta el estado de los objetos que has propuesto.</p>{% endblock %}
+{% block account_actions %}
+  {% url 'publications:create' as create_url %}
+  {% include "components/button.html" with label="Publicar un objeto" href=create_url leading_icon="＋" %}
+{% endblock %}
+
+{% block account_content %}
+  <form class="publication-filter" method="get" action="{% url 'publications:list' %}">
+    {% include "components/form_field.html" with field=filter_form.status %}
+    <button class="button button--secondary" type="submit">Filtrar</button>
+    {% if request.GET.status %}<a href="{% url 'publications:list' %}">Limpiar</a>{% endif %}
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="publication-list" aria-label="Publicaciones propias">
+      {% for publication in page_obj.object_list %}
+        <article class="publication-row">
+          <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}" aria-label="Ver {{ publication.title }}">
+            {% if publication.citizen_photos %}
+              <img src="{% url 'publication_photo' photo_id=publication.citizen_photos.0.pk %}" alt="{{ publication.citizen_photos.0.alt_text|default:publication.title }}" loading="lazy" width="240" height="180">
+            {% else %}
+              <span aria-hidden="true">{{ publication.category.name|first|upper }}</span>
+            {% endif %}
+          </a>
+          <div class="publication-row__content">
+            <div class="publication-row__heading">
+              <div>
+                <p class="publication-row__category">{% if publication.category.parent %}{{ publication.category.parent.name }} / {% endif %}{{ publication.category.name }}</p>
+                <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
+              </div>
+              <span class="publication-status publication-status--{{ publication.status }}">{{ publication.get_status_display }}</span>
+            </div>
+            <p class="publication-row__date">
+              {% if publication.submitted_at %}Enviada el {{ publication.submitted_at|date:"j \d\e F \d\e Y" }}{% else %}Borrador creado el {{ publication.created_at|date:"j \d\e F \d\e Y" }}{% endif %}
+            </p>
+            {% if publication.citizen_feedback %}
+              <div class="publication-feedback">
+                <strong>{% if publication.status == 'changes_requested' %}Cambios solicitados{% else %}Motivo de revisión{% endif %}</strong>
+                <p>{{ publication.citizen_feedback.notes|default:publication.citizen_feedback.reason_code }}</p>
+              </div>
+            {% endif %}
+            <div class="publication-row__actions">
+              <a href="{% url 'publications:detail' publication.pk %}">Ver detalle</a>
+              {% if publication.status in editable_statuses %}<a href="{% url 'publications:edit' publication.pk %}">Editar</a>{% endif %}
+              {% if publication.status in withdrawable_statuses %}<a class="publication-action--danger" href="{% url 'publications:withdraw' publication.pk %}">Retirar</a>{% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% if paginator.num_pages > 1 %}
+      <nav class="publication-pagination" aria-label="Páginas de publicaciones">
+        {% if page_obj.has_previous %}<a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>{% endif %}
+        {% for page_number in page_range %}
+          {% if page_number == paginator.ELLIPSIS %}
+            <span aria-hidden="true">{{ paginator.ELLIPSIS }}</span>
+          {% elif page_number == page_obj.number %}
+            <span class="is-current" aria-current="page">{{ page_number }}</span>
+          {% else %}
+            <a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_number }}">{{ page_number }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Siguiente</a>{% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="publication-empty" role="status">
+      <h2>{% if request.GET.status %}No hay publicaciones con este estado{% else %}Todavía no has publicado ningún objeto{% endif %}</h2>
+      <p>{% if request.GET.status %}Prueba con otro estado o vuelve a ver todas tus publicaciones.{% else %}Puedes guardar un borrador o enviar un objeto directamente a revisión.{% endif %}</p>
+      {% if not request.GET.status %}<a class="button button--primary" href="{% url 'publications:create' %}">Publicar un objeto</a>{% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

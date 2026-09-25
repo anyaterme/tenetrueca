@@ -59,6 +59,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'accounts.context_processors.authentication_capabilities',
+                'accounts.context_processors.staff_capabilities',
             ],
         },
     },
@@ -102,12 +104,33 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
+
+PUBLICATION_PHOTO_MAX_BYTES = 8 * 1024 * 1024
+PUBLICATION_PHOTO_MAX_COUNT = 8
+PUBLICATION_PHOTO_MAX_WIDTH = 6000
+PUBLICATION_PHOTO_MAX_HEIGHT = 6000
+PUBLICATION_PHOTO_MAX_PIXELS = 24_000_000
+CATALOG_PAGE_SIZE = 12
+PUBLICATION_PAGE_SIZE = 10
+PUBLICATION_DAILY_LIMIT = 5
+MODERATION_PAGE_SIZE = 20
+RECEPTION_PAGE_SIZE = 20
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
+AUTHENTICATION_BACKENDS = ['accounts.backends.TenetruecaAuthenticationBackend']
+AUTH_PROVIDER = 'local'
+AUTH_API_URL = ''
+AUTH_API_TOKEN = ''
+AUTH_API_TIMEOUT = 5
+MAGIC_LOGIN_ENABLED = True
+MAGIC_LOGIN_EXPIRATION_MINUTES = 30
+MAGIC_LOGIN_COOLDOWN_SECONDS = 60
+TERMS_CONSENT_VERSION = '1.0'
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'profile'
 LOGOUT_REDIRECT_URL = 'home'
 
 REST_FRAMEWORK = {

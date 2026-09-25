@@ -1,0 +1,7 @@
+{% if messages %}
+  <div class="messages site-shell" aria-live="polite">
+    {% for message in messages %}
+      <div class="message message--{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}

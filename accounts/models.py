@@ -1,5 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.functions import Lower
+from django.utils import timezone
 
 from accounts.managers import UserManager
 from core.models import TimeStampedModel
@@ -12,7 +15,17 @@ class User(AbstractUser):
         SUSPENDED = 'suspended', 'Suspendida'
         DEACTIVATED = 'deactivated', 'Desactivada'
 
-    username = None
+    class AuthSource(models.TextChoices):
+        LOCAL = 'local', 'Local'
+        EXTERNAL = 'external', 'Externa'
+
+    username = models.CharField(
+        'nombre de usuario',
+        max_length=150,
+        null=True,
+        blank=True,
+        unique=True,
+    )
     email = models.EmailField('email', unique=True)
     first_name = models.CharField('nombre', max_length=150)
     last_name = models.CharField('apellidos', max_length=150, blank=True)
@@ -31,7 +44,13 @@ class User(AbstractUser):
         default=AccountStatus.PENDING,
         db_index=True,
     )
-    external_identity_id = models.CharField(max_length=255, blank=True, db_index=True)
+    external_auth_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    auth_source = models.CharField(
+        max_length=16,
+        choices=AuthSource.choices,
+        default=AuthSource.LOCAL,
+        db_index=True,
+    )
     preferences = models.JSONField(default=dict, blank=True)
     consent_version = models.CharField(max_length=50, blank=True)
     consent_accepted_at = models.DateTimeField(null=True, blank=True)
@@ -50,14 +69,42 @@ class User(AbstractUser):
     objects = UserManager()
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(Lower('email'), name='accounts_user_email_ci_unique'),
+            models.UniqueConstraint(Lower('username'), name='accounts_user_username_ci_unique'),
+        ]
         indexes = [
             models.Index(fields=['email']),
             models.Index(fields=['account_status']),
-            models.Index(fields=['external_identity_id']),
+            models.Index(fields=['auth_source']),
         ]
 
     def __str__(self):
         return self.email
+
+
+class MagicLoginToken(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='magic_login_tokens',
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    expires_at = models.DateTimeField(db_index=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    invalidated_at = models.DateTimeField(null=True, blank=True)
+    requested_ip = models.GenericIPAddressField(null=True, blank=True)
+    redirect_path = models.CharField(max_length=2048, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'used_at', 'expires_at']),
+        ]
+
+    def __str__(self):
+        return f'Magic link {self.pk} · {self.user}'
 
 
 class UserCenterAccess(TimeStampedModel):

@@ -1,0 +1,9 @@
+{% if paginator.num_pages > 1 %}
+  <nav class="staff-pagination" aria-label="Páginas de resultados">
+    {% if page_obj.has_previous %}<a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>{% endif %}
+    {% for page_number in page_range %}
+      {% if page_number == paginator.ELLIPSIS %}<span aria-hidden="true">{{ paginator.ELLIPSIS }}</span>{% elif page_number == page_obj.number %}<span class="is-current" aria-current="page">{{ page_number }}</span>{% else %}<a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_number }}">{{ page_number }}</a>{% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}<a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>
+{% endif %}

@@ -1,0 +1,74 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+
+{% block title %}{{ object.title }} · Catálogo TRUEC@{% endblock %}
+{% block body_class %}catalog-detail-page{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="site-shell catalog-detail">
+  <nav class="catalog-breadcrumb" aria-label="Migas de pan">
+    <a href="{% url 'catalog:list' %}">Catálogo</a>
+    <span aria-hidden="true">/</span>
+    <a href="{% url 'catalog:list' %}?category={% if object.category_node.parent %}{{ object.category_node.parent.slug }}{% else %}{{ object.category_node.slug }}{% endif %}">{% if object.category_node.parent %}{{ object.category_node.parent.name }}{% else %}{{ object.category_node.name }}{% endif %}</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">{{ object.title }}</span>
+  </nav>
+
+  <div class="catalog-detail__grid">
+    <section class="catalog-gallery" aria-label="Fotografías de {{ object.title }}">
+      {% with photos=object.publication.public_photos %}
+        {% if photos %}
+          <div class="catalog-gallery__primary">
+            <img src="{% url 'publication_photo' photo_id=photos.0.pk %}" alt="{{ photos.0.alt_text|default:object.title }}" width="960" height="720">
+          </div>
+          {% if photos|length > 1 %}
+            <div class="catalog-gallery__thumbnails">
+              {% for photo in photos|slice:"1:" %}
+                <img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:object.title }}" loading="lazy" width="320" height="240">
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="catalog-gallery__empty" aria-label="Este objeto todavía no tiene fotografía pública">
+            <span aria-hidden="true">{{ object.category_node.name|first|upper }}</span>
+          </div>
+        {% endif %}
+      {% endwith %}
+    </section>
+
+    <article class="catalog-detail__content">
+      <p class="catalog-detail__category">
+        {% if object.category_node.parent %}{{ object.category_node.parent.name }} / {% endif %}{{ object.category_node.name }}
+      </p>
+      <h1>{{ object.title }}</h1>
+      <p class="catalog-detail__status"><span aria-hidden="true"></span>Disponible</p>
+
+      <dl class="catalog-detail__facts">
+        <div class="catalog-detail__fact catalog-detail__fact--condition">
+          <dt>Condición</dt>
+          <dd>{{ object.get_condition_display }}</dd>
+        </div>
+        <div class="catalog-detail__fact catalog-detail__fact--center">
+          <dt>Punto Limpio</dt>
+          <dd>{{ object.center.name }}</dd>
+        </div>
+      </dl>
+
+      <section class="catalog-detail__description" aria-labelledby="object-description-title">
+        <h2 id="object-description-title">Descripción</h2>
+        {{ object.description|linebreaks }}
+      </section>
+
+      {% if object.center.public_information %}
+        <p class="catalog-detail__center-note">{{ object.center.public_information }}</p>
+      {% endif %}
+      <a class="catalog-detail__back" href="{% url 'catalog:list' %}">Volver al catálogo</a>
+      <p class="catalog-detail__notice"><span aria-hidden="true">i</span>La recogida se realiza en el Punto Limpio indicado.</p>
+    </article>
+  </div>
+</div>
+{% endblock %}

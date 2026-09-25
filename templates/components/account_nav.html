@@ -1,0 +1,31 @@
+{% with current=request.resolver_match.url_name namespace=request.resolver_match.namespace %}
+  <aside class="account-nav" aria-label="Área personal">
+    <p class="account-nav__title"><span aria-hidden="true">▣</span> Mi cuenta</p>
+    <nav class="account-nav__items">
+      <a class="account-nav__item{% if current == 'profile' %} is-active{% endif %}" href="{% url 'profile' %}"{% if current == 'profile' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">○</span>
+        <span>Mi perfil</span>
+      </a>
+      <a class="account-nav__item{% if current == 'profile-edit' %} is-active{% endif %}" href="{% url 'profile-edit' %}"{% if current == 'profile-edit' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">✎</span>
+        <span>Editar perfil</span>
+      </a>
+      <a class="account-nav__item{% if current == 'preferences' %} is-active{% endif %}" href="{% url 'preferences' %}"{% if current == 'preferences' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">⚙</span>
+        <span>Preferencias</span>
+      </a>
+      <a class="account-nav__item{% if namespace == 'publications' and current != 'create' %} is-active{% endif %}" href="{% url 'publications:list' %}"{% if namespace == 'publications' and current != 'create' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">▤</span>
+        <span>Mis publicaciones</span>
+      </a>
+      <a class="account-nav__item{% if namespace == 'publications' and current == 'create' %} is-active{% endif %}" href="{% url 'publications:create' %}"{% if namespace == 'publications' and current == 'create' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">＋</span>
+        <span>Publicar objeto</span>
+      </a>
+      <a class="account-nav__item{% if current == 'password-change' %} is-active{% endif %}" href="{% url 'password-change' %}"{% if current == 'password-change' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">▢</span>
+        <span>Cambiar contraseña</span>
+      </a>
+    </nav>
+  </aside>
+{% endwith %}

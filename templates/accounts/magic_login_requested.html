@@ -1,0 +1,10 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Revisa tu correo · TRUEC@{% endblock %}
+{% block auth_title %}Revisa tu correo{% endblock %}
+{% block auth_subtitle %}Si existe una cuenta asociada a esa dirección, recibirás un enlace para iniciar sesión.{% endblock %}
+
+{% block auth_content %}
+  <p class="auth-information">El enlace caduca pronto y sólo se puede utilizar una vez.</p>
+  <p class="auth-secondary-action"><a href="{% url 'login' %}">Volver a iniciar sesión</a></p>
+{% endblock %}

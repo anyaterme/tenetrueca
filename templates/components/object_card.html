@@ -1,0 +1,32 @@
+<article class="home-object-card{% if catalog_card %} catalog-object-card{% endif %}">
+  <div class="home-object-card__visual">
+    {% if primary_photo %}
+      {% if detail_url %}<a href="{{ detail_url }}" aria-label="Ver {{ object.title }}">{% endif %}
+        <img src="{% url 'publication_photo' photo_id=primary_photo.pk %}" alt="{{ primary_photo.alt_text|default:object.title }}" loading="lazy" width="640" height="480">
+      {% if detail_url %}</a>{% endif %}
+    {% else %}
+      <span aria-hidden="true">{{ object.category_node.name|default:object.category|default:"Objeto"|first|upper }}</span>
+      <small>{{ object.category_node.name|default:object.category|default:"Objeto" }}</small>
+    {% endif %}
+  </div>
+  <div class="home-object-card__body">
+    {% if catalog_card %}
+      <div class="catalog-object-card__eyebrow">
+        <span class="catalog-object-card__category">{{ object.category_node.name }}</span>
+        <span class="home-object-card__status"><span aria-hidden="true"></span>Disponible</span>
+      </div>
+    {% else %}
+      <span class="home-object-card__status">Disponible</span>
+    {% endif %}
+    <h3>{% if detail_url %}<a href="{{ detail_url }}">{{ object.title }}</a>{% else %}{{ object.title }}{% endif %}</h3>
+    {% if catalog_card %}
+      <p class="catalog-object-card__condition">{{ object.get_condition_display }}</p>
+      <p class="home-object-card__location"><span aria-hidden="true"></span>{{ object.center.name }}</p>
+      <a class="catalog-object-card__link" href="{{ detail_url }}">Ver objeto <span aria-hidden="true"></span></a>
+    {% else %}
+      <p class="home-object-card__location"><span aria-hidden="true">●</span> {{ object.center.name }}</p>
+      <p class="home-object-card__description">{{ object.description|default:"Sin descripción disponible."|truncatewords:18 }}</p>
+      <p class="home-object-card__meta">{{ object.category_node.name|default:object.category }} · {{ object.get_condition_display }}</p>
+    {% endif %}
+  </div>
+</article>

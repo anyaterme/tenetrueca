@@ -1,0 +1,20 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Enlace de acceso · TRUEC@{% endblock %}
+{% block auth_title %}Entrar mediante enlace{% endblock %}
+{% block auth_subtitle %}Te enviaremos un enlace de un solo uso para iniciar sesión.{% endblock %}
+
+{% block auth_content %}
+  <form class="auth-form" method="post" action="{% url 'magic-login-request' %}" novalidate>
+    {% csrf_token %}
+    {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+    {% if form.non_field_errors %}
+      <div class="form-errors" role="alert">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {% include "components/form_field.html" with field=form.identifier icon="@" %}
+    {% include "components/button.html" with label="Enviar enlace de acceso" button_type="submit" block=True extra_class="auth-submit" %}
+  </form>
+  <p class="auth-secondary-action"><a href="{% url 'login' %}">Volver a iniciar sesión</a></p>
+{% endblock %}

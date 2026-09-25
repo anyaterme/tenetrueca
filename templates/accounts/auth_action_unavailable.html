@@ -1,0 +1,10 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Acción no disponible · TRUEC@{% endblock %}
+{% block auth_title %}Acción no disponible{% endblock %}
+{% block auth_subtitle %}Esta cuenta utiliza el proveedor de identidad externo.{% endblock %}
+
+{% block auth_content %}
+  {% url 'login' as login_url %}
+  {% include "components/button.html" with label="Volver a iniciar sesión" href=login_url block=True %}
+{% endblock %}

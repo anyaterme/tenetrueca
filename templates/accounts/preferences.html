@@ -1,0 +1,30 @@
+{% extends "layouts/account.html" %}
+
+{% block title %}Preferencias · TRUEC@{% endblock %}
+{% block account_breadcrumb_label %}Preferencias{% endblock %}
+{% block account_title %}Preferencias{% endblock %}
+{% block account_subtitle %}<p>Decide qué comunicaciones opcionales quieres recibir.</p>{% endblock %}
+
+{% block account_content %}
+  <div class="settings-sections">
+    <section class="settings-section" aria-labelledby="transactional-title">
+      <h2 id="transactional-title">Notificaciones transaccionales</h2>
+      <p>Estas comunicaciones son necesarias para que TRUEC@ funcione correctamente y no pueden desactivarse.</p>
+      <ul class="settings-list">
+        <li>Reservas y recogidas</li>
+        <li>Incidencias relacionadas con tus operaciones</li>
+        <li>Seguridad de la cuenta</li>
+      </ul>
+    </section>
+
+    <section class="settings-section" aria-labelledby="optional-title">
+      <h2 id="optional-title">Comunicaciones opcionales</h2>
+      <p>Puedes cambiar esta preferencia en cualquier momento.</p>
+      <form class="preferences-form" method="post" action="{% url 'preferences' %}">
+        {% csrf_token %}
+        {% include "components/form_field.html" with field=form.optional_email_communications %}
+        {% include "components/button.html" with label="Guardar preferencias" button_type="submit" %}
+      </form>
+    </section>
+  </div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Iniciar sesión · TRUEC@{% endblock %}
+{% block auth_title %}Iniciar sesión{% endblock %}
+{% block auth_subtitle %}Accede a tu cuenta para continuar{% endblock %}
+
+{% block auth_content %}
+  {% url 'password_reset' as password_reset_url %}
+  <form class="auth-form" method="post" action="{% url 'login' %}" novalidate>
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="form-errors" role="alert">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+
+    {% include "components/form_field.html" with field=form.username icon="@" %}
+    {% if local_auth_enabled %}
+      {% include "components/form_field.html" with field=form.password icon="●" password_toggle=True field_link_url=password_reset_url field_link_label="¿Has olvidado tu contraseña?" %}
+    {% else %}
+      {% include "components/form_field.html" with field=form.password icon="●" password_toggle=True %}
+    {% endif %}
+    {% include "components/button.html" with label="Iniciar sesión" button_type="submit" block=True trailing_icon="→" extra_class="auth-submit" %}
+  </form>
+  {% if magic_login_enabled %}
+    <div class="auth-divider"><span>o</span></div>
+    {% url 'magic-login-request' as magic_login_url %}
+    {% if next %}
+      {% querystring next=next as magic_login_query %}
+      {% include "components/button.html" with label="✉ Recibir enlace para iniciar sesión" href=magic_login_url|add:magic_login_query variant="secondary" block=True %}
+    {% else %}
+      {% include "components/button.html" with label="✉ Recibir enlace para iniciar sesión" href=magic_login_url variant="secondary" block=True %}
+    {% endif %}
+  {% endif %}
+  {% if local_auth_enabled %}
+    <p class="auth-secondary-action">¿No tienes cuenta? <a href="{% url 'register' %}">Crear una cuenta</a></p>
+  {% endif %}
+{% endblock %}

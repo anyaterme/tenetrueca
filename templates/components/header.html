@@ -1,0 +1,40 @@
+{% load static %}
+<header class="site-header">
+  <div class="site-shell site-header__inner">
+    <div class="site-brand-lockup">
+      <a class="brand" href="{% url 'home' %}" aria-label="TRUEC@, inicio">
+        <img
+          class="brand__logo"
+          src="{% static 'img/brand/trueca-horizontal.png' %}"
+          alt=""
+          width="796"
+          height="187"
+        >
+      </a>
+    </div>
+    <nav class="site-nav" aria-label="Navegación principal">
+      <a class="site-nav__catalog" href="{% url 'catalog:list' %}">Catálogo</a>
+      {% if user.is_authenticated %}
+        {% if can_moderate_publications %}<a href="{% url 'moderation:queue' %}">Moderación</a>{% endif %}
+        {% if can_receive_objects %}<a href="{% url 'inventory:reception_queue' %}">Recepción</a>{% endif %}
+        {% if account_area %}
+          <a class="site-nav__web" href="{% url 'home' %}">Ver web <span aria-hidden="true">↗</span></a>
+          <span class="site-nav__divider" aria-hidden="true"></span>
+        {% endif %}
+        <a class="site-nav__identity" href="{% url 'profile' %}"{% if account_area %} aria-current="page"{% endif %}>
+          <span class="site-nav__avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
+          <span>{{ user.first_name|default:user.email }}</span>
+        </a>
+        <form class="site-nav__logout" method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" aria-label="Cerrar sesión">
+            <span class="site-nav__logout-label">Cerrar sesión</span>
+            <span class="site-nav__logout-icon" aria-hidden="true">↪</span>
+          </button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Iniciar sesión</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>

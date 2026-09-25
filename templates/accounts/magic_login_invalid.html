@@ -1,0 +1,11 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Enlace no válido · TRUEC@{% endblock %}
+{% block auth_title %}Este enlace ya no es válido{% endblock %}
+{% block auth_subtitle %}Puede que haya caducado, ya se haya utilizado o exista un enlace más reciente.{% endblock %}
+
+{% block auth_content %}
+  {% url 'magic-login-request' as magic_login_url %}
+  {% include "components/button.html" with label="Solicitar otro enlace" href=magic_login_url block=True %}
+  <p class="auth-secondary-action"><a href="{% url 'login' %}">Volver a iniciar sesión</a></p>
+{% endblock %}
