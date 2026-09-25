@@ -1,0 +1,47 @@
+{% extends "layouts/account.html" %}
+
+{% block title %}Mis reservas · TRUEC@{% endblock %}
+{% block account_breadcrumb_label %}Mis reservas{% endblock %}
+{% block account_title %}Mis reservas{% endblock %}
+{% block account_subtitle %}<p>Consulta tus reservas activas y el historial de recogidas, cancelaciones y caducidades.</p>{% endblock %}
+
+{% block account_content %}
+  {% if reservation_cards %}
+    <div class="reservation-list">
+      {% for card in reservation_cards %}
+        {% with reservation=card.reservation %}
+          <article class="profile-section reservation-card">
+            <header class="profile-section__header">
+              <span class="profile-section__icon profile-section__icon--account" aria-hidden="true">▤</span>
+              <div>
+                <h2><a href="{% url 'reservations:detail' reservation.public_id %}">{{ reservation.inventory_item.title }}</a></h2>
+                <p>{{ reservation.get_status_display }} · {{ reservation.inventory_item.center.name }}</p>
+              </div>
+            </header>
+            <dl class="profile-rows">
+              {% include "components/profile_row.html" with label="Referencia" value=reservation.inventory_item.reference empty_label="Sin referencia" %}
+              {% include "components/profile_row.html" with label="Fecha límite" value=reservation.expires_at empty_label="Sin fecha" %}
+            </dl>
+            {% if card.qr_data_uri %}
+              <div class="reservation-card__qr">
+                <img src="{{ card.qr_data_uri }}" alt="QR de recogida de {{ reservation.inventory_item.title }}">
+              </div>
+            {% endif %}
+            <a class="button button--secondary" href="{% url 'reservations:detail' reservation.public_id %}">Ver reserva</a>
+          </article>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="profile-section">
+      <header class="profile-section__header">
+        <span class="profile-section__icon profile-section__icon--account" aria-hidden="true">▤</span>
+        <div>
+          <h2>No tienes reservas todavía</h2>
+          <p>Cuando reserves un objeto disponible aparecerá aquí.</p>
+        </div>
+      </header>
+      <a class="button button--primary" href="{% url 'catalog:list' %}">Ver catálogo</a>
+    </div>
+  {% endif %}
+{% endblock %}

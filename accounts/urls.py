@@ -6,6 +6,7 @@ from accounts.views import (
     AccountPasswordChangeView,
     AccountPasswordResetConfirmView,
     AccountPasswordResetView,
+    DashboardView,
     MagicLinkConsumeView,
     MagicLinkRequestedView,
     MagicLinkRequestView,
@@ -17,6 +18,7 @@ from accounts.views import (
 
 
 urlpatterns = [
+    path('', DashboardView.as_view(), name='dashboard'),
     path('login/', AccountLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('enlace-acceso/', MagicLinkRequestView.as_view(), name='magic-login-request'),

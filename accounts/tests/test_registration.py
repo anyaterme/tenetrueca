@@ -2,6 +2,9 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from points.models import PointMovement
+from points.services import points_balance
+
 
 @override_settings(
     AUTH_PROVIDER='local',
@@ -25,12 +28,20 @@ class RegistrationTests(TestCase):
     def test_registration_creates_local_user_and_logs_in(self):
         response = self.client.post(reverse('register'), self.registration_data())
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse('dashboard'))
         user = get_user_model().objects.get(email='laura@example.com')
         self.assertTrue(user.check_password('Clave-registro-2026'))
         self.assertEqual(user.username, 'laura')
         self.assertEqual(user.auth_source, user.AuthSource.LOCAL)
         self.assertIsNotNone(user.consent_accepted_at)
+        self.assertEqual(points_balance(user), 100)
+        self.assertEqual(
+            PointMovement.objects.filter(
+                user=user,
+                reason=PointMovement.Reason.REGISTRATION,
+            ).count(),
+            1,
+        )
 
     def test_duplicate_email_is_case_insensitive(self):
         get_user_model().objects.create_user(

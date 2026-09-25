@@ -45,6 +45,18 @@ class ProfileTests(TestCase):
         self.assertNotContains(response, 'Origen de autenticación')
         self.assertNotContains(response, self.user.external_auth_id or 'external-auth-secret')
 
+    def test_citizen_profile_groups_mobile_preferences_without_duplicate_edit_action(self):
+        response = self.client.get(reverse('profile'))
+
+        self.assertContains(response, '<details class="account-mobile-menu">')
+        self.assertContains(response, 'Preferencias y seguridad')
+        self.assertContains(response, f'href="{reverse("preferences")}"')
+        self.assertContains(response, f'href="{reverse("password-change")}"')
+        compact_menu = response.content.decode().split(
+            '<details class="account-mobile-menu">', 1
+        )[1].split('</details>', 1)[0]
+        self.assertNotIn(reverse('profile-edit'), compact_menu)
+
     def test_unauthenticated_user_is_redirected_to_login(self):
         self.client.logout()
 

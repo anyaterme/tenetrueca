@@ -6,16 +6,16 @@
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/home.css' %}">
-  <link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+  <link rel="stylesheet" href="{% static 'css/catalog.css' %}?v=20260925-4">
 {% endblock %}
 
 {% block content %}
-<form class="catalog-search" method="get" action="{% url 'catalog:list' %}" role="search">
+<form class="catalog-search" id="catalog-search-form" method="get" action="{% url 'catalog:list' %}" role="search">
   <header class="catalog-heading">
     <div class="site-shell catalog-heading__inner">
       <div class="catalog-heading__content">
         <p class="catalog-kicker">Catálogo de reutilización</p>
-        <h1>Objetos con otra vida, cerca de ti</h1>
+        <h1>Objetos con otra vida en Tenerife</h1>
         <p>Encuentra objetos disponibles en los Puntos Limpios de Tenerife.</p>
         <div class="catalog-searchbar">
           <label class="visually-hidden" for="{{ filter_form.q.id_for_label }}">{{ filter_form.q.label }}</label>
@@ -32,45 +32,88 @@
   </header>
 
   <div class="catalog-filter-section">
-    <div class="site-shell catalog-filters">
-      <div class="catalog-filter">
-        <label for="{{ filter_form.center.id_for_label }}">{{ filter_form.center.label }}</label>
-        {{ filter_form.center }}
-        {{ filter_form.center.errors }}
-      </div>
-      <div class="catalog-filter">
-        <label for="{{ filter_form.category.id_for_label }}">{{ filter_form.category.label }}</label>
-        {{ filter_form.category }}
-        {{ filter_form.category.errors }}
-      </div>
-      <div class="catalog-filter">
-        <label for="{{ filter_form.subcategory.id_for_label }}">{{ filter_form.subcategory.label }}</label>
-        {{ filter_form.subcategory }}
-        {{ filter_form.subcategory.errors }}
-      </div>
-      <div class="catalog-filter__actions">
-        <button class="catalog-filter__apply" type="submit">Aplicar filtros</button>
-        {% if has_filters %}<a href="{% url 'catalog:list' %}">Limpiar filtros</a>{% endif %}
-      </div>
+    <div class="site-shell">
+      <details class="catalog-filter-disclosure" open data-has-errors="{% if filter_form.errors %}true{% else %}false{% endif %}">
+        <summary>
+          <span class="catalog-filter-disclosure__icon" aria-hidden="true"></span>
+          <span>Filtros</span>
+          {% if active_filter_count %}<span class="catalog-filter-disclosure__count">{{ active_filter_count }}</span>{% endif %}
+          <span class="catalog-filter-disclosure__chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="catalog-filters">
+          <div class="catalog-filter">
+            <label for="{{ filter_form.center.id_for_label }}">{{ filter_form.center.label }}</label>
+            {{ filter_form.center }}
+            {{ filter_form.center.errors }}
+          </div>
+          <div class="catalog-filter">
+            <label for="{{ filter_form.category.id_for_label }}">{{ filter_form.category.label }}</label>
+            {{ filter_form.category }}
+            {{ filter_form.category.errors }}
+          </div>
+          <div class="catalog-filter">
+            <label for="{{ filter_form.subcategory.id_for_label }}">{{ filter_form.subcategory.label }}</label>
+            {{ filter_form.subcategory }}
+            {{ filter_form.subcategory.errors }}
+          </div>
+          <div class="catalog-filter__actions">
+            <button class="catalog-filter__apply" type="submit">Aplicar filtros</button>
+          </div>
+        </div>
+      </details>
+
+      {% if has_filters %}
+        <div class="catalog-active-filters" aria-label="Filtros activos">
+          {% if active_filter_chips %}<strong>Filtros activos:</strong>{% endif %}
+          <div class="catalog-active-filters__chips">
+            {% for chip in active_filter_chips %}
+              <a class="catalog-filter-chip" href="{{ chip.remove_url }}" title="Quitar filtro {{ chip.label }}">
+                <span>{{ chip.label }}</span>
+                <span aria-hidden="true">×</span>
+                <span class="visually-hidden">Quitar filtro {{ chip.label }}</span>
+              </a>
+            {% endfor %}
+          </div>
+          <a class="catalog-active-filters__clear" href="{% url 'catalog:list' %}">Limpiar filtros</a>
+        </div>
+      {% endif %}
     </div>
   </div>
 </form>
 
 <section class="catalog-results" aria-labelledby="catalog-results-title">
   <div class="site-shell">
-
     <div class="catalog-results__summary">
       <h2 id="catalog-results-title">
-        {% if paginator.count %}{{ paginator.count }} objeto{{ paginator.count|pluralize }} disponible{{ paginator.count|pluralize }}{% else %}Objetos disponibles{% endif %}
+        {{ paginator.count }} objeto{{ paginator.count|pluralize }} disponible{{ paginator.count|pluralize }}
       </h2>
-      {% if paginator.num_pages > 1 %}<p>Página {{ page_obj.number }} de {{ paginator.num_pages }}</p>{% endif %}
+      <div class="catalog-results__controls">
+        <div class="catalog-ordering">
+          <label for="{{ filter_form.ordering.id_for_label }}">{{ filter_form.ordering.label }}</label>
+          {{ filter_form.ordering }}
+          <button class="catalog-ordering__submit" type="submit" form="catalog-search-form" aria-label="Aplicar orden" title="Aplicar orden">
+            <span aria-hidden="true">↻</span>
+          </button>
+        </div>
+        {% if paginator.num_pages > 1 %}
+          <span class="catalog-results__page">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+          <nav class="catalog-pagination-compact" aria-label="Cambiar página">
+            {% if page_obj.has_previous %}
+              <a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}" rel="prev" aria-label="Página anterior">‹</a>
+            {% else %}<span aria-hidden="true">‹</span>{% endif %}
+            {% if page_obj.has_next %}
+              <a href="?{% if preserved_query %}{{ preserved_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}" rel="next" aria-label="Página siguiente">›</a>
+            {% else %}<span aria-hidden="true">›</span>{% endif %}
+          </nav>
+        {% endif %}
+      </div>
     </div>
 
     {% if page_obj.object_list %}
       <div class="catalog-grid">
         {% for object in page_obj.object_list %}
           {% with primary_photo=object.publication.public_photos.0 %}
-            {% include "components/object_card.html" with object=object primary_photo=primary_photo detail_url=object.get_absolute_url catalog_card=True only %}
+            {% include "components/object_card.html" with object=object primary_photo=primary_photo detail_url=object.get_absolute_url catalog_card=True is_available=True user_authenticated=user.is_authenticated favorite_next=request.get_full_path csrf_token=csrf_token only %}
           {% endwith %}
         {% endfor %}
       </div>
@@ -108,4 +151,8 @@
     {% endif %}
   </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/catalog.js' %}?v=20260925-1" defer></script>
 {% endblock %}

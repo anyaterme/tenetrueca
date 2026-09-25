@@ -73,7 +73,7 @@
       <div class="home-object-grid">
         {% for object in featured_objects %}
           {% with primary_photo=object.publication.public_photos.0 %}
-            {% include "components/object_card.html" with object=object primary_photo=primary_photo detail_url=object.get_absolute_url only %}
+            {% include "components/object_card.html" with object=object primary_photo=primary_photo detail_url=object.get_absolute_url is_available=True only %}
           {% endwith %}
         {% endfor %}
       </div>

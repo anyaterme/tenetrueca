@@ -133,6 +133,10 @@
   gap: 20px;
 }
 
+.account-mobile-menu {
+  display: none;
+}
+
 .profile-section {
   padding: 22px;
   border: 1px solid var(--color-border);
@@ -255,6 +259,92 @@
 
 .profile-guidance p {
   margin: 0;
+}
+
+.favorite-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.account-empty {
+  text-align: center;
+}
+
+.account-empty h2 {
+  margin: 0 0 .4rem;
+  font-size: 1.2rem;
+}
+
+.account-empty p {
+  margin: 0 0 1rem;
+  color: #60738d;
+}
+
+.points-balance {
+  display: flex;
+  align-items: baseline;
+  gap: .4rem;
+  padding: .65rem .85rem;
+  border: 1px solid #b8d8c7;
+  border-radius: 8px;
+  background: #edf7f1;
+  color: #126a45;
+}
+
+.points-balance strong {
+  font-size: 1.45rem;
+}
+
+.points-movements {
+  display: grid;
+}
+
+.points-movement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e1e8f0;
+}
+
+.points-movement:last-child {
+  border-bottom: 0;
+}
+
+.points-movement h2 {
+  margin: 0 0 .2rem;
+  font-size: 1rem;
+}
+
+.points-movement time {
+  color: #60738d;
+  font-size: .86rem;
+}
+
+.points-movement > strong {
+  font-size: 1.2rem;
+}
+
+.points-movement .is-credit {
+  color: #126a45;
+}
+
+.points-movement .is-debit {
+  color: #a13939;
+}
+
+.account-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 760px) {
+  .favorite-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .account-actions {
@@ -416,8 +506,79 @@
     border-radius: 0 0 4px 4px;
   }
 
+  .account-shell--citizen .account-nav {
+    display: none;
+  }
+
   .account-content {
     padding: 26px 0 44px;
+  }
+
+  .account-shell--citizen .account-mobile-menu {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .account-mobile-menu summary {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+    padding: 10px 16px;
+    color: var(--color-ink);
+    cursor: pointer;
+    font-weight: 800;
+    list-style: none;
+  }
+
+  .account-mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .account-mobile-menu summary:focus-visible {
+    outline: 3px solid rgba(13, 128, 196, .3);
+    outline-offset: -3px;
+  }
+
+  .account-mobile-menu__icon {
+    color: #536987;
+    font-size: 1.45rem;
+    text-align: center;
+  }
+
+  .account-mobile-menu__chevron {
+    color: #536987;
+    font-size: 1.55rem;
+    transition: transform .18s ease;
+  }
+
+  .account-mobile-menu[open] .account-mobile-menu__chevron {
+    transform: rotate(90deg);
+  }
+
+  .account-mobile-menu nav {
+    border-top: 1px solid #e1e8f0;
+  }
+
+  .account-mobile-menu a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 48px;
+    padding: .75rem 1rem .75rem 3.85rem;
+    border-bottom: 1px solid #e1e8f0;
+    color: #315269;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .account-mobile-menu a:last-child {
+    border-bottom: 0;
   }
 }
 
@@ -492,5 +653,45 @@
 
   .account-actions .button {
     width: 100%;
+  }
+}
+
+.reservation-list {
+  display: grid;
+  gap: 18px;
+}
+
+.reservation-card {
+  display: grid;
+  gap: 16px;
+}
+
+.reservation-card__qr img,
+.reservation-qr__image {
+  display: block;
+  width: min(100%, 240px);
+  height: auto;
+  border: 1px solid rgba(24, 35, 53, .12);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+.reservation-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 20px;
+  align-items: start;
+}
+
+.reservation-qr {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+}
+
+@media (max-width: 780px) {
+  .reservation-detail-grid {
+    grid-template-columns: 1fr;
   }
 }

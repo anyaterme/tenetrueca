@@ -276,3 +276,30 @@ class ReusableObject(TimeStampedModel):
 
     def __str__(self):
         return f'{self.reference} · {self.title}'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+    )
+    reusable_object = models.ForeignKey(
+        ReusableObject,
+        on_delete=models.CASCADE,
+        related_name='favorited_by',
+    )
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'reusable_object'],
+                name='catalog_unique_user_favorite',
+            ),
+        ]
+        indexes = [models.Index(fields=['user', 'created_at'])]
+
+    def __str__(self):
+        return f'{self.user} · {self.reusable_object}'

@@ -26,7 +26,7 @@ class LoginTests(TestCase):
             {'username': self.user.email, 'password': self.password},
         )
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse('dashboard'))
         self.assertEqual(int(self.client.session[SESSION_KEY]), self.user.pk)
 
     def test_login_respects_next_destination(self):
@@ -78,14 +78,14 @@ class LoginTests(TestCase):
             {'username': self.user.email.upper(), 'password': self.password},
         )
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse('dashboard'))
 
     def test_authenticated_user_is_redirected(self):
         self.client.force_login(self.user)
 
         response = self.client.get(reverse('login'))
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse('dashboard'))
 
     def test_external_next_url_is_not_followed(self):
         response = self.client.post(
@@ -95,6 +95,21 @@ class LoginTests(TestCase):
                 'password': self.password,
                 'next': 'https://example.net/phishing',
             },
+        )
+
+        self.assertRedirects(response, reverse('dashboard'))
+
+    def test_staff_keeps_existing_post_login_destination(self):
+        staff_user = get_user_model().objects.create_user(
+            email='staff@example.com',
+            first_name='Staff',
+            password=self.password,
+            is_staff=True,
+        )
+
+        response = self.client.post(
+            reverse('login'),
+            {'username': staff_user.email, 'password': self.password},
         )
 
         self.assertRedirects(response, reverse('profile'))

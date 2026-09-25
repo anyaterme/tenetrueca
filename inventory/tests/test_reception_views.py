@@ -10,6 +10,8 @@ from catalog.models import Category, ReusableObject
 from inventory.models import InventoryItem, ReceptionInspection
 from inventory.services import inspect_reception
 from locations.models import RecyclingCenter
+from points.models import PointMovement
+from points.services import points_balance
 from publications.models import Publication
 
 
@@ -101,6 +103,7 @@ class ReceptionWorkflowTests(TestCase):
         self.assertIn('center', response.context['form'].errors)
         self.assertFalse(ReceptionInspection.objects.exists())
         self.assertFalse(InventoryItem.objects.filter(publication=publication).exists())
+        self.assertEqual(points_balance(self.owner), 0)
 
     def test_rejection_requires_reason_and_preserves_history_without_inventory(self):
         publication = self.create_publication()
@@ -135,6 +138,7 @@ class ReceptionWorkflowTests(TestCase):
                 entity_id=str(publication.pk),
             ).exists()
         )
+        self.assertEqual(points_balance(self.owner), 0)
 
     def test_acceptance_creates_one_public_inventory_item_and_is_idempotent(self):
         publication = self.create_publication()
@@ -174,6 +178,19 @@ class ReceptionWorkflowTests(TestCase):
         self.assertEqual(first_item.center, self.center)
         self.assertEqual(first_item.status, ReusableObject.Status.AVAILABLE)
         self.assertEqual(first_item.validated_by, self.operator)
+        self.assertEqual(points_balance(self.owner), 100)
+        self.assertEqual(
+            PointMovement.objects.filter(
+                user=self.owner,
+                reason=PointMovement.Reason.OBJECT_ACCEPTED,
+            ).count(),
+            1,
+        )
+        movement = PointMovement.objects.get(
+            user=self.owner,
+            reason=PointMovement.Reason.OBJECT_ACCEPTED,
+        )
+        self.assertIsNotNone(movement.operation_id)
         self.assertEqual(InventoryItem.objects.public_catalog().get(), first_item)
         self.assertTrue(
             AuditEvent.objects.filter(

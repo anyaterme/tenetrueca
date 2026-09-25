@@ -1,9 +1,11 @@
 from django.db import connection
+from django.db.models import BooleanField, Exists, OuterRef, Value
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
 from inventory.models import InventoryItem
+from catalog.models import Favorite
 
 
 def home(request):
@@ -11,8 +13,21 @@ def home(request):
         InventoryItem.objects.public_catalog()
         .select_related('center', 'category_node', 'publication')
         .with_public_photos()
-        .order_by('-created_at')[:4]
     )
+    if request.user.is_authenticated:
+        featured_objects = featured_objects.annotate(
+            is_favorite=Exists(
+                Favorite.objects.filter(
+                    user=request.user,
+                    reusable_object_id=OuterRef('pk'),
+                )
+            )
+        )
+    else:
+        featured_objects = featured_objects.annotate(
+            is_favorite=Value(False, output_field=BooleanField())
+        )
+    featured_objects = featured_objects.order_by('-created_at')[:4]
 
     if request.user.is_authenticated:
         publish_url = reverse('publications:create')

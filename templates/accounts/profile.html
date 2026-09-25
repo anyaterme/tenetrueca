@@ -12,6 +12,19 @@
 {% block account_content %}
   {% url 'profile-edit' as edit_url %}
   <div class="profile-sections">
+    {% if not is_operations_staff %}
+      <details class="account-mobile-menu">
+        <summary>
+          <span class="account-mobile-menu__icon" aria-hidden="true">⚙</span>
+          <span>Preferencias y seguridad</span>
+          <span class="account-mobile-menu__chevron" aria-hidden="true">›</span>
+        </summary>
+        <nav aria-label="Preferencias y seguridad">
+          <a href="{% url 'preferences' %}"><span>Preferencias</span><span aria-hidden="true">›</span></a>
+          <a href="{% url 'password-change' %}"><span>Cambiar contraseña</span><span aria-hidden="true">›</span></a>
+        </nav>
+      </details>
+    {% endif %}
     <section class="profile-section" aria-labelledby="personal-data-title">
       <header class="profile-section__header">
         <span class="profile-section__icon profile-section__icon--personal" aria-hidden="true">○</span>
@@ -43,6 +56,8 @@
       <dl class="profile-rows">
         {% include "components/profile_row.html" with label="Correo electrónico" value=user.email empty_label="No informado" %}
         {% include "components/profile_row.html" with label="Punto limpio habitual" value=user.habitual_recycling_center empty_label="Sin seleccionar" action_label="Cambiar" action_url=edit_url %}
+        {% url 'points:movements' as points_url %}
+        {% include "components/profile_row.html" with label="Saldo de puntos" value=points_balance empty_label="0" action_label="Ver movimientos" action_url=points_url %}
       </dl>
       <div class="profile-guidance">
         <span aria-hidden="true">i</span>

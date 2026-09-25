@@ -1,0 +1,109 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+
+{% block title %}Inicio · TRUEC@{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=20260925-3">{% endblock %}
+
+{% block account_header %}
+  <nav class="breadcrumbs dashboard-breadcrumb" aria-label="Migas de pan">
+    <a href="{% url 'dashboard' %}">Mi cuenta</a>
+    <span aria-hidden="true">›</span>
+    <span aria-current="page">Inicio</span>
+  </nav>
+  <header class="dashboard-greeting">
+    <p>Hola,</p>
+    <h1 id="account-title">{{ dashboard_name }}</h1>
+    <span class="dashboard-greeting__desktop">Tu actividad en TRUEC@, de un vistazo.</span>
+    <span class="dashboard-greeting__mobile">¿Qué te gustaría hacer hoy?</span>
+  </header>
+{% endblock %}
+
+{% block account_content %}
+  <section class="dashboard-balance" aria-labelledby="dashboard-balance-title">
+    <img src="{% static 'img/brand/trueca-icon.png' %}" alt="" width="400" height="400">
+    <div class="dashboard-balance__copy">
+      <p id="dashboard-balance-title">Tu saldo</p>
+      <strong>{{ points_balance }} punto{{ points_balance|pluralize }}</strong>
+      <small>Gana puntos cuando un objeto que entregas es aceptado.</small>
+    </div>
+    <a href="{% url 'points:movements' %}">Ver movimientos <span aria-hidden="true">›</span></a>
+    <div class="dashboard-balance__tip">
+      <span aria-hidden="true">＋</span>
+      <p>Gana puntos al entregar objetos aceptados.</p>
+    </div>
+  </section>
+
+  <div class="dashboard-actions" aria-label="Acciones principales">
+    <a class="dashboard-action dashboard-action--primary" href="{% url 'catalog:list' %}">
+      <span class="dashboard-action__search" aria-hidden="true"></span>
+      <span>Explorar catálogo</span>
+    </a>
+    <a class="dashboard-action dashboard-action--secondary" href="{% url 'publications:create' %}">
+      <span class="dashboard-action__add" aria-hidden="true">＋</span>
+      <span>Publicar un objeto</span>
+    </a>
+  </div>
+
+  <section class="dashboard-activity" id="actividad" aria-labelledby="dashboard-activity-title">
+    <div class="dashboard-section-heading">
+      <div>
+        <p>Resumen personal</p>
+        <h2 id="dashboard-activity-title">Tu actividad</h2>
+      </div>
+      <a href="{% url 'catalog:favorites' %}">Favoritos ({{ favorite_count }})</a>
+    </div>
+
+    {% if latest_publication or latest_reservation %}
+      <div class="dashboard-activity-grid">
+        <article class="dashboard-activity-card">
+          <a class="dashboard-activity-card__heading" href="{% url 'publications:list' %}">
+            <span class="dashboard-activity-card__icon" aria-hidden="true">▤</span>
+            <span><strong>Mis publicaciones</strong><small>{{ publication_count }} en total</small></span>
+            <span aria-hidden="true">›</span>
+          </a>
+          {% if latest_publication %}
+            <div class="dashboard-recent">
+              <a class="dashboard-recent__media" href="{% url 'publications:detail' latest_publication.pk %}" aria-label="Ver {{ latest_publication.title }}">
+                {% if latest_publication.dashboard_photos %}
+                  <img src="{% url 'publication_photo' photo_id=latest_publication.dashboard_photos.0.pk %}" alt="{{ latest_publication.dashboard_photos.0.alt_text|default:latest_publication.title }}" width="160" height="120">
+                {% else %}
+                  <span aria-hidden="true">{{ latest_publication.category.name|first|upper }}</span>
+                {% endif %}
+              </a>
+              <span class="dashboard-recent__content">
+                <strong><a href="{% url 'publications:detail' latest_publication.pk %}">{{ latest_publication.title }}</a></strong>
+                <span class="publication-status publication-status--{{ latest_publication.status }}">{{ latest_publication.get_status_display }}</span>
+                {% if latest_publication.status == 'rejected' or latest_publication.status == 'changes_requested' %}
+                  <a class="dashboard-recent__attention" href="{% url 'publications:detail' latest_publication.pk %}">Consultar motivo <span aria-hidden="true">›</span></a>
+                {% endif %}
+              </span>
+            </div>
+          {% endif %}
+        </article>
+
+        <article class="dashboard-activity-card">
+          <a class="dashboard-activity-card__heading" href="{% url 'reservations:list' %}">
+            <span class="dashboard-activity-card__icon" aria-hidden="true">□</span>
+            <span><strong>Mis reservas</strong><small>{{ active_reservation_count }} activa{{ active_reservation_count|pluralize }}</small></span>
+            <span aria-hidden="true">›</span>
+          </a>
+          {% if latest_reservation %}
+            <a class="dashboard-recent dashboard-recent--reservation" href="{% url 'reservations:detail' latest_reservation.public_id %}">
+              <span class="dashboard-recent__content">
+                <strong>{{ latest_reservation.inventory_item.title }}</strong>
+                <small>{{ latest_reservation.inventory_item.center.name }}</small>
+                <span class="dashboard-reservation-status dashboard-reservation-status--{{ latest_reservation.status }}">{{ latest_reservation.get_status_display }}</span>
+              </span>
+            </a>
+          {% endif %}
+        </article>
+      </div>
+    {% else %}
+      <div class="dashboard-empty" role="status">
+        <h3>Tu actividad empezará aquí</h3>
+        <p>Explora objetos disponibles o publica algo que ya no necesitas.</p>
+        <a href="{% url 'catalog:list' %}">Ver catálogo</a>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

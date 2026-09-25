@@ -3,8 +3,9 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetConfirmView, PasswordResetView
-from django.shortcuts import redirect, render, resolve_url
-from django.urls import reverse_lazy
+from django.db import models, transaction
+from django.shortcuts import redirect, render
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import FormView, TemplateView
 
@@ -17,6 +18,21 @@ from accounts.forms import (
 )
 from accounts.services import MagicLinkService
 from audit.models import AuditEvent
+from core.permissions import user_can_moderate, user_can_receive
+from points.services import award_registration_points, points_balance
+from publications.models import Publication, PublicationPhoto
+from reservations.models import Reservation
+
+
+def is_operations_staff(user):
+    return bool(
+        user.is_authenticated
+        and (user.is_staff or user_can_moderate(user) or user_can_receive(user))
+    )
+
+
+def authenticated_home_url(user):
+    return reverse('profile' if is_operations_staff(user) else 'dashboard')
 
 
 class LocalAuthenticationOnlyMixin:
@@ -38,6 +54,9 @@ class AccountLoginView(LoginView):
     template_name = 'accounts/login.html'
     redirect_authenticated_user = True
 
+    def get_default_redirect_url(self):
+        return authenticated_home_url(self.request.user)
+
 
 class MagicLinkRequestView(MagicLoginEnabledMixin, FormView):
     form_class = MagicLinkRequestForm
@@ -46,7 +65,7 @@ class MagicLinkRequestView(MagicLoginEnabledMixin, FormView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect('profile')
+            return redirect(authenticated_home_url(request.user))
         return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
@@ -87,21 +106,23 @@ class MagicLinkConsumeView(MagicLoginEnabledMixin, View):
             result='success',
             metadata={'redirected': bool(consumed.redirect_path)},
         )
-        return redirect(consumed.redirect_path or resolve_url(settings.LOGIN_REDIRECT_URL))
+        return redirect(consumed.redirect_path or authenticated_home_url(consumed.user))
 
 
 class RegisterView(LocalAuthenticationOnlyMixin, FormView):
     form_class = RegistrationForm
     template_name = 'accounts/register.html'
-    success_url = reverse_lazy('profile')
+    success_url = reverse_lazy('dashboard')
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect('profile')
+            return redirect(authenticated_home_url(request.user))
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        user = form.save()
+        with transaction.atomic():
+            user = form.save()
+            award_registration_points(user=user)
         authenticated_user = authenticate(
             self.request,
             username=user.email,
@@ -129,6 +150,57 @@ class AccountPasswordResetConfirmView(LocalAuthenticationOnlyMixin, PasswordRese
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['points_balance'] = points_balance(self.request.user)
+        return context
+
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'accounts/dashboard.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if is_operations_staff(request.user):
+            return redirect('profile')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        publications = (
+            Publication.objects.filter(submitter=user)
+            .select_related('category')
+            .prefetch_related(
+                models.Prefetch(
+                    'photos',
+                    queryset=PublicationPhoto.objects.order_by(
+                        '-is_primary', 'sort_order', 'created_at'
+                    ),
+                    to_attr='dashboard_photos',
+                )
+            )
+            .order_by('-updated_at', '-pk')
+        )
+        reservations = (
+            Reservation.objects.filter(user=user)
+            .select_related('inventory_item', 'inventory_item__center')
+            .order_by('-reserved_at', '-pk')
+        )
+        context.update(
+            {
+                'dashboard_name': user.first_name or user.username or user.email,
+                'points_balance': points_balance(user),
+                'publication_count': publications.count(),
+                'latest_publication': publications.first(),
+                'active_reservation_count': reservations.filter(
+                    status=Reservation.Status.ACTIVE
+                ).count(),
+                'latest_reservation': reservations.first(),
+                'favorite_count': user.favorites.count(),
+            }
+        )
+        return context
 
 
 class ProfileUpdateView(LoginRequiredMixin, FormView):

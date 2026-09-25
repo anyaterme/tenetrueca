@@ -1,0 +1,29 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  <link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+{% endblock %}
+
+{% block title %}Mis favoritos · TRUEC@{% endblock %}
+{% block account_breadcrumb_label %}Mis favoritos{% endblock %}
+{% block account_title %}Mis favoritos{% endblock %}
+{% block account_subtitle %}<p>Objetos que has guardado para consultar más tarde.</p>{% endblock %}
+
+{% block account_content %}
+  {% if favorite_cards %}
+    <div class="catalog-grid favorite-grid">
+      {% for card in favorite_cards %}
+        {% include "components/object_card.html" with object=card.object primary_photo=card.primary_photo detail_url=card.detail_url catalog_card=True is_available=card.object.is_available user_authenticated=True favorite_next=request.get_full_path csrf_token=csrf_token only %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <section class="profile-section account-empty">
+      <h2>Aún no tienes favoritos</h2>
+      <p>Guarda objetos desde el catálogo para encontrarlos aquí.</p>
+      <a class="button button--primary" href="{% url 'catalog:list' %}">Explorar catálogo</a>
+    </section>
+  {% endif %}
+{% endblock %}

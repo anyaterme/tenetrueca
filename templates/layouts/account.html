@@ -5,27 +5,29 @@
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/auth.css' %}">
-  <link rel="stylesheet" href="{% static 'css/account.css' %}">
+  <link rel="stylesheet" href="{% static 'css/account.css' %}?v=20260925-2">
 {% endblock %}
 
 {% block site_header %}{% include "components/header.html" with account_area=True %}{% endblock %}
 
 {% block content %}
-  <div class="account-shell">
+  <div class="account-shell{% if not is_operations_staff %} account-shell--citizen{% endif %}">
     {% include "components/account_nav.html" %}
     <section class="account-content" aria-labelledby="account-title">
-      <nav class="breadcrumbs" aria-label="Migas de pan">
-        <a href="{% url 'profile' %}">Mi cuenta</a>
-        <span aria-hidden="true">›</span>
-        <span aria-current="page">{% block account_breadcrumb_label %}{% endblock %}</span>
-      </nav>
-      <header class="account-content__header">
-        <div class="account-content__heading">
-          <h1 id="account-title">{% block account_title %}{% endblock %}</h1>
-          <div class="account-content__subtitle">{% block account_subtitle %}{% endblock %}</div>
-        </div>
-        <div class="account-content__actions">{% block account_actions %}{% endblock %}</div>
-      </header>
+      {% block account_header %}
+        <nav class="breadcrumbs" aria-label="Migas de pan">
+          <a href="{% if is_operations_staff %}{% url 'profile' %}{% else %}{% url 'dashboard' %}{% endif %}">Mi cuenta</a>
+          <span aria-hidden="true">›</span>
+          <span aria-current="page">{% block account_breadcrumb_label %}{% endblock %}</span>
+        </nav>
+        <header class="account-content__header">
+          <div class="account-content__heading">
+            <h1 id="account-title">{% block account_title %}{% endblock %}</h1>
+            <div class="account-content__subtitle">{% block account_subtitle %}{% endblock %}</div>
+          </div>
+          <div class="account-content__actions">{% block account_actions %}{% endblock %}</div>
+        </header>
+      {% endblock %}
       {% block account_content %}{% endblock %}
     </section>
   </div>

@@ -8,6 +8,8 @@ from audit.models import AuditEvent
 from catalog.models import ReusableObject, catalog_readiness_errors
 from core.permissions import allowed_reception_centers
 from inventory.models import InventoryItem, ReceptionInspection
+from operations.models import Operation
+from points.services import award_accepted_object_points
 from publications.models import Publication
 
 
@@ -16,6 +18,23 @@ def _inventory_reference(publication):
     if ReusableObject.objects.filter(reference=reference).exists():
         return f'TT-{publication.pk}-{uuid4().hex[:8]}'
     return reference
+
+
+def _deposit_operation(*, inventory_item, operator, inspection):
+    operation, _ = Operation.objects.get_or_create(
+        reference=f'DEP-{inventory_item.pk:08d}',
+        defaults={
+            'operation_type': Operation.Type.DEPOSIT,
+            'status': Operation.Status.COMPLETED,
+            'actor': operator,
+            'reusable_object': inventory_item,
+            'center': inventory_item.center,
+            'occurred_at': inspection.inspected_at,
+            'notes': 'Objeto recibido y aceptado físicamente.',
+            'metadata': {'inspection_id': inspection.pk},
+        },
+    )
+    return operation
 
 
 @transaction.atomic
@@ -54,6 +73,16 @@ def inspect_reception(
         .first()
     )
     if accepted is not None:
+        operation = _deposit_operation(
+            inventory_item=accepted.inventory_item,
+            operator=accepted.operator,
+            inspection=accepted,
+        )
+        award_accepted_object_points(
+            inventory_item=accepted.inventory_item,
+            operation=operation,
+            actor=accepted.operator,
+        )
         return accepted.inventory_item, accepted, False
 
     inspected_at = timezone.now()
@@ -143,5 +172,15 @@ def inspect_reception(
             'internal_location': internal_location,
             'notes': notes,
         },
+    )
+    operation = _deposit_operation(
+        inventory_item=inventory_item,
+        operator=operator,
+        inspection=inspection,
+    )
+    award_accepted_object_points(
+        inventory_item=inventory_item,
+        operation=operation,
+        actor=operator,
     )
     return inventory_item, inspection, True

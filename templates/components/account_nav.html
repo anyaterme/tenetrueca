@@ -2,6 +2,12 @@
   <aside class="account-nav" aria-label="Área personal">
     <p class="account-nav__title"><span aria-hidden="true">▣</span> Mi cuenta</p>
     <nav class="account-nav__items">
+      {% if not is_operations_staff %}
+        <a class="account-nav__item{% if current == 'dashboard' %} is-active{% endif %}" href="{% url 'dashboard' %}"{% if current == 'dashboard' %} aria-current="page"{% endif %}>
+          <span class="account-nav__icon" aria-hidden="true">⌂</span>
+          <span>Inicio</span>
+        </a>
+      {% endif %}
       <a class="account-nav__item{% if current == 'profile' %} is-active{% endif %}" href="{% url 'profile' %}"{% if current == 'profile' %} aria-current="page"{% endif %}>
         <span class="account-nav__icon" aria-hidden="true">○</span>
         <span>Mi perfil</span>
@@ -17,6 +23,18 @@
       <a class="account-nav__item{% if namespace == 'publications' and current != 'create' %} is-active{% endif %}" href="{% url 'publications:list' %}"{% if namespace == 'publications' and current != 'create' %} aria-current="page"{% endif %}>
         <span class="account-nav__icon" aria-hidden="true">▤</span>
         <span>Mis publicaciones</span>
+      </a>
+      <a class="account-nav__item{% if namespace == 'reservations' %} is-active{% endif %}" href="{% url 'reservations:list' %}"{% if namespace == 'reservations' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">□</span>
+        <span>Mis reservas</span>
+      </a>
+      <a class="account-nav__item{% if namespace == 'catalog' and current == 'favorites' %} is-active{% endif %}" href="{% url 'catalog:favorites' %}"{% if namespace == 'catalog' and current == 'favorites' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">☆</span>
+        <span>Mis favoritos</span>
+      </a>
+      <a class="account-nav__item{% if namespace == 'points' %} is-active{% endif %}" href="{% url 'points:movements' %}"{% if namespace == 'points' %} aria-current="page"{% endif %}>
+        <span class="account-nav__icon" aria-hidden="true">●</span>
+        <span>Movimientos de puntos</span>
       </a>
       <a class="account-nav__item{% if namespace == 'publications' and current == 'create' %} is-active{% endif %}" href="{% url 'publications:create' %}"{% if namespace == 'publications' and current == 'create' %} aria-current="page"{% endif %}>
         <span class="account-nav__icon" aria-hidden="true">＋</span>

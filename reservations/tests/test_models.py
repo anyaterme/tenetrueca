@@ -77,12 +77,21 @@ class ReservationModelTests(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             Reservation.objects.bulk_create([duplicate])
 
-    def test_reservation_does_not_change_inventory_status(self):
+    def test_direct_reservation_model_does_not_change_inventory_status(self):
         Reservation.objects.create(**self.reservation_data(self.requester))
 
         self.item.refresh_from_db()
         self.assertEqual(self.item.status, InventoryItem.Status.AVAILABLE)
         self.assertNotIn(self.item, InventoryItem.objects.available())
+
+    def test_owner_cannot_create_a_reservation_for_own_publication(self):
+        with self.assertRaisesMessage(
+            ValidationError,
+            'No puedes reservar un objeto que has publicado.',
+        ):
+            Reservation.objects.create(**self.reservation_data(self.owner))
+
+        self.assertFalse(Reservation.objects.filter(inventory_item=self.item).exists())
 
     def test_terminal_inventory_item_cannot_receive_active_reservation(self):
         for status in (InventoryItem.Status.DELIVERED, InventoryItem.Status.WITHDRAWN):

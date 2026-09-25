@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
   {% block extra_css %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}{% if user.is_authenticated and not is_operations_staff %} body--citizen-nav{% endif %}">
   <a class="skip-link" href="#main">Saltar al contenido</a>
   {% block body %}
     {% block site_header %}{% include "components/header.html" %}{% endblock %}
@@ -19,6 +19,9 @@
       {% block content %}{% endblock %}
     </main>
     {% block site_footer %}{% include "components/footer.html" %}{% endblock %}
+    {% if user.is_authenticated and not is_operations_staff %}
+      {% include "components/mobile_nav.html" %}
+    {% endif %}
   {% endblock %}
   {% block extra_js %}{% endblock %}
 </body>

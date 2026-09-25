@@ -17,6 +17,12 @@ class HierarchicalCategoryChoiceField(forms.ModelChoiceField):
 
 
 class CatalogFilterForm(forms.Form):
+    ORDERING_CHOICES = (
+        ('', 'Más recientes'),
+        ('oldest', 'Más antiguos'),
+        ('title', 'Nombre A-Z'),
+    )
+
     q = forms.CharField(
         required=False,
         max_length=120,
@@ -49,6 +55,12 @@ class CatalogFilterForm(forms.Form):
         to_field_name='slug',
         empty_label='Todos los puntos limpios',
         label='Punto Limpio',
+    )
+    ordering = forms.ChoiceField(
+        required=False,
+        choices=ORDERING_CHOICES,
+        label='Ordenar por',
+        widget=forms.Select(attrs={'form': 'catalog-search-form'}),
     )
 
     def __init__(self, *args, **kwargs):

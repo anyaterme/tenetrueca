@@ -112,7 +112,7 @@ class MagicLinkTests(TestCase):
             reverse('magic-login-consume', kwargs={'token': raw_token})
         )
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse('dashboard'))
         self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
         token = MagicLoginToken.objects.get()
         self.assertIsNotNone(token.used_at)
@@ -207,7 +207,7 @@ class MagicLinkTests(TestCase):
             reverse('magic-login-consume', kwargs={'token': raw_token})
         )
 
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse('dashboard'))
 
     @override_settings(AUTH_PROVIDER='remote')
     def test_magic_link_is_independent_from_password_provider(self):
@@ -218,7 +218,7 @@ class MagicLinkTests(TestCase):
         consume_response = self.client.get(
             reverse('magic-login-consume', kwargs={'token': raw_token})
         )
-        self.assertRedirects(consume_response, reverse('profile'))
+        self.assertRedirects(consume_response, reverse('dashboard'))
 
     @override_settings(MAGIC_LOGIN_ENABLED=False)
     def test_disabled_feature_hides_entry_and_rejects_endpoints(self):

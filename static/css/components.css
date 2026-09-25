@@ -100,6 +100,10 @@
   color: var(--color-blue);
 }
 
+.citizen-mobile-nav {
+  display: none;
+}
+
 .hero {
   background: var(--color-soft);
   padding: 5rem 0;
@@ -412,7 +416,113 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
+  .body--citizen-nav {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  .citizen-mobile-nav {
+    position: fixed;
+    z-index: 90;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-height: calc(68px + env(safe-area-inset-bottom));
+    padding: 6px 8px calc(5px + env(safe-area-inset-bottom));
+    border-top: 1px solid #d7e0e4;
+    background: rgba(255, 255, 255, .98);
+    box-shadow: 0 -5px 18px rgba(20, 47, 60, .08);
+  }
+
+  .citizen-mobile-nav a {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    min-height: 56px;
+    align-content: center;
+    justify-items: center;
+    gap: 3px;
+    padding: 3px 2px;
+    color: #596872;
+    font-size: .72rem;
+    font-weight: 650;
+    line-height: 1.1;
+    text-decoration: none;
+  }
+
+  .citizen-mobile-nav a.is-active {
+    color: #075d42;
+    font-weight: 800;
+  }
+
+  .citizen-mobile-nav a.is-active::after {
+    position: absolute;
+    right: 18%;
+    bottom: 0;
+    left: 18%;
+    height: 3px;
+    border-radius: 3px;
+    background: #087653;
+    content: "";
+  }
+
+  .citizen-mobile-nav__icon {
+    position: relative;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    font-size: 1.65rem;
+    line-height: 1;
+  }
+
+  .citizen-mobile-nav__icon--search::before {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    content: "";
+  }
+
+  .citizen-mobile-nav__icon--search::after {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 9px;
+    border-top: 2px solid currentColor;
+    content: "";
+    transform: rotate(45deg);
+  }
+
+  .citizen-mobile-nav__icon--add {
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    font-size: 1.45rem;
+  }
+
+  .citizen-mobile-nav__icon--account::before {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+  }
+
+  .citizen-mobile-nav__icon--account::after {
+    width: 22px;
+    height: 10px;
+    margin-top: -3px;
+    border-radius: 12px 12px 4px 4px;
+    background: currentColor;
+    content: "";
+  }
+
+  .site-header--citizen .site-nav__catalog {
+    display: none;
+  }
+
   .hero__grid {
     display: block;
   }

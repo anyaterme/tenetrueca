@@ -1,6 +1,7 @@
 from datetime import timedelta
 from io import BytesIO
 from tempfile import TemporaryDirectory
+from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -210,6 +211,7 @@ class PublicCatalogTests(TestCase):
                 'category': self.parent_category.slug,
                 'subcategory': self.category.slug,
                 'center': self.center.slug,
+                'ordering': 'oldest',
             },
         )
 
@@ -217,7 +219,7 @@ class PublicCatalogTests(TestCase):
         self.assertTrue(response.context['page_obj'].has_next())
         self.assertContains(
             response,
-            'q=Mesa&amp;category=hogar&amp;subcategory=muebles&amp;center=punto-limpio-norte&amp;page=2',
+            'q=Mesa&amp;category=hogar&amp;subcategory=muebles&amp;center=punto-limpio-norte&amp;ordering=oldest&amp;page=2',
         )
 
         second_page = self.client.get(
@@ -227,10 +229,79 @@ class PublicCatalogTests(TestCase):
                 'category': self.parent_category.slug,
                 'subcategory': self.category.slug,
                 'center': self.center.slug,
+                'ordering': 'oldest',
                 'page': 2,
             },
         )
         self.assertEqual(len(second_page.context['page_obj'].object_list), 1)
+
+    def test_ordering_supports_oldest_and_title_without_changing_default(self):
+        newest = self.create_item('Zulu más reciente')
+        oldest = self.create_item('Alfa más antiguo')
+
+        default_response = self.client.get(reverse('catalog:list'))
+        oldest_response = self.client.get(
+            reverse('catalog:list'), {'ordering': 'oldest'}
+        )
+        title_response = self.client.get(
+            reverse('catalog:list'), {'ordering': 'title'}
+        )
+
+        self.assertEqual(
+            list(default_response.context['page_obj'].object_list),
+            [newest, oldest],
+        )
+        self.assertEqual(
+            list(oldest_response.context['page_obj'].object_list),
+            [oldest, newest],
+        )
+        self.assertEqual(
+            list(title_response.context['page_obj'].object_list),
+            [oldest, newest],
+        )
+
+    def test_active_filter_chips_remove_only_the_selected_filter(self):
+        self.create_item('Mesa filtrada')
+
+        response = self.client.get(
+            reverse('catalog:list'),
+            {
+                'q': 'Mesa',
+                'category': self.parent_category.slug,
+                'subcategory': self.category.slug,
+                'center': self.center.slug,
+                'ordering': 'oldest',
+            },
+        )
+
+        chips = {chip['key']: chip for chip in response.context['active_filter_chips']}
+        self.assertEqual(response.context['active_filter_count'], 3)
+        self.assertEqual(set(chips), {'center', 'category', 'subcategory'})
+
+        category_query = parse_qs(urlparse(chips['category']['remove_url']).query)
+        self.assertNotIn('category', category_query)
+        self.assertNotIn('subcategory', category_query)
+        self.assertEqual(category_query['center'], [self.center.slug])
+        self.assertEqual(category_query['q'], ['Mesa'])
+        self.assertEqual(category_query['ordering'], ['oldest'])
+
+        center_query = parse_qs(urlparse(chips['center']['remove_url']).query)
+        self.assertNotIn('center', center_query)
+        self.assertEqual(center_query['category'], [self.parent_category.slug])
+        self.assertEqual(center_query['subcategory'], [self.category.slug])
+        self.assertEqual(center_query['ordering'], ['oldest'])
+
+    def test_catalog_card_uses_branded_fallback_instead_of_category_initial(self):
+        item = self.create_item('Mesa sin fotografía')
+
+        response = self.client.get(reverse('catalog:list'))
+
+        self.assertContains(
+            response,
+            f'aria-label="Sin fotografía disponible para {item.title}"',
+        )
+        self.assertContains(response, 'img/brand/trueca-icon.png')
+        self.assertContains(response, 'Sin fotografía')
 
     def test_available_object_detail_shows_public_fields_and_photos(self):
         item = self.create_item('Mesa con fotografía', with_photo=True)

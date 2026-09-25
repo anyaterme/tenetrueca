@@ -18,6 +18,7 @@
         {% endif %}
         {% if can_receive_objects %}
           <a href="{% url 'inventory:reception_queue' %}"{% if staff_section == 'reception' %} class="is-active" aria-current="page"{% endif %}>Recepción</a>
+          <a href="{% url 'inventory:reception_queue' %}"{% if staff_section == 'pickup' %} class="is-active" aria-current="page"{% endif %}>Recogidas QR</a>
         {% endif %}
       </nav>
     </aside>

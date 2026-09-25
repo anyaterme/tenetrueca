@@ -66,6 +66,23 @@
       {% if object.center.public_information %}
         <p class="catalog-detail__center-note">{{ object.center.public_information }}</p>
       {% endif %}
+      {% if user.is_authenticated %}
+        <form class="favorite-detail-action" method="post" action="{% if object.is_favorite %}{% url 'catalog:favorite_remove' object.reference %}{% else %}{% url 'catalog:favorite_add' object.reference %}{% endif %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="button button--secondary" type="submit">{% if object.is_favorite %}★ Quitar de favoritos{% else %}☆ Guardar en favoritos{% endif %}</button>
+        </form>
+        {% if is_own_object %}
+          <p class="catalog-detail__notice"><span aria-hidden="true">i</span>No puedes reservar un objeto que has publicado.</p>
+        {% else %}
+          <form method="post" action="{% url 'reservations:create' object.reference %}">
+            {% csrf_token %}
+            <button class="button button--primary" type="submit">Reservar objeto</button>
+          </form>
+        {% endif %}
+      {% else %}
+        <a class="button button--primary" href="{% url 'login' %}?next={{ request.path }}">Inicia sesión para reservar</a>
+      {% endif %}
       <a class="catalog-detail__back" href="{% url 'catalog:list' %}">Volver al catálogo</a>
       <p class="catalog-detail__notice"><span aria-hidden="true">i</span>La recogida se realiza en el Punto Limpio indicado.</p>
     </article>

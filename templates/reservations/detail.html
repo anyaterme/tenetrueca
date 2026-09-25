@@ -1,0 +1,52 @@
+{% extends "layouts/account.html" %}
+
+{% block title %}Reserva de {{ reservation.inventory_item.title }} · TRUEC@{% endblock %}
+{% block account_breadcrumb_label %}Reserva{% endblock %}
+{% block account_title %}{{ reservation.inventory_item.title }}{% endblock %}
+{% block account_subtitle %}<p>Recogida en {{ reservation.inventory_item.center.name }} antes del {{ reservation.expires_at|date:"d/m/Y H:i" }}.</p>{% endblock %}
+{% block account_actions %}<a class="button button--secondary" href="{% url 'reservations:list' %}">Mis reservas</a>{% endblock %}
+
+{% block account_content %}
+  <div class="reservation-detail-grid">
+    <section class="profile-section" aria-labelledby="reservation-summary-title">
+      <header class="profile-section__header">
+        <span class="profile-section__icon profile-section__icon--account" aria-hidden="true">▤</span>
+        <div>
+          <h2 id="reservation-summary-title">Confirmación</h2>
+          <p>{{ reservation.get_status_display }}</p>
+        </div>
+      </header>
+      <dl class="profile-rows">
+        {% include "components/profile_row.html" with label="Objeto" value=reservation.inventory_item.title empty_label="Sin título" %}
+        {% include "components/profile_row.html" with label="Referencia" value=reservation.inventory_item.reference empty_label="Sin referencia" %}
+        {% include "components/profile_row.html" with label="Punto Limpio" value=reservation.inventory_item.center.name empty_label="Sin centro" %}
+        {% include "components/profile_row.html" with label="Reservada" value=reservation.reserved_at empty_label="Sin fecha" %}
+        {% include "components/profile_row.html" with label="Fecha límite" value=reservation.expires_at empty_label="Sin fecha" %}
+        {% if reservation.completed_at %}
+          {% include "components/profile_row.html" with label="Recogida" value=reservation.completed_at empty_label="Sin fecha" %}
+        {% endif %}
+      </dl>
+      {% if reservation.status == "active" %}
+        <form method="post" action="{% url 'reservations:cancel' reservation.public_id %}">
+          {% csrf_token %}
+          <button class="button button--secondary" type="submit">Cancelar reserva</button>
+        </form>
+      {% endif %}
+    </section>
+
+    <aside class="profile-section reservation-qr" aria-labelledby="reservation-qr-title">
+      <header class="profile-section__header">
+        <span class="profile-section__icon profile-section__icon--personal" aria-hidden="true">□</span>
+        <div>
+          <h2 id="reservation-qr-title">QR de recogida</h2>
+          <p>Muéstralo al personal del Punto Limpio.</p>
+        </div>
+      </header>
+      {% if qr_data_uri %}
+        <img class="reservation-qr__image" src="{{ qr_data_uri }}" alt="QR de recogida de la reserva">
+      {% else %}
+        <p class="profile-guidance">El QR ya no está activo para esta reserva.</p>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

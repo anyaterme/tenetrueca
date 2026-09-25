@@ -1,0 +1,40 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Recogida de {{ reservation.inventory_item.title }} · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Recogida con QR{% endblock %}
+{% block staff_title %}Recogida de reserva{% endblock %}
+{% block staff_subtitle %}<p>Revisa los datos antes de confirmar la entrega. La lectura del QR no completa la recogida.</p>{% endblock %}
+
+{% block staff_content %}
+  <div class="review-grid">
+    <section class="staff-panel" aria-labelledby="pickup-reservation-title">
+      <div class="staff-panel__heading">
+        <h2 id="pickup-reservation-title">{{ reservation.inventory_item.title }}</h2>
+        <span class="publication-status publication-status--approved">{{ reservation.get_status_display }}</span>
+      </div>
+      <dl class="review-data">
+        <div><dt>Persona</dt><dd>{{ reservation.user.get_full_name|default:reservation.user.email }}</dd></div>
+        <div><dt>Objeto</dt><dd>{{ reservation.inventory_item.reference }}</dd></div>
+        <div><dt>Punto Limpio</dt><dd>{{ reservation.inventory_item.center.name }}</dd></div>
+        <div><dt>Fecha límite</dt><dd>{{ reservation.expires_at|date:"d/m/Y H:i" }}</dd></div>
+      </dl>
+    </section>
+    <aside class="review-sidebar">
+      <section class="staff-panel" aria-labelledby="pickup-confirm-title">
+        <h2 id="pickup-confirm-title">Confirmar entrega</h2>
+        <p class="staff-muted">Solo confirma si el objeto se entrega físicamente a la persona de la reserva.</p>
+        {% if pickup_error %}<div class="staff-error" role="alert">{{ pickup_error }}</div>{% endif %}
+        {% if reservation.status == "active" %}
+          <form method="post">
+            {% csrf_token %}
+            <button class="button button--primary" type="submit">Completar recogida</button>
+            <a class="button button--secondary" href="{{ cancel_url }}">Volver</a>
+          </form>
+        {% else %}
+          <div class="staff-success"><strong>Recogida completada</strong><p>{{ reservation.completed_at|date:"d/m/Y H:i" }} · {{ reservation.pickup_center.name }}</p></div>
+          <a class="button button--secondary" href="{{ cancel_url }}">Volver</a>
+        {% endif %}
+      </section>
+    </aside>
+  </div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% with current=request.resolver_match.url_name namespace=request.resolver_match.namespace %}
+  <nav class="citizen-mobile-nav" aria-label="Navegación ciudadana">
+    <a href="{% url 'catalog:list' %}"{% if namespace == 'catalog' and current != 'favorites' %} class="is-active" aria-current="page"{% endif %}>
+      <span class="citizen-mobile-nav__icon citizen-mobile-nav__icon--search" aria-hidden="true"></span>
+      <span>Catálogo</span>
+    </a>
+    <a href="{% url 'publications:create' %}"{% if namespace == 'publications' and current == 'create' %} class="is-active" aria-current="page"{% endif %}>
+      <span class="citizen-mobile-nav__icon citizen-mobile-nav__icon--add" aria-hidden="true">＋</span>
+      <span>Publicar</span>
+    </a>
+    <a href="{% url 'dashboard' %}#actividad"{% if current == 'dashboard' or namespace == 'reservations' or namespace == 'publications' and current != 'create' or namespace == 'catalog' and current == 'favorites' %} class="is-active" aria-current="page"{% endif %}>
+      <span class="citizen-mobile-nav__icon citizen-mobile-nav__icon--activity" aria-hidden="true">☷</span>
+      <span>Actividad</span>
+    </a>
+    <a href="{% url 'profile' %}"{% if current == 'profile' or current == 'profile-edit' or current == 'preferences' or current == 'password-change' or namespace == 'points' %} class="is-active" aria-current="page"{% endif %}>
+      <span class="citizen-mobile-nav__icon citizen-mobile-nav__icon--account" aria-hidden="true"></span>
+      <span>Cuenta</span>
+    </a>
+  </nav>
+{% endwith %}

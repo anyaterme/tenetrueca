@@ -1,8 +1,8 @@
 {% load static %}
-<header class="site-header">
+<header class="site-header{% if user.is_authenticated and not is_operations_staff %} site-header--citizen{% endif %}">
   <div class="site-shell site-header__inner">
     <div class="site-brand-lockup">
-      <a class="brand" href="{% url 'home' %}" aria-label="TRUEC@, inicio">
+      <a class="brand" href="{% if user.is_authenticated and not is_operations_staff %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}" aria-label="TRUEC@, inicio">
         <img
           class="brand__logo"
           src="{% static 'img/brand/trueca-horizontal.png' %}"

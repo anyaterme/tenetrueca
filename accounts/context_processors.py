@@ -11,7 +11,13 @@ def authentication_capabilities(request):
 
 
 def staff_capabilities(request):
+    can_moderate = user_can_moderate(request.user)
+    can_receive = user_can_receive(request.user)
     return {
-        'can_moderate_publications': user_can_moderate(request.user),
-        'can_receive_objects': user_can_receive(request.user),
+        'can_moderate_publications': can_moderate,
+        'can_receive_objects': can_receive,
+        'is_operations_staff': bool(
+            request.user.is_authenticated
+            and (request.user.is_staff or can_moderate or can_receive)
+        ),
     }

@@ -30,6 +30,8 @@ urlpatterns = [
     path('cuenta/', include('accounts.urls')),
     path('catalogo/', include('catalog.urls')),
     path('publicaciones/', include('publications.citizen_urls')),
+    path('reservas/', include('reservations.urls')),
+    path('cuenta/puntos/', include('points.urls')),
     path('moderacion/', include('moderation.urls')),
     path('recepcion/', include('inventory.urls')),
     path('fotografias/', include('publications.urls')),

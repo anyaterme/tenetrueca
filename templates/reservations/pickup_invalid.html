@@ -1,0 +1,13 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}QR no válido · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Recogida con QR{% endblock %}
+{% block staff_title %}QR no válido{% endblock %}
+{% block staff_subtitle %}<p>No se puede continuar con esta recogida.</p>{% endblock %}
+
+{% block staff_content %}
+  <section class="staff-panel">
+    <div class="staff-form__errors" role="alert">{{ error_message }}</div>
+    <a class="button button--secondary" href="{% url 'inventory:reception_queue' %}">Volver a gestión</a>
+  </section>
+{% endblock %}
