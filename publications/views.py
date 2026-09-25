@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from audit.models import AuditEvent
-from core.permissions import user_can_moderate, user_can_receive
+from core.permissions import scope_publications, user_can_moderate, user_can_receive
 from moderation.models import ModerationDecision
 from publications.forms import (
     CitizenPublicationForm,
@@ -122,12 +122,17 @@ def publication_photo(request, photo_id):
         PublicationPhoto.objects.select_related('publication'),
         pk=photo_id,
     )
+    scoped_publication = scope_publications(
+        request.user,
+        Publication.objects.filter(pk=photo.publication_id),
+    ).exists()
     user_can_review = request.user.is_authenticated and (
         request.user.pk == photo.publication.submitter_id
-        or user_can_moderate(request.user)
+        or (user_can_moderate(request.user) and scoped_publication)
         or (
             photo.publication.status == Publication.Status.APPROVED
             and user_can_receive(request.user)
+            and scoped_publication
         )
     )
     is_publicly_accessible = photo.is_publicly_accessible

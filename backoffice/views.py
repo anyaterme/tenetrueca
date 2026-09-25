@@ -29,6 +29,9 @@ from backoffice.services import (
 )
 from core.permissions import (
     allowed_reception_centers,
+    operational_scope,
+    scope_publications,
+    scope_reservations,
     user_can_access_backoffice,
     user_can_manage_staff,
     user_can_manage_users,
@@ -67,11 +70,15 @@ def _dashboard_tasks(user, centers):
     tasks = []
 
     if user_can_moderate(user):
-        publications = (
+        publications = scope_publications(
+            user,
             Publication.objects.filter(
                 status=Publication.Status.PENDING_REVIEW,
                 submitted_at__isnull=False,
-            )
+            ),
+        )
+        publications = (
+            publications
             .select_related('submitter', 'category', 'submitter__habitual_recycling_center')
             .order_by('submitted_at', 'pk')[:6]
         )
@@ -93,11 +100,15 @@ def _dashboard_tasks(user, centers):
             )
 
     if centers.exists():
-        publications = (
+        publications = scope_publications(
+            user,
             Publication.objects.filter(
                 status=Publication.Status.APPROVED,
                 inventory_object__isnull=True,
-            )
+            ),
+        )
+        publications = (
+            publications
             .select_related('submitter', 'category')
             .order_by('approved_at', 'pk')[:6]
         )
@@ -118,12 +129,16 @@ def _dashboard_tasks(user, centers):
                 }
             )
 
-        reservations = (
+        reservations = scope_reservations(
+            user,
             Reservation.objects.filter(
                 status=Reservation.Status.ACTIVE,
                 expires_at__gt=timezone.now(),
                 inventory_item__center__in=centers,
-            )
+            ),
+        )
+        reservations = (
+            reservations
             .select_related('user', 'inventory_item', 'inventory_item__center')
             .order_by('expires_at', 'pk')[:6]
         )
@@ -158,12 +173,14 @@ def dashboard(request):
 
     metrics = []
     if can_moderate:
+        pending_publications = scope_publications(
+            request.user,
+            Publication.objects.filter(status=Publication.Status.PENDING_REVIEW),
+        )
         metrics.append(
             {
                 'label': 'Por moderar',
-                'value': Publication.objects.filter(
-                    status=Publication.Status.PENDING_REVIEW
-                ).count(),
+                'value': pending_publications.count(),
                 'note': 'Publicaciones pendientes',
                 'tone': 'warning',
                 'icon': 'file-check',
@@ -171,14 +188,26 @@ def dashboard(request):
             }
         )
     if centers.exists():
+        reception_publications = scope_publications(
+            request.user,
+            Publication.objects.filter(
+                status=Publication.Status.APPROVED,
+                inventory_object__isnull=True,
+            ),
+        )
+        active_pickups = scope_reservations(
+            request.user,
+            Reservation.objects.filter(
+                status=Reservation.Status.ACTIVE,
+                expires_at__gt=timezone.now(),
+                inventory_item__center__in=centers,
+            ),
+        )
         metrics.extend(
             [
                 {
                     'label': 'Pendientes de recepción',
-                    'value': Publication.objects.filter(
-                        status=Publication.Status.APPROVED,
-                        inventory_object__isnull=True,
-                    ).count(),
+                    'value': reception_publications.count(),
                     'note': 'Objetos aprobados',
                     'tone': 'success',
                     'icon': 'package',
@@ -186,11 +215,7 @@ def dashboard(request):
                 },
                 {
                     'label': 'Recogidas activas',
-                    'value': Reservation.objects.filter(
-                        status=Reservation.Status.ACTIVE,
-                        expires_at__gt=timezone.now(),
-                        inventory_item__center__in=centers,
-                    ).count(),
+                    'value': active_pickups.count(),
                     'note': 'En tus centros',
                     'tone': 'info',
                     'icon': 'qr',
@@ -254,17 +279,31 @@ def dashboard(request):
 
 
 @login_required
+def no_assignment(request):
+    scope = operational_scope(request.user)
+    if not scope.is_manager:
+        return redirect('backoffice:dashboard')
+    if scope.center is not None:
+        return redirect('backoffice:dashboard')
+    return render(request, 'backoffice/no_assignment.html')
+
+
+@login_required
 def pickup_queue(request):
     _require_backoffice(request.user)
     centers = allowed_reception_centers(request.user)
     if not centers.exists():
         raise PermissionDenied
-    reservations = (
+    reservations = scope_reservations(
+        request.user,
         Reservation.objects.filter(
             status=Reservation.Status.ACTIVE,
             expires_at__gt=timezone.now(),
             inventory_item__center__in=centers,
-        )
+        ),
+    )
+    reservations = (
+        reservations
         .select_related('user', 'inventory_item', 'inventory_item__center')
         .order_by('expires_at', 'pk')
     )
@@ -452,7 +491,11 @@ def team_add(request):
                     else:
                         user.set_unusable_password()
                     user.save()
-                    assign_staff_role(user, form.cleaned_data['role'])
+                    assign_staff_role(
+                        user,
+                        form.cleaned_data['role'],
+                        center=form.cleaned_data['center'],
+                    )
                     record_staff_event(
                         actor=request.user,
                         target=user,
@@ -460,6 +503,7 @@ def team_add(request):
                         metadata={
                             'role': form.cleaned_data['role'],
                             'new_account': True,
+                            'center_id': getattr(form.cleaned_data['center'], 'pk', None),
                         },
                     )
                     if temporary_password is None:
@@ -519,6 +563,7 @@ def team_grant_existing(request):
     User = get_user_model()
     target = get_object_or_404(User, pk=request.POST.get('user_id'))
     role = request.POST.get('role', '')
+    center_id = request.POST.get('center', '')
     provisioning_method = request.POST.get(
         'provisioning_method',
         StaffInviteForm.ProvisioningMethod.INVITATION,
@@ -529,6 +574,11 @@ def team_grant_existing(request):
     if provisioning_method not in StaffInviteForm.ProvisioningMethod.values:
         messages.error(request, 'El método de acceso seleccionado no es válido.')
         return redirect('backoffice:team_add')
+    from locations.models import RecyclingCenter
+
+    center = None
+    if role == StaffInvitation.Role.MANAGER and center_id:
+        center = get_object_or_404(RecyclingCenter, pk=center_id, is_active=True)
 
     temporary_password = None
     try:
@@ -556,13 +606,17 @@ def team_grant_existing(request):
                     'deactivated_at',
                 ]
             )
-            assign_staff_role(target, role)
+            assign_staff_role(target, role, center=center)
             if not was_staff:
                 record_staff_event(
                     actor=request.user,
                     target=target,
                     action=StaffAuditEvent.Action.ACCESS_GRANTED,
-                    metadata={'role': role, 'existing_account': True},
+                    metadata={
+                        'role': role,
+                        'existing_account': True,
+                        'center_id': getattr(center, 'pk', None),
+                    },
                 )
             if not was_active:
                 record_staff_event(
@@ -642,6 +696,11 @@ def _staff_member_or_404(pk):
 def team_detail(request, pk):
     member = _staff_member_or_404(pk)
     current_role = staff_role_value(member)
+    assigned_center = (
+        member.center_accesses.filter(is_active=True)
+        .select_related('center')
+        .first()
+    )
     form = StaffMemberForm(
         request.POST or None,
         user=member,
@@ -662,8 +721,12 @@ def team_detail(request, pk):
         else:
             with transaction.atomic():
                 form.save()
+                assign_staff_role(
+                    member,
+                    new_role,
+                    center=form.cleaned_data['center'],
+                )
                 if current_role != new_role:
-                    assign_staff_role(member, new_role)
                     record_staff_event(
                         actor=request.user,
                         target=member,
@@ -691,6 +754,7 @@ def team_detail(request, pk):
             'activity': activity,
             'staff_since': staff_since,
             'current_role_label': staff_role_label(member),
+            'assigned_center': assigned_center.center if assigned_center else None,
             'pending_invitation': member.staff_invitations.filter(
                 accepted_at__isnull=True,
                 invalidated_at__isnull=True,
@@ -827,13 +891,15 @@ def staff_invitation_accept(request, token):
                 pending.user.save(update_fields=['must_change_password'])
             StaffInvitationService.accept(pending.record)
         if requires_password:
+            from accounts.views import authenticated_home_url
+
             login(
                 request,
                 pending.user,
                 backend=settings.AUTHENTICATION_BACKENDS[0],
             )
             messages.success(request, 'Tu acceso al equipo ya está preparado.')
-            return redirect('backoffice:dashboard')
+            return redirect(authenticated_home_url(pending.user))
         messages.success(request, 'Invitación aceptada. Ya puedes iniciar sesión.')
         return redirect('login')
 

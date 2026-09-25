@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from core.permissions import allowed_reception_centers
+from core.permissions import allowed_reception_centers, scope_publications
 from inventory.forms import ReceptionInspectionForm, ReceptionQueueFilterForm
 from inventory.models import ReceptionInspection
 from inventory.services import inspect_reception
@@ -54,7 +54,10 @@ def reception_queue(request):
     if not filter_data:
         filter_data.update({'ordering': 'oldest'})
     filter_form = ReceptionQueueFilterForm(filter_data)
-    publications = _approved_publications().filter(inventory_object__isnull=True)
+    publications = scope_publications(
+        request.user,
+        _approved_publications().filter(inventory_object__isnull=True),
+    )
     if filter_form.is_valid():
         query = filter_form.cleaned_data['q']
         ordering = filter_form.cleaned_data['ordering'] or 'oldest'
@@ -93,7 +96,10 @@ def reception_queue(request):
 @login_required
 def reception_detail(request, pk):
     centers = _require_reception_access(request.user)
-    publication = get_object_or_404(_approved_publications(), pk=pk)
+    publication = get_object_or_404(
+        scope_publications(request.user, _approved_publications()),
+        pk=pk,
+    )
     accepted_inspection = next(
         (
             inspection

@@ -49,6 +49,16 @@
     });
   });
 
+  var roleField = document.getElementById('id_role');
+  var managerCenter = document.querySelector('[data-manager-center]');
+  if (roleField && managerCenter) {
+    function syncManagerCenter() {
+      managerCenter.hidden = roleField.value !== 'manager';
+    }
+    roleField.addEventListener('change', syncManagerCenter);
+    syncManagerCenter();
+  }
+
   document.querySelectorAll('[data-override-toggle]').forEach(function (toggle) {
     var target = document.getElementById(toggle.dataset.overrideToggle);
     if (!target) return;

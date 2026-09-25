@@ -81,9 +81,9 @@ class EmailConfigurationTests(TestCase):
             200,
         )
         self.client.force_login(self.manager)
-        self.assertEqual(
-            self.client.get(reverse('configuration:email')).status_code,
-            403,
+        self.assertRedirects(
+            self.client.get(reverse('configuration:email')),
+            reverse('backoffice:no_assignment'),
         )
         self.client.force_login(self.citizen)
         self.assertEqual(

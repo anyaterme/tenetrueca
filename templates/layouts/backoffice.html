@@ -68,12 +68,16 @@
           <span class="staff-topbar__context">Gestión operativa</span>
         {% endif %}
         <div class="staff-topbar__spacer"></div>
-        {% if staff_centers %}
-          <span class="staff-center-summary">{% include "components/backoffice_icon.html" with name="building" %}<span>{% if staff_centers|length == 1 %}{{ staff_centers.0.name }}{% else %}{{ staff_centers|length }} centros asignados{% endif %}</span>{% include "components/backoffice_icon.html" with name="chevron-down" class_name="staff-center-summary__chevron" %}</span>
+        {% if is_backoffice_administrator %}
+          <span class="staff-center-summary">{% include "components/backoffice_icon.html" with name="building" %}<span>Todos los centros</span></span>
+        {% elif is_backoffice_manager and operational_center %}
+          <span class="staff-center-summary">{% include "components/backoffice_icon.html" with name="building" %}<span>{{ operational_center.name }}</span></span>
+        {% elif staff_centers %}
+          <span class="staff-center-summary">{% include "components/backoffice_icon.html" with name="building" %}<span>{% if staff_centers|length == 1 %}{{ staff_centers.0.name }}{% else %}{{ staff_centers|length }} centros asignados{% endif %}</span></span>
         {% endif %}
         <a class="staff-account" href="{% url 'profile' %}">
           <span class="staff-account__avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
-          <span class="staff-account__copy"><strong>{{ user.get_full_name|default:user.email }}</strong><small>{% if user.is_superuser %}Administración{% elif can_manage_staff %}Gestión funcional{% elif can_moderate_publications %}Moderación{% else %}Operaciones{% endif %}</small></span>
+          <span class="staff-account__copy"><strong>{{ user.get_full_name|default:user.email }}</strong><small>{% if is_backoffice_administrator %}Administrador{% elif is_backoffice_manager %}Gestor{% elif can_manage_staff %}Gestión funcional{% elif can_moderate_publications %}Moderación{% else %}Operaciones{% endif %}</small></span>
         </a>
         <form class="staff-logout" method="post" action="{% url 'logout' %}">
           {% csrf_token %}

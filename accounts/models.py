@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
@@ -129,6 +130,29 @@ class UserCenterAccess(TimeStampedModel):
             models.Index(fields=['user', 'is_active']),
             models.Index(fields=['center', 'role', 'is_active']),
         ]
+
+    def clean(self):
+        super().clean()
+        if not self.is_active or not self.user_id:
+            return
+        from core.roles import ROLE_STAFF_MANAGER
+
+        if not self.user.groups.filter(name=ROLE_STAFF_MANAGER).exists():
+            return
+        conflicting = UserCenterAccess.objects.filter(
+            user_id=self.user_id,
+            is_active=True,
+        ).exclude(center_id=self.center_id)
+        if self.pk:
+            conflicting = conflicting.exclude(pk=self.pk)
+        if conflicting.exists():
+            raise ValidationError(
+                'Un gestor no puede tener más de un punto limpio activo.'
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.user} - {self.center} ({self.role})'

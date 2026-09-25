@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from audit.models import AuditEvent
 from catalog.models import ReusableObject, catalog_readiness_errors
-from core.permissions import allowed_reception_centers
+from core.permissions import allowed_reception_centers, scope_publications
 from inventory.models import InventoryItem, ReceptionInspection
 from operations.models import Operation
 from points.services import award_accepted_object_points
@@ -57,10 +57,17 @@ def inspect_reception(
     if decision == ReceptionInspection.Decision.REJECT and not notes:
         raise ValidationError('El rechazo requiere un motivo.')
 
-    publication = Publication.objects.select_for_update().select_related(
-        'submitter',
-        'category',
-    ).get(pk=publication_id)
+    publications = scope_publications(
+        operator,
+        Publication.objects.select_for_update().select_related(
+            'submitter',
+            'category',
+        ),
+    )
+    try:
+        publication = publications.get(pk=publication_id)
+    except Publication.DoesNotExist as error:
+        raise PermissionDenied from error
     if publication.status != Publication.Status.APPROVED:
         raise ValidationError('Solo se pueden recibir publicaciones aprobadas.')
 

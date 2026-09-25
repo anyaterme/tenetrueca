@@ -345,6 +345,97 @@
   margin-left: 2px;
 }
 
+.no-assignment-shell {
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: #eef8ff;
+}
+
+.no-assignment-panel {
+  width: min(100%, 560px);
+  padding: 42px;
+  border: 1px solid var(--bo-border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgb(0 74 122 / 10%);
+  text-align: center;
+}
+
+.no-assignment-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 30px;
+  color: var(--bo-navy);
+  text-align: left;
+}
+
+.no-assignment-brand img {
+  width: 48px;
+  height: 48px;
+}
+
+.no-assignment-brand span {
+  display: grid;
+}
+
+.no-assignment-brand strong {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.no-assignment-brand small {
+  margin-top: 3px;
+  color: var(--bo-muted);
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.no-assignment-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bo-primary-subtle);
+  color: var(--bo-primary);
+}
+
+.no-assignment-icon .staff-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.no-assignment-panel h1 {
+  margin: 6px 0 14px;
+  color: var(--bo-navy);
+  font-size: clamp(1.65rem, 4vw, 2.2rem);
+  letter-spacing: 0;
+}
+
+.no-assignment-panel > p:not(.staff-eyebrow) {
+  margin: 0 auto 28px;
+  color: var(--bo-muted);
+  line-height: 1.65;
+}
+
+.no-assignment-panel form {
+  display: flex;
+  justify-content: center;
+}
+
+.no-assignment-panel .button {
+  gap: 9px;
+}
+
+.no-assignment-panel .staff-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .staff-account {
   display: flex;
   align-items: center;
@@ -2056,6 +2147,14 @@
 }
 
 @media (max-width: 760px) {
+  .no-assignment-shell {
+    padding: 18px;
+  }
+
+  .no-assignment-panel {
+    padding: 30px 22px;
+  }
+
   .staff-app {
     display: block;
   }
@@ -2141,10 +2240,17 @@
     max-width: none;
   }
 
-  .staff-center-summary,
   .staff-account__copy,
   .staff-topbar__context {
     display: none;
+  }
+
+  .staff-center-summary {
+    order: 4;
+    display: flex;
+    flex-basis: 100%;
+    max-width: none;
+    margin-top: 2px;
   }
 
   .staff-content {

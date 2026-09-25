@@ -3,6 +3,7 @@ from django.db import models
 
 from accounts.forms import AccessibleFieldsMixin
 from backoffice.models import StaffInvitation
+from locations.models import RecyclingCenter
 
 
 class StaffInviteForm(AccessibleFieldsMixin, forms.Form):
@@ -27,6 +28,13 @@ class StaffInviteForm(AccessibleFieldsMixin, forms.Form):
     role = forms.ChoiceField(
         label='Rol',
         choices=(('', 'Selecciona un rol'), *StaffInvitation.Role.choices),
+    )
+    center = forms.ModelChoiceField(
+        label='Punto limpio',
+        queryset=RecyclingCenter.objects.filter(is_active=True),
+        required=False,
+        empty_label='Sin asignación',
+        help_text='Opcional. Cada gestor puede trabajar en un único punto limpio.',
     )
     provisioning_method = forms.ChoiceField(
         label='Método de acceso',
@@ -70,6 +78,12 @@ class StaffInviteForm(AccessibleFieldsMixin, forms.Form):
             )
         return method
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('role') != StaffInvitation.Role.MANAGER:
+            cleaned_data['center'] = None
+        return cleaned_data
+
 
 class StaffMemberForm(AccessibleFieldsMixin, forms.Form):
     first_name = forms.CharField(
@@ -85,6 +99,13 @@ class StaffMemberForm(AccessibleFieldsMixin, forms.Form):
     )
     email = forms.EmailField(label='Correo electrónico', disabled=True)
     role = forms.ChoiceField(label='Rol', choices=StaffInvitation.Role.choices)
+    center = forms.ModelChoiceField(
+        label='Punto limpio',
+        queryset=RecyclingCenter.objects.filter(is_active=True),
+        required=False,
+        empty_label='Sin asignación',
+        help_text='El cambio de centro se aplica en la siguiente petición del gestor.',
+    )
 
     def __init__(
         self,
@@ -102,11 +123,22 @@ class StaffMemberForm(AccessibleFieldsMixin, forms.Form):
                 'last_name': user.last_name,
                 'email': user.email,
                 'role': initial_role,
+                'center': (
+                    user.center_accesses.filter(is_active=True)
+                    .values_list('center_id', flat=True)
+                    .first()
+                ),
             }
         )
         super().__init__(*args, **kwargs)
         self.fields['role'].disabled = not allow_role_change
         self.mark_field_errors()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('role') != StaffInvitation.Role.MANAGER:
+            cleaned_data['center'] = None
+        return cleaned_data
 
     def save(self):
         self.user.first_name = self.cleaned_data['first_name'].strip()

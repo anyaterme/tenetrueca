@@ -7,7 +7,7 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 
 from audit.models import AuditEvent
-from core.permissions import user_can_moderate
+from core.permissions import scope_publications, user_can_moderate
 from moderation.forms import ModerationDecisionForm, ModerationQueueFilterForm
 from moderation.models import ModerationDecision
 from moderation.services import moderate_publication
@@ -27,8 +27,8 @@ def _require_moderator(user):
         raise PermissionDenied
 
 
-def _staff_publications():
-    return (
+def _staff_publications(user):
+    publications = (
         Publication.objects.filter(
             submitted_at__isnull=False,
             status__in=REVIEWABLE_STATUSES,
@@ -58,6 +58,7 @@ def _staff_publications():
             ),
         )
     )
+    return scope_publications(user, publications)
 
 
 @login_required
@@ -68,8 +69,8 @@ def moderation_queue(request):
         filter_data.update(
             {'status': Publication.Status.PENDING_REVIEW, 'ordering': 'oldest'}
         )
-    filter_form = ModerationQueueFilterForm(filter_data)
-    publications = _staff_publications()
+    filter_form = ModerationQueueFilterForm(filter_data, user=request.user)
+    publications = _staff_publications(request.user)
 
     if filter_form.is_valid():
         status = filter_form.cleaned_data['status']
@@ -127,7 +128,7 @@ def _review_context(publication, decision_form):
 @login_required
 def moderation_detail(request, pk):
     _require_moderator(request.user)
-    publication = get_object_or_404(_staff_publications(), pk=pk)
+    publication = get_object_or_404(_staff_publications(request.user), pk=pk)
     return render(
         request,
         'moderation/detail.html',
@@ -140,7 +141,7 @@ def moderation_decide(request, pk):
     _require_moderator(request.user)
     if request.method != 'POST':
         return redirect('moderation:detail', pk=pk)
-    publication = get_object_or_404(_staff_publications(), pk=pk)
+    publication = get_object_or_404(_staff_publications(request.user), pk=pk)
     form = ModerationDecisionForm(request.POST)
     if form.is_valid():
         try:

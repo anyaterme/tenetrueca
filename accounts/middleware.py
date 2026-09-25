@@ -29,3 +29,28 @@ class ForcePasswordChangeMiddleware:
                 if match is None or match.url_name not in self.exempt_url_names:
                     return redirect('password-change')
         return self.get_response(request)
+
+
+class ManagerOperationalScopeMiddleware:
+    exempt_url_names = {'no_assignment', 'logout', 'password-change'}
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        from core.permissions import operational_scope
+
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated:
+            scope = operational_scope(user)
+            if scope.is_manager and scope.center is None:
+                static_prefix = f'/{settings.STATIC_URL.lstrip("/")}'
+                media_prefix = f'/{settings.MEDIA_URL.lstrip("/")}'
+                if not request.path_info.startswith((static_prefix, media_prefix)):
+                    try:
+                        match = resolve(request.path_info)
+                    except Resolver404:
+                        match = None
+                    if match is None or match.url_name not in self.exempt_url_names:
+                        return redirect('backoffice:no_assignment')
+        return self.get_response(request)

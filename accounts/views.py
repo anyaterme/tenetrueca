@@ -18,7 +18,7 @@ from accounts.forms import (
 )
 from accounts.services import MagicLinkService
 from audit.models import AuditEvent
-from core.permissions import user_can_access_backoffice
+from core.permissions import operational_scope, user_can_access_backoffice
 from points.services import award_registration_points, points_balance
 from publications.models import Publication, PublicationPhoto
 from reservations.models import Reservation
@@ -31,6 +31,9 @@ def is_operations_staff(user):
 def authenticated_home_url(user):
     if user.must_change_password:
         return reverse('password-change')
+    scope = operational_scope(user)
+    if scope.is_manager and scope.center is None:
+        return reverse('backoffice:no_assignment')
     return reverse('backoffice:dashboard' if is_operations_staff(user) else 'dashboard')
 
 
@@ -254,6 +257,9 @@ class AccountPasswordChangeView(
 
     def get_success_url(self):
         if self.request.user.must_change_password:
+            scope = operational_scope(self.request.user)
+            if scope.is_manager and scope.center is None:
+                return reverse('backoffice:no_assignment')
             return reverse(
                 'backoffice:dashboard'
                 if is_operations_staff(self.request.user)

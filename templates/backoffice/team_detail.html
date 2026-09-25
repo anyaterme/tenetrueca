@@ -16,6 +16,7 @@
           {% include "components/form_field.html" with field=form.last_name %}
           {% include "components/form_field.html" with field=form.email %}
           {% include "components/form_field.html" with field=form.role %}
+          <div data-manager-center>{% include "components/form_field.html" with field=form.center %}</div>
           <button class="button button--primary" type="submit">Guardar cambios</button>
         </form>
       </section>
@@ -29,7 +30,7 @@
     <aside class="team-detail-aside">
       <section class="staff-panel">
         <h2>Resumen</h2>
-        <dl class="team-summary"><div><dt>Estado</dt><dd>{% if member.is_active %}Activo{% else %}Inactivo{% endif %}</dd></div><div><dt>Rol</dt><dd>{{ current_role_label }}</dd></div><div><dt>Miembro desde</dt><dd>{{ staff_since|date:"d/m/Y" }}</dd></div><div><dt>Último acceso</dt><dd>{% if member.last_login %}{{ member.last_login|date:"d/m/Y H:i" }}{% else %}Nunca{% endif %}</dd></div>{% if pending_invitation %}<div><dt>Invitación</dt><dd>Pendiente hasta {{ pending_invitation.expires_at|date:"d/m/Y H:i" }}</dd></div>{% endif %}</dl>
+        <dl class="team-summary"><div><dt>Estado</dt><dd>{% if member.is_active %}Activo{% else %}Inactivo{% endif %}</dd></div><div><dt>Rol</dt><dd>{{ current_role_label }}</dd></div>{% if assigned_center %}<div><dt>Punto limpio</dt><dd>{{ assigned_center.name }}</dd></div>{% endif %}<div><dt>Miembro desde</dt><dd>{{ staff_since|date:"d/m/Y" }}</dd></div><div><dt>Último acceso</dt><dd>{% if member.last_login %}{{ member.last_login|date:"d/m/Y H:i" }}{% else %}Nunca{% endif %}</dd></div>{% if pending_invitation %}<div><dt>Invitación</dt><dd>Pendiente hasta {{ pending_invitation.expires_at|date:"d/m/Y H:i" }}</dd></div>{% endif %}</dl>
       </section>
 
       <section class="staff-panel team-access-actions">

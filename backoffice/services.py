@@ -16,6 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from backoffice.models import StaffAuditEvent, StaffInvitation
+from accounts.models import UserCenterAccess
 from configuration.services import EmailConfigurationService
 from core.roles import ROLE_STAFF_ADMIN, ROLE_STAFF_MANAGER
 
@@ -65,9 +66,12 @@ def staff_role_label(user):
     return dict(StaffInvitation.Role.choices).get(value, 'Sin rol')
 
 
-def assign_staff_role(user, role):
+@transaction.atomic
+def assign_staff_role(user, role, *, center=None):
     if role not in StaffInvitation.Role.values:
         raise ValidationError('El rol seleccionado no es válido.')
+    if center is not None and not center.is_active:
+        raise ValidationError('El punto limpio seleccionado no está activo.')
     manage_staff_permission = Permission.objects.get(
         content_type__app_label='accounts',
         codename='manage_staff',
@@ -76,6 +80,18 @@ def assign_staff_role(user, role):
     user.groups.remove(*role_groups)
     user.user_permissions.remove(manage_staff_permission)
     user.groups.add(Group.objects.get(name=ROLE_GROUP_NAMES[role]))
+    accesses = UserCenterAccess.objects.select_for_update().filter(user=user)
+    accesses.filter(is_active=True).update(is_active=False)
+    if role == StaffInvitation.Role.MANAGER and center is not None:
+        access, _ = UserCenterAccess.objects.get_or_create(
+            user=user,
+            center=center,
+            role=UserCenterAccess.ScopeRole.SUPERVISOR,
+            defaults={'is_active': True},
+        )
+        if not access.is_active:
+            access.is_active = True
+            access.save(update_fields=['is_active', 'updated_at'])
     for cache_name in ('_perm_cache', '_user_perm_cache', '_group_perm_cache'):
         if hasattr(user, cache_name):
             delattr(user, cache_name)

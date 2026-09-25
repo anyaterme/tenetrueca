@@ -74,9 +74,9 @@ class StaffManagementTests(TestCase):
         self.assertContains(response, 'Equipo')
 
         self.client.force_login(self.manager)
-        self.assertEqual(
-            self.client.get(reverse('backoffice:team_list')).status_code,
-            403,
+        self.assertRedirects(
+            self.client.get(reverse('backoffice:team_list')),
+            reverse('backoffice:no_assignment'),
         )
 
         self.client.force_login(self.citizen)
@@ -193,12 +193,12 @@ class StaffManagementTests(TestCase):
         )
 
         user.refresh_from_db()
-        self.assertRedirects(change_response, reverse('backoffice:dashboard'))
+        self.assertRedirects(change_response, reverse('backoffice:no_assignment'))
         self.assertFalse(user.must_change_password)
         self.assertTrue(user.check_password('Nueva-clave-segura-del-equipo-2026'))
-        self.assertEqual(
-            self.client.get(reverse('backoffice:dashboard')).status_code,
-            200,
+        self.assertRedirects(
+            self.client.get(reverse('backoffice:dashboard')),
+            reverse('backoffice:no_assignment'),
         )
 
     def test_invitation_link_sets_password_and_is_single_use(self):
@@ -225,9 +225,10 @@ class StaffManagementTests(TestCase):
         )
 
         user = get_user_model().objects.get(email='leo-team@example.com')
-        self.assertRedirects(response, reverse('backoffice:dashboard'))
+        self.assertRedirects(response, reverse('backoffice:no_assignment'))
         self.assertTrue(user.check_password('A-very-secure-team-password-42'))
         self.assertIsNotNone(user.staff_invitations.get().accepted_at)
+        self.client.logout()
         self.assertEqual(self.client.get(url).status_code, 400)
 
     def test_existing_account_is_converted_without_duplication(self):

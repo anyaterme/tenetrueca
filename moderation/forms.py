@@ -1,6 +1,7 @@
 from django import forms
 
 from locations.models import RecyclingCenter
+from core.permissions import operational_scope
 from moderation.models import ModerationDecision
 from publications.models import Publication
 
@@ -39,6 +40,18 @@ class ModerationQueueFilterForm(forms.Form):
         label='Orden',
         choices=(('oldest', 'Más antiguas primero'), ('newest', 'Más recientes primero')),
     )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        scope = operational_scope(user) if user is not None else None
+        if scope and scope.is_manager:
+            center_ids = [scope.center.pk] if scope.center is not None else []
+            self.fields['center'].queryset = self.fields['center'].queryset.filter(
+                pk__in=center_ids
+            )
+            self.fields['center'].empty_label = None
+            if scope.center is not None:
+                self.fields['center'].initial = scope.center
 
     def clean(self):
         cleaned_data = super().clean()

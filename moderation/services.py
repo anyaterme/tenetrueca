@@ -3,7 +3,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit.models import AuditEvent
-from core.permissions import user_can_moderate
+from core.permissions import scope_publications, user_can_moderate
 from moderation.models import ModerationDecision
 from publications.models import Publication
 
@@ -29,7 +29,14 @@ def moderate_publication(*, publication_id, reviewer, decision, notes=''):
     } and not notes:
         raise ValidationError('La decisión requiere un motivo.')
 
-    publication = Publication.objects.select_for_update().get(pk=publication_id)
+    publications = scope_publications(
+        reviewer,
+        Publication.objects.select_for_update(),
+    )
+    try:
+        publication = publications.get(pk=publication_id)
+    except Publication.DoesNotExist as error:
+        raise PermissionDenied from error
     if publication.status != Publication.Status.PENDING_REVIEW:
         raise ValidationError('Esta publicación ya no está pendiente de revisión.')
 
@@ -79,6 +86,7 @@ def moderate_publication(*, publication_id, reviewer, decision, notes=''):
         after={'status': resulting_status},
         metadata={
             'decision_id': moderation_decision.pk,
+            'center_id': publication.submitter.habitual_recycling_center_id,
             'reason_code': moderation_decision.reason_code,
             'notes': notes,
         },
