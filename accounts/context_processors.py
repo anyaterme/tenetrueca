@@ -7,6 +7,7 @@ from core.permissions import (
     user_can_manage_users,
     user_can_moderate,
 )
+from configuration.permissions import user_can_manage_email_configuration
 
 
 def authentication_capabilities(request):
@@ -25,6 +26,7 @@ def staff_capabilities(request):
         'can_receive_objects': can_receive,
         'can_manage_users': user_can_manage_users(request.user),
         'can_manage_staff': user_can_manage_staff(request.user),
+        'can_manage_configuration': user_can_manage_email_configuration(request.user),
         'is_operations_staff': user_can_access_backoffice(request.user),
         'staff_centers': centers,
     }

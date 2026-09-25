@@ -49,6 +49,49 @@
     });
   });
 
+  document.querySelectorAll('[data-override-toggle]').forEach(function (toggle) {
+    var target = document.getElementById(toggle.dataset.overrideToggle);
+    if (!target) return;
+
+    function syncOverride() {
+      var controls = target.matches('input, select, textarea')
+        ? [target]
+        : target.querySelectorAll('input, select, textarea');
+      controls.forEach(function (control) {
+        control.disabled = !toggle.checked;
+      });
+    }
+
+    toggle.addEventListener('change', syncOverride);
+    syncOverride();
+  });
+
+  var passwordReplacement = document.querySelector('[data-password-replacement]');
+  var passwordActions = document.querySelectorAll('input[name="password_action"]');
+  if (passwordReplacement && passwordActions.length) {
+    function syncPasswordAction() {
+      var selected = document.querySelector('input[name="password_action"]:checked');
+      passwordReplacement.disabled = !selected || selected.value !== 'replace';
+      if (!passwordReplacement.disabled) passwordReplacement.focus();
+    }
+    passwordActions.forEach(function (option) {
+      option.addEventListener('change', syncPasswordAction);
+    });
+    syncPasswordAction();
+  }
+
+  var emailFeedback = document.querySelector('[data-email-feedback]');
+  if (emailFeedback && window.Swal) {
+    emailFeedback.hidden = true;
+    window.Swal.fire({
+      title: emailFeedback.dataset.title,
+      text: emailFeedback.dataset.text,
+      icon: emailFeedback.dataset.icon || 'info',
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#006ba6'
+    });
+  }
+
   var prompt = document.getElementById('existing-account-prompt');
   var existingForm = document.getElementById('existing-account-form');
   if (!prompt || !existingForm) return;
@@ -63,7 +106,7 @@
       showCancelButton: true,
       confirmButtonText: 'Conceder acceso',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0c6a49'
+      confirmButtonColor: '#006ba6'
     }).then(function (result) {
       if (result.isConfirmed) existingForm.submit();
     });

@@ -187,6 +187,49 @@
   border-top: 1px solid rgba(255, 255, 255, .14);
 }
 
+.staff-nav__configuration {
+  gap: 5px;
+}
+
+.staff-nav__parent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 13px;
+  border-radius: 6px;
+  color: #edf7fd;
+  font-size: .88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.staff-nav__parent.is-active {
+  background: rgba(73, 172, 230, .3);
+  color: #fff;
+}
+
+.staff-nav__parent .staff-icon {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.staff-nav .staff-nav__subnav {
+  gap: 2px;
+  padding-left: 32px;
+}
+
+.staff-nav .staff-nav__subnav a {
+  min-height: 36px;
+  padding: 7px 10px;
+  font-size: .78rem;
+}
+
+.staff-nav .staff-nav__subnav a::before {
+  left: -44px;
+}
+
 .staff-workspace {
   min-width: 0;
 }
@@ -1594,6 +1637,305 @@
   font-size: .72rem;
 }
 
+.configuration-feedback {
+  margin-bottom: 18px;
+}
+
+.email-configuration-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(310px, .75fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.email-configuration-main {
+  padding: 0;
+  overflow: hidden;
+}
+
+.email-configuration-heading {
+  align-items: center;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--bo-border);
+}
+
+.email-configuration-heading h2 {
+  margin-bottom: 3px;
+}
+
+.email-configuration-heading p {
+  margin: 0;
+  font-size: .8rem;
+}
+
+.configuration-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bo-primary-dark);
+  font-size: .72rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.configuration-summary::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bo-primary);
+  content: "";
+}
+
+.configuration-summary--inherited {
+  color: var(--bo-muted);
+}
+
+.configuration-summary--inherited::before {
+  background: #94a3b8;
+}
+
+.email-configuration-form {
+  display: grid;
+  gap: 22px;
+  padding: 22px;
+}
+
+.email-configuration-row {
+  display: grid;
+  gap: 18px;
+}
+
+.email-configuration-row--connection {
+  grid-template-columns: minmax(0, 1fr) minmax(140px, .35fr);
+}
+
+.configuration-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.configuration-field__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.configuration-field__heading label,
+.configuration-field__label {
+  color: var(--bo-navy);
+  font-size: .86rem;
+  font-weight: 750;
+}
+
+.configuration-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--bo-muted);
+  font-size: .66rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.configuration-source::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+  content: "";
+}
+
+.configuration-source--database {
+  color: var(--bo-primary-dark);
+}
+
+.configuration-source--database::before {
+  background: var(--bo-primary);
+}
+
+.configuration-override {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 7px;
+  color: var(--bo-muted);
+  cursor: pointer;
+  font-size: .7rem;
+  font-weight: 700;
+}
+
+.configuration-override input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--bo-primary);
+}
+
+.configuration-field__control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.configuration-field__control > input,
+.configuration-field__control > select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #cbd8e4;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--bo-navy);
+}
+
+.configuration-field__control > input:focus,
+.configuration-field__control > select:focus {
+  border-color: var(--bo-primary);
+  outline: 3px solid rgba(0, 107, 166, .14);
+  outline-offset: 0;
+}
+
+.configuration-field__control > input:disabled,
+.configuration-field__control > select:disabled,
+.configuration-field__control input:disabled {
+  background: #f3f6f9;
+  color: #60738d;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.configuration-field__control > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.configuration-field__control > div > div label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--bo-navy);
+  cursor: pointer;
+  font-size: .82rem;
+}
+
+.configuration-field__control input[type="radio"] {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--bo-primary);
+}
+
+.configuration-field__suffix {
+  color: var(--bo-muted);
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
+.configuration-field__help,
+.configuration-password__state {
+  margin: 0;
+  color: var(--bo-muted);
+  font-size: .72rem;
+}
+
+.configuration-field--error .configuration-field__control > input,
+.configuration-field--error .configuration-field__control > select {
+  border-color: var(--bo-danger);
+}
+
+.configuration-password {
+  padding: 16px;
+  border: 1px solid var(--bo-border);
+  border-radius: 7px;
+  background: #f8fbfd;
+}
+
+.configuration-password__actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.configuration-password__actions label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--bo-navy);
+  cursor: pointer;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.configuration-password__actions input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--bo-primary);
+}
+
+.configuration-password__input input {
+  max-width: 430px;
+}
+
+.email-configuration-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+  padding-top: 20px;
+  border-top: 1px solid var(--bo-border);
+}
+
+.email-configuration-actions .staff-icon,
+.email-test-panel .button .staff-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.email-configuration-aside {
+  display: grid;
+  gap: 18px;
+}
+
+.email-test-panel .staff-muted {
+  margin: -4px 0 17px;
+  font-size: .82rem;
+}
+
+.email-test-panel .button {
+  justify-self: start;
+}
+
+.email-help-panel > p,
+.email-help-panel li {
+  color: var(--bo-muted);
+  font-size: .8rem;
+}
+
+.email-help-panel > p {
+  margin: -2px 0 16px;
+}
+
+.email-help-panel__examples {
+  padding-top: 16px;
+  border-top: 1px solid var(--bo-border);
+}
+
+.email-help-panel__examples strong {
+  color: var(--bo-navy);
+  font-size: .78rem;
+}
+
+.email-help-panel__examples ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
 @media (max-width: 1280px) {
   .backoffice-grid {
     grid-template-columns: 1fr;
@@ -1605,6 +1947,10 @@
 
   .backoffice-aside .staff-panel:first-child {
     grid-column: 1 / -1;
+  }
+
+  .email-configuration-grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(290px, .7fr);
   }
 }
 
@@ -1632,7 +1978,8 @@
   .staff-brand__copy,
   .staff-nav__title,
   .staff-nav nav a > span:last-child,
-  .staff-nav__footer a > span:last-child {
+  .staff-nav__footer a > span:last-child,
+  .staff-nav__parent > span {
     display: none;
   }
 
@@ -1640,6 +1987,15 @@
   .staff-nav__footer a {
     justify-content: center;
     padding: 8px;
+  }
+
+  .staff-nav__parent {
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .staff-nav .staff-nav__subnav {
+    display: none;
   }
 
   .staff-topbar {
@@ -1680,7 +2036,8 @@
   }
 
   .team-detail-grid,
-  .team-form-layout {
+  .team-form-layout,
+  .email-configuration-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1741,6 +2098,18 @@
 
   .staff-nav__group + .staff-nav__group {
     margin-top: 6px;
+  }
+
+  .staff-nav__configuration {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .staff-nav__parent {
+    flex: 0 0 46px;
+    width: 46px;
+    min-height: 44px;
   }
 
   .staff-nav nav {
@@ -1877,6 +2246,10 @@
     grid-template-columns: 1fr;
   }
 
+  .email-configuration-row--connection {
+    grid-template-columns: 1fr;
+  }
+
   .team-edit-form .button,
   .team-edit-form .staff-form__errors {
     grid-column: auto;
@@ -1923,5 +2296,20 @@
 
   .team-member-card dl {
     grid-template-columns: 1fr;
+  }
+
+  .email-configuration-heading,
+  .email-configuration-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .email-configuration-form {
+    padding: 18px 16px;
+  }
+
+  .email-configuration-actions .button,
+  .email-test-panel .button {
+    width: 100%;
   }
 }

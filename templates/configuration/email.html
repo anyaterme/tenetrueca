@@ -1,0 +1,86 @@
+{% extends "layouts/backoffice.html" %}
+
+{% block title %}Correo electrónico · TRUEC@{% endblock %}
+{% block staff_breadcrumb %}Configuración / Correo electrónico{% endblock %}
+{% block staff_title %}Correo electrónico{% endblock %}
+{% block staff_subtitle %}<p>Configura los parámetros para el envío de correos electrónicos desde la plataforma.</p>{% endblock %}
+
+{% block staff_content %}
+  {% if configuration_feedback %}
+    <div class="configuration-feedback message message--{{ configuration_feedback.icon }}" role="status" data-email-feedback data-icon="{{ configuration_feedback.icon }}" data-title="{{ configuration_feedback.title }}" data-text="{{ configuration_feedback.text }}">
+      <strong>{{ configuration_feedback.title }}</strong> {{ configuration_feedback.text }}
+    </div>
+  {% endif %}
+
+  <form id="reset-email-configuration" method="post" action="{% url 'configuration:email_reset' %}" data-confirm-title="Restablecer configuración de correo" data-confirm-text="Se eliminarán todos los overrides guardados y los próximos envíos volverán a utilizar los valores del servidor.">{% csrf_token %}</form>
+
+  <div class="email-configuration-grid">
+    <section class="staff-panel email-configuration-main" aria-labelledby="smtp-settings-title">
+      <div class="staff-panel__heading email-configuration-heading">
+        <div>
+          <h2 id="smtp-settings-title">Configuración SMTP</h2>
+          <p class="staff-muted">Solo los campos marcados como personalizados se guardan en la base de datos.</p>
+        </div>
+        {% if has_email_overrides %}<span class="configuration-summary">Overrides activos</span>{% else %}<span class="configuration-summary configuration-summary--inherited">Valores del servidor</span>{% endif %}
+      </div>
+
+      <form class="email-configuration-form" method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="staff-form__errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+
+        <div class="email-configuration-row email-configuration-row--connection">
+          {% include "configuration/_override_field.html" with field=form.email_host toggle=form.override_email_host source=field_sources.EMAIL_HOST help_text="Nombre o dirección del servidor SMTP." %}
+          {% include "configuration/_override_field.html" with field=form.email_port toggle=form.override_email_port source=field_sources.EMAIL_PORT help_text="Puerto de conexión del proveedor." %}
+        </div>
+
+        {% include "configuration/_override_field.html" with field=form.security toggle=form.override_security source=field_sources.EMAIL_SECURITY help_text="STARTTLS y SSL/TLS son opciones excluyentes." %}
+        {% include "configuration/_override_field.html" with field=form.email_host_user toggle=form.override_email_host_user source=field_sources.EMAIL_HOST_USER help_text="Puede dejarse vacío si el servidor no requiere autenticación." %}
+
+        <div class="configuration-field configuration-password{% if form.new_password.errors %} configuration-field--error{% endif %}">
+          <div class="configuration-field__heading">
+            <span class="configuration-field__label">Contraseña SMTP</span>
+            <span class="configuration-source configuration-source--{{ field_sources.EMAIL_HOST_PASSWORD }}">{% if field_sources.EMAIL_HOST_PASSWORD == 'database' %}Backoffice{% else %}Servidor{% endif %}</span>
+          </div>
+          <p class="configuration-password__state">{% if password_override_exists %}Existe una credencial cifrada almacenada. Su valor nunca se envía al navegador.{% else %}Actualmente se utiliza la credencial definida en el servidor.{% endif %}</p>
+          <div class="configuration-password__actions">{{ form.password_action }}</div>
+          <div class="configuration-field__control configuration-password__input">{{ form.new_password }}</div>
+          {% if form.password_action.errors %}<ul class="form-field__errors" role="alert">{% for error in form.password_action.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+          {% if form.new_password.errors %}<ul class="form-field__errors" id="{{ form.new_password.id_for_label }}-errors" role="alert">{% for error in form.new_password.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        {% include "configuration/_override_field.html" with field=form.default_from_email toggle=form.override_default_from_email source=field_sources.DEFAULT_FROM_EMAIL help_text="Admite una dirección sola o acompañada de un nombre visible." %}
+        {% include "configuration/_override_field.html" with field=form.email_timeout toggle=form.override_email_timeout source=field_sources.EMAIL_TIMEOUT suffix="segundos" help_text="Entre 1 y 300 segundos." %}
+
+        <div class="email-configuration-actions">
+          <button class="button button--secondary" type="submit" form="reset-email-configuration"{% if not has_email_overrides %} disabled{% endif %}>{% include "components/backoffice_icon.html" with name="reset" %}<span>Restablecer valores</span></button>
+          <button class="button button--primary" type="submit">{% include "components/backoffice_icon.html" with name="save" %}<span>Guardar cambios</span></button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="email-configuration-aside" aria-label="Prueba y ayuda de configuración">
+      <section class="staff-panel email-test-panel" aria-labelledby="email-test-title">
+        <div class="backoffice-panel-title"><span>{% include "components/backoffice_icon.html" with name="mail" %}</span><h2 id="email-test-title">Probar configuración</h2></div>
+        <p class="staff-muted">Envía un correo para verificar conexión, autenticación y seguridad.</p>
+        <form class="staff-form" method="post" action="{% url 'configuration:email_test' %}" novalidate>
+          {% csrf_token %}
+          {% include "components/form_field.html" with field=test_form.recipient %}
+          <button class="button button--primary" type="submit">{% include "components/backoffice_icon.html" with name="send" %}<span>Enviar correo de prueba</span></button>
+        </form>
+      </section>
+
+      <section class="staff-panel email-help-panel" aria-labelledby="email-help-title">
+        <div class="backoffice-panel-title"><span>{% include "components/backoffice_icon.html" with name="help" %}</span><h2 id="email-help-title">Ayuda</h2></div>
+        <p>Necesitas los datos proporcionados por tu servicio de correo. Los valores no personalizados se heredan del entorno del servidor.</p>
+        <div class="email-help-panel__examples">
+          <strong>Parámetros habituales</strong>
+          <ul>
+            <li>STARTTLS suele utilizar el puerto 587.</li>
+            <li>SSL/TLS suele utilizar el puerto 465.</li>
+            <li>Confirma siempre los datos con tu proveedor.</li>
+          </ul>
+        </div>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

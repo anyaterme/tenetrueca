@@ -29,6 +29,7 @@ urlpatterns = [
     path('politica-privacidad/', privacy_policy, name='privacy_policy'),
     path('cuenta/', include('accounts.urls')),
     path('backoffice/', include('backoffice.urls')),
+    path('backoffice/configuracion/', include('configuration.urls')),
     path('catalogo/', include('catalog.urls')),
     path('publicaciones/', include('publications.citizen_urls')),
     path('reservas/', include('reservations.urls')),

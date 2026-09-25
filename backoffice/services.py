@@ -16,6 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from backoffice.models import StaffAuditEvent, StaffInvitation
+from configuration.services import EmailConfigurationService
 from core.roles import ROLE_STAFF_ADMIN, ROLE_STAFF_MANAGER
 
 
@@ -165,11 +166,13 @@ class StaffInvitationService:
             'invitation_url': invitation_url,
             'expiration_hours': settings.STAFF_INVITATION_EXPIRATION_HOURS,
         }
+        email_options = EmailConfigurationService.email_options(fail_silently=True)
         message = EmailMultiAlternatives(
             subject='Invitación al equipo de TRUEC@',
             body=render_to_string('backoffice/emails/staff_invitation.txt', context),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=email_options['from_email'],
             to=[user.email],
+            connection=email_options['connection'],
         )
         message.attach_alternative(
             render_to_string('backoffice/emails/staff_invitation.html', context),

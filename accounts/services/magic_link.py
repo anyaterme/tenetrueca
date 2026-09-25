@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from accounts.models import MagicLoginToken, User
+from configuration.services import EmailConfigurationService
 
 
 @dataclass(frozen=True)
@@ -104,11 +105,13 @@ class MagicLinkService:
             'magic_url': magic_url,
             'expiration_minutes': settings.MAGIC_LOGIN_EXPIRATION_MINUTES,
         }
+        email_options = EmailConfigurationService.email_options(fail_silently=True)
         message = EmailMultiAlternatives(
             subject='Tu enlace para iniciar sesión en TRUEC@',
             body=render_to_string('accounts/emails/magic_login.txt', context),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=email_options['from_email'],
             to=[user.email],
+            connection=email_options['connection'],
         )
         message.attach_alternative(
             render_to_string('accounts/emails/magic_login.html', context),

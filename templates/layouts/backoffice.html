@@ -41,6 +41,16 @@
         </div>
       {% endif %}
 
+      {% if can_manage_configuration %}
+        <div class="staff-nav__group staff-nav__configuration">
+          <p class="staff-nav__title">Configuración</p>
+          <a class="staff-nav__parent{% if staff_section == 'configuration' %} is-active{% endif %}" href="{% url 'configuration:email' %}">{% include "components/backoffice_icon.html" with name="settings" %}<span>Configuración</span></a>
+          <nav class="staff-nav__subnav">
+            <a href="{% url 'configuration:email' %}"{% if staff_section == 'configuration' %} class="is-active" aria-current="page"{% endif %}><span>Correo electrónico</span></a>
+          </nav>
+        </div>
+      {% endif %}
+
       <div class="staff-nav__footer">
         <a href="{% url 'home' %}">{% include "components/backoffice_icon.html" with name="external" %}<span>Ver web pública</span></a>
       </div>
