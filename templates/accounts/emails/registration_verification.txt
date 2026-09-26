@@ -1,0 +1,7 @@
+Hola {{ user.first_name|default:user.email }},
+
+Verifica tu correo y crea tu contraseña para completar el registro en TRUEC@:
+{{ activation_url }}
+
+El enlace caduca en {{ expiration_minutes }} minutos y sólo puede utilizarse una vez.
+Si no solicitaste esta cuenta, puedes ignorar este correo.

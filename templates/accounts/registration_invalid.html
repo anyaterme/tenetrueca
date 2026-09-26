@@ -1,0 +1,11 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Enlace no válido · TRUEC@{% endblock %}
+{% block auth_title %}Este enlace ya no es válido{% endblock %}
+{% block auth_subtitle %}Puede que haya caducado, ya se haya utilizado o exista un enlace más reciente.{% endblock %}
+
+{% block auth_content %}
+  {% url 'register' as register_url %}
+  {% include "components/button.html" with label="Solicitar un enlace nuevo" href=register_url block=True %}
+  <p class="auth-secondary-action"><a href="{% url 'login' %}">Ir a iniciar sesión</a></p>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Revisa tu correo · TRUEC@{% endblock %}
+{% block auth_title %}Revisa tu correo{% endblock %}
+{% block auth_subtitle %}Te hemos enviado un enlace para verificar tu dirección y completar el registro.{% endblock %}
+
+{% block auth_content %}
+  {% if masked_email %}<p class="auth-email-destination">{{ masked_email }}</p>{% endif %}
+  <p class="auth-information">El enlace caduca pronto y sólo puede utilizarse una vez.</p>
+  {% if can_resend %}
+    <form class="auth-resend-form" method="post" action="{% url 'registration-resend' %}">
+      {% csrf_token %}
+      {% include "components/button.html" with label="Reenviar correo" button_type="submit" block=True variant="secondary" %}
+    </form>
+  {% endif %}
+  <p class="auth-secondary-action"><a href="{% url 'login' %}">Volver a iniciar sesión</a></p>
+{% endblock %}
