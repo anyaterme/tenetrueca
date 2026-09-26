@@ -9,12 +9,23 @@ from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.http import HttpResponseBadRequest
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 
 from accounts.models import UserCenterAccess
 from audit.models import AuditEvent
 from backoffice.forms import StaffInviteForm, StaffMemberForm
+from backoffice.center_filter import (
+    clear_admin_center_filter,
+    filter_audit_events_by_admin_centers,
+    filter_centers_by_admin_selection,
+    filter_publications_by_admin_centers,
+    filter_reservations_by_admin_centers,
+    set_admin_center_filter,
+)
 from backoffice.models import StaffAuditEvent, StaffInvitation
 from backoffice.permissions import staff_management_required
 from backoffice.services import (
@@ -66,7 +77,8 @@ def _elapsed_label(value):
     return f'{hours} h'
 
 
-def _dashboard_tasks(user, centers):
+def _dashboard_tasks(request, centers):
+    user = request.user
     tasks = []
 
     if user_can_moderate(user):
@@ -77,6 +89,7 @@ def _dashboard_tasks(user, centers):
                 submitted_at__isnull=False,
             ),
         )
+        publications = filter_publications_by_admin_centers(request, publications)
         publications = (
             publications
             .select_related('submitter', 'category', 'submitter__habitual_recycling_center')
@@ -107,9 +120,10 @@ def _dashboard_tasks(user, centers):
                 inventory_object__isnull=True,
             ),
         )
+        publications = filter_publications_by_admin_centers(request, publications)
         publications = (
             publications
-            .select_related('submitter', 'category')
+            .select_related('submitter', 'category', 'submitter__habitual_recycling_center')
             .order_by('approved_at', 'pk')[:6]
         )
         for publication in publications:
@@ -119,7 +133,7 @@ def _dashboard_tasks(user, centers):
                     'kind_label': 'Recepción',
                     'title': publication.title,
                     'person': publication.submitter.get_full_name() or publication.submitter.email,
-                    'center': None,
+                    'center': publication.submitter.habitual_recycling_center,
                     'status_label': 'Aprobada',
                     'status_tone': 'success',
                     'waiting_label': _elapsed_label(publication.approved_at),
@@ -137,6 +151,7 @@ def _dashboard_tasks(user, centers):
                 inventory_item__center__in=centers,
             ),
         )
+        reservations = filter_reservations_by_admin_centers(request, reservations)
         reservations = (
             reservations
             .select_related('user', 'inventory_item', 'inventory_item__center')
@@ -166,7 +181,9 @@ def _dashboard_tasks(user, centers):
 def dashboard(request):
     _require_backoffice(request.user)
     User = get_user_model()
-    centers = allowed_reception_centers(request.user)
+    centers = filter_centers_by_admin_selection(
+        request, allowed_reception_centers(request.user)
+    )
     can_moderate = user_can_moderate(request.user)
     can_manage_users = user_can_manage_users(request.user)
     can_manage_staff = user_can_manage_staff(request.user)
@@ -176,6 +193,9 @@ def dashboard(request):
         pending_publications = scope_publications(
             request.user,
             Publication.objects.filter(status=Publication.Status.PENDING_REVIEW),
+        )
+        pending_publications = filter_publications_by_admin_centers(
+            request, pending_publications
         )
         metrics.append(
             {
@@ -195,6 +215,9 @@ def dashboard(request):
                 inventory_object__isnull=True,
             ),
         )
+        reception_publications = filter_publications_by_admin_centers(
+            request, reception_publications
+        )
         active_pickups = scope_reservations(
             request.user,
             Reservation.objects.filter(
@@ -203,6 +226,7 @@ def dashboard(request):
                 inventory_item__center__in=centers,
             ),
         )
+        active_pickups = filter_reservations_by_admin_centers(request, active_pickups)
         metrics.extend(
             [
                 {
@@ -257,6 +281,7 @@ def dashboard(request):
     activity = AuditEvent.objects.select_related('actor').filter(source='backoffice')
     if not request.user.is_superuser and not can_manage_staff:
         activity = activity.filter(actor=request.user)
+    activity = filter_audit_events_by_admin_centers(request, activity)
     activity = list(activity[:5])
     for event in activity:
         event.display_action = AUDIT_ACTION_LABELS.get(
@@ -271,7 +296,7 @@ def dashboard(request):
             'staff_section': 'dashboard',
             'dashboard_name': request.user.first_name or request.user.email,
             'metrics': metrics,
-            'tasks': _dashboard_tasks(request.user, centers),
+            'tasks': _dashboard_tasks(request, centers),
             'recent_activity': activity,
             'assigned_centers': centers,
         },
@@ -302,6 +327,7 @@ def pickup_queue(request):
             inventory_item__center__in=centers,
         ),
     )
+    reservations = filter_reservations_by_admin_centers(request, reservations)
     reservations = (
         reservations
         .select_related('user', 'inventory_item', 'inventory_item__center')
@@ -330,6 +356,27 @@ def pickup_queue(request):
             'query': query,
         },
     )
+
+
+@login_required
+@require_POST
+def update_center_filter(request):
+    next_url = request.POST.get('next', '').strip()
+    if not url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = reverse('backoffice:dashboard')
+
+    if request.POST.get('clear') or request.POST.get('all_centers'):
+        clear_admin_center_filter(request)
+    else:
+        try:
+            set_admin_center_filter(request, request.POST.getlist('center_ids'))
+        except ValidationError as error:
+            return HttpResponseBadRequest(error.messages[0])
+    return redirect(next_url)
 
 
 @login_required

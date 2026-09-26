@@ -122,6 +122,32 @@
   gap: 18px;
 }
 
+.turnstile-field {
+  min-height: 65px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.turnstile-field__unavailable {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 4px solid var(--color-danger);
+  background: #fff2f0;
+  color: var(--color-danger);
+  font-size: .9rem;
+}
+
+.auth-email-destination {
+  margin: 0 0 18px;
+  color: var(--color-ink);
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+
+.auth-resend-form {
+  margin-top: 24px;
+}
+
 .auth-divider {
   display: flex;
   align-items: center;
@@ -530,5 +556,14 @@
   .form-field__control input,
   .auth-submit {
     min-height: 54px;
+  }
+
+  .turnstile-field {
+    margin-right: -6px;
+  }
+
+  .turnstile-field .cf-turnstile {
+    transform: scale(.92);
+    transform-origin: top left;
   }
 }

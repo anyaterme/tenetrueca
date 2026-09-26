@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetConfirmView, PasswordResetView
-from django.db import models, transaction
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -15,11 +16,14 @@ from accounts.forms import (
     PreferencesForm,
     ProfileUpdateForm,
     RegistrationForm,
+    RegistrationPasswordForm,
 )
-from accounts.services import MagicLinkService
+from accounts.services import MagicLinkService, RegistrationService
+from accounts.services.registration import InvalidRegistrationToken, RegistrationDeliveryError
+from accounts.services.turnstile import verify_turnstile
 from audit.models import AuditEvent
 from core.permissions import operational_scope, user_can_access_backoffice
-from points.services import award_registration_points, points_balance
+from points.services import points_balance
 from publications.models import Publication, PublicationPhoto
 from reservations.models import Reservation
 
@@ -114,28 +118,127 @@ class MagicLinkConsumeView(MagicLoginEnabledMixin, View):
 class RegisterView(LocalAuthenticationOnlyMixin, FormView):
     form_class = RegistrationForm
     template_name = 'accounts/register.html'
-    success_url = reverse_lazy('dashboard')
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect(authenticated_home_url(request.user))
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['turnstile_site_key'] = settings.TURNSTILE_SITE_KEY
+        return context
+
     def form_valid(self, form):
-        with transaction.atomic():
-            user = form.save()
-            award_registration_points(user=user)
-        authenticated_user = authenticate(
-            self.request,
-            username=user.email,
-            password=form.cleaned_data['password1'],
+        turnstile = verify_turnstile(
+            self.request.POST.get('cf-turnstile-response'),
+            remote_ip=RegistrationService.request_ip(self.request),
         )
-        if authenticated_user is None:
-            form.add_error(None, 'No se pudo iniciar la sesión. Inténtalo de nuevo.')
+        if not turnstile.valid:
+            if turnstile.reason in {'configuration', 'unavailable'}:
+                message = (
+                    'No pudimos verificar que eres una persona. '
+                    'Inténtalo de nuevo en unos minutos.'
+                )
+            else:
+                message = 'Completa la verificación de seguridad para continuar.'
+            form.add_error(None, message)
             return self.form_invalid(form)
-        login(self.request, authenticated_user)
-        messages.success(self.request, 'Tu cuenta se ha creado correctamente.')
-        return super().form_valid(form)
+
+        try:
+            result = RegistrationService.start(
+                request=self.request,
+                cleaned_data=form.cleaned_data,
+            )
+        except RegistrationDeliveryError:
+            form.add_error(
+                None,
+                'No pudimos enviar el correo de verificación. Inténtalo de nuevo.',
+            )
+            return self.form_invalid(form)
+
+        self.request.session['registration_email'] = result.email
+        return redirect('registration-check-email')
+
+
+class RegistrationCheckEmailView(LocalAuthenticationOnlyMixin, TemplateView):
+    template_name = 'accounts/registration_check_email.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(authenticated_home_url(request.user))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        email = self.request.session.get('registration_email', '')
+        context['masked_email'] = RegistrationService.mask_email(email)
+        context['can_resend'] = bool(email)
+        return context
+
+
+class RegistrationResendView(LocalAuthenticationOnlyMixin, View):
+    def get(self, request):
+        return redirect('registration-check-email')
+
+    def post(self, request):
+        if request.user.is_authenticated:
+            return redirect(authenticated_home_url(request.user))
+
+        email = request.session.get('registration_email', '')
+        if email:
+            try:
+                RegistrationService.resend(request=request, email=email)
+            except RegistrationDeliveryError:
+                messages.error(
+                    request,
+                    'No pudimos reenviar el correo. Inténtalo de nuevo más tarde.',
+                )
+                return redirect('registration-check-email')
+        messages.success(
+            request,
+            'Si el registro sigue pendiente, recibirás un nuevo enlace cuando sea posible.',
+        )
+        return redirect('registration-check-email')
+
+
+class RegistrationActivateView(LocalAuthenticationOnlyMixin, View):
+    template_name = 'accounts/registration_set_password.html'
+
+    def _invalid_response(self, request):
+        return render(request, 'accounts/registration_invalid.html', status=400)
+
+    def get(self, request, token):
+        pending = RegistrationService.pending(token)
+        if pending is None:
+            return self._invalid_response(request)
+        form = RegistrationPasswordForm(pending.user)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, token):
+        pending = RegistrationService.pending(token)
+        if pending is None:
+            return self._invalid_response(request)
+
+        form = RegistrationPasswordForm(pending.user, request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {'form': form})
+
+        try:
+            user = RegistrationService.complete(
+                raw_token=token,
+                password=form.cleaned_data['new_password1'],
+            )
+        except InvalidRegistrationToken:
+            return self._invalid_response(request)
+        except ValidationError as error:
+            form.add_error('new_password2', error)
+            return render(request, self.template_name, {'form': form})
+
+        login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
+        request.session.pop('registration_email', None)
+        messages.success(request, 'Tu cuenta se ha activado correctamente.')
+        return redirect(authenticated_home_url(user))
 
 
 class AccountPasswordResetView(LocalAuthenticationOnlyMixin, PasswordResetView):

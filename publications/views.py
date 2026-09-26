@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from audit.models import AuditEvent
+from catalog.models import Category
 from core.permissions import scope_publications, user_can_moderate, user_can_receive
 from moderation.models import ModerationDecision
 from publications.forms import (
@@ -79,6 +80,7 @@ def _audit_publication(request, publication, action, before=None, metadata=None)
 
 
 def _apply_photo_changes(publication, form):
+    primary_selection = form.cleaned_data.get('primary_photo') or ''
     photos_to_remove = list(form.cleaned_data.get('remove_photos') or [])
     stored_files = [(photo.image.storage, photo.image.name) for photo in photos_to_remove]
     if photos_to_remove:
@@ -86,24 +88,53 @@ def _apply_photo_changes(publication, form):
         for storage, name in stored_files:
             transaction.on_commit(lambda storage=storage, name=name: storage.delete(name))
 
-    if not publication.photos.filter(is_primary=True).exists():
-        first_remaining = publication.photos.order_by('sort_order', 'created_at').first()
-        if first_remaining:
-            first_remaining.is_primary = True
-            first_remaining.save(update_fields=['is_primary'])
-
-    next_sort_order = (
-        publication.photos.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or -1
-    ) + 1
-    has_primary = publication.photos.filter(is_primary=True).exists()
+    max_sort_order = publication.photos.aggregate(max_sort_order=Max('sort_order'))[
+        'max_sort_order'
+    ]
+    next_sort_order = (max_sort_order if max_sort_order is not None else -1) + 1
+    new_photo_objects = []
     for offset, photo in enumerate(form.cleaned_data.get('photos') or []):
-        PublicationPhoto.objects.create(
+        new_photo_objects.append(PublicationPhoto.objects.create(
             publication=publication,
             image=photo,
             alt_text=f'Fotografía de {publication.title}',
             sort_order=next_sort_order + offset,
-            is_primary=not has_primary and offset == 0,
+            is_primary=False,
+        ))
+
+    primary_photo = None
+    if primary_selection.startswith('existing:'):
+        primary_photo = publication.photos.filter(
+            pk=primary_selection.removeprefix('existing:')
+        ).first()
+    elif primary_selection.startswith('new:'):
+        new_index = int(primary_selection.removeprefix('new:'))
+        if new_index < len(new_photo_objects):
+            primary_photo = new_photo_objects[new_index]
+    if primary_photo is None:
+        primary_photo = (
+            publication.photos.filter(is_primary=True).first()
+            or publication.photos.order_by('sort_order', 'created_at').first()
         )
+    if primary_photo is not None:
+        publication.photos.filter(is_primary=True).update(is_primary=False)
+        primary_photo.is_primary = True
+        primary_photo.save(update_fields=['is_primary'])
+
+
+def _publication_form_context(form, publication):
+    categories = list(
+        Category.objects.filter(is_active=True)
+        .order_by('sort_order', 'name')
+        .values('id', 'name', 'parent_id')
+    )
+    return {
+        'form': form,
+        'publication': publication,
+        'publication_categories': categories,
+        'photo_max_count': settings.PUBLICATION_PHOTO_MAX_COUNT,
+        'photo_max_mb': settings.PUBLICATION_PHOTO_MAX_BYTES // (1024 * 1024),
+    }
 
 
 def _attach_citizen_feedback(publications):
@@ -251,7 +282,7 @@ def publication_create(request):
     return render(
         request,
         'publications/publication_form.html',
-        {'form': form, 'publication': None},
+        _publication_form_context(form, None),
     )
 
 
@@ -307,7 +338,7 @@ def publication_edit(request, pk):
     return render(
         request,
         'publications/publication_form.html',
-        {'form': form, 'publication': publication},
+        _publication_form_context(form, publication),
     )
 
 

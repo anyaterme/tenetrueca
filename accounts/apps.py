@@ -5,8 +5,9 @@ from django.db.models.signals import post_migrate
 def ensure_staff_roles(sender, **kwargs):
     from django.contrib.auth.models import Group, Permission
 
-    from core.roles import ROLE_STAFF_ADMIN, ROLE_STAFF_MANAGER
+    from core.roles import ROLE_CITIZEN, ROLE_STAFF_ADMIN, ROLE_STAFF_MANAGER
 
+    Group.objects.get_or_create(name=ROLE_CITIZEN)
     admin_group, _ = Group.objects.get_or_create(name=ROLE_STAFF_ADMIN)
     Group.objects.get_or_create(name=ROLE_STAFF_MANAGER)
     permission = Permission.objects.filter(

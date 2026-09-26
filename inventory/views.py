@@ -7,6 +7,10 @@ from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.permissions import allowed_reception_centers, scope_publications
+from backoffice.center_filter import (
+    filter_centers_by_admin_selection,
+    filter_publications_by_admin_centers,
+)
 from inventory.forms import ReceptionInspectionForm, ReceptionQueueFilterForm
 from inventory.models import ReceptionInspection
 from inventory.services import inspect_reception
@@ -49,7 +53,8 @@ def _approved_publications():
 
 @login_required
 def reception_queue(request):
-    centers = _require_reception_access(request.user)
+    authorized_centers = _require_reception_access(request.user)
+    centers = filter_centers_by_admin_selection(request, authorized_centers)
     filter_data = request.GET.copy()
     if not filter_data:
         filter_data.update({'ordering': 'oldest'})
@@ -58,6 +63,7 @@ def reception_queue(request):
         request.user,
         _approved_publications().filter(inventory_object__isnull=True),
     )
+    publications = filter_publications_by_admin_centers(request, publications)
     if filter_form.is_valid():
         query = filter_form.cleaned_data['q']
         ordering = filter_form.cleaned_data['ordering'] or 'oldest'

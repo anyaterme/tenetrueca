@@ -41,7 +41,7 @@ class ModerationQueueFilterForm(forms.Form):
         choices=(('oldest', 'Más antiguas primero'), ('newest', 'Más recientes primero')),
     )
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user=None, center_ids=None, **kwargs):
         super().__init__(*args, **kwargs)
         scope = operational_scope(user) if user is not None else None
         if scope and scope.is_manager:
@@ -52,6 +52,10 @@ class ModerationQueueFilterForm(forms.Form):
             self.fields['center'].empty_label = None
             if scope.center is not None:
                 self.fields['center'].initial = scope.center
+        elif center_ids is not None:
+            self.fields['center'].queryset = self.fields['center'].queryset.filter(
+                pk__in=center_ids
+            )
 
     def clean(self):
         cleaned_data = super().clean()

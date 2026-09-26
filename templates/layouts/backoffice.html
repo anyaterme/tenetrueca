@@ -5,7 +5,7 @@
 {% block extra_css %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'css/auth.css' %}">
-  <link rel="stylesheet" href="{% static 'css/backoffice.css' %}">
+  <link rel="stylesheet" href="{% static 'css/backoffice.css' %}?v=20260926-center-filter">
 {% endblock %}
 
 {% block body %}
@@ -69,7 +69,51 @@
         {% endif %}
         <div class="staff-topbar__spacer"></div>
         {% if is_backoffice_administrator %}
-          <span class="staff-center-summary">{% include "components/backoffice_icon.html" with name="building" %}<span>Todos los centros</span></span>
+          <div class="staff-center-filter" data-center-filter>
+            <button class="staff-center-summary staff-center-summary--button{% if admin_center_filter.is_active %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="staff-center-filter-panel" data-center-filter-toggle>
+              {% include "components/backoffice_icon.html" with name="building" %}
+              <span>{{ admin_center_filter.label }}</span>
+              {% include "components/backoffice_icon.html" with name="chevron-down" class_name="staff-center-summary__chevron" %}
+            </button>
+            <div class="staff-center-filter__backdrop" data-center-filter-close hidden></div>
+            <section id="staff-center-filter-panel" class="staff-center-filter__panel" aria-labelledby="staff-center-filter-title" hidden data-center-filter-panel>
+              <div class="staff-center-filter__header">
+                <h2 id="staff-center-filter-title">Filtrar por puntos limpios</h2>
+                <button class="staff-center-filter__close" type="button" aria-label="Cerrar filtro" data-center-filter-close>{% include "components/backoffice_icon.html" with name="x" %}</button>
+              </div>
+              <form method="post" action="{% url 'backoffice:update_center_filter' %}" data-center-filter-form>
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <label class="staff-center-filter__search" for="staff-center-search">
+                  <span class="visually-hidden">Buscar punto limpio</span>
+                  {% include "components/backoffice_icon.html" with name="search" %}
+                  <input id="staff-center-search" type="search" placeholder="Buscar punto limpio..." autocomplete="off" data-center-filter-search>
+                </label>
+                <label class="staff-center-filter__option staff-center-filter__option--all">
+                  <input type="checkbox" name="all_centers" value="1"{% if admin_center_filter.is_all %} checked{% endif %} data-center-filter-all>
+                  <span>Todos los centros</span>
+                </label>
+                <div class="staff-center-filter__options" data-center-filter-options>
+                  {% for center in admin_center_filter.available_centers %}
+                    <label class="staff-center-filter__option" data-center-filter-option data-search-text="{{ center.name|lower }}">
+                      <input type="checkbox" name="center_ids" value="{{ center.pk }}"{% if center in admin_center_filter.centers %} checked{% endif %} data-center-filter-center>
+                      <span>{{ center.name }}</span>
+                    </label>
+                  {% empty %}
+                    <p class="staff-center-filter__empty">No hay puntos limpios activos.</p>
+                  {% endfor %}
+                </div>
+                <p class="staff-center-filter__validation" role="status" data-center-filter-validation></p>
+                <footer class="staff-center-filter__footer">
+                  <span data-center-filter-count>{% if admin_center_filter.is_all %}Todos los centros{% else %}{{ admin_center_filter.selection_label }}{% endif %}</span>
+                  <span class="staff-center-filter__actions">
+                    <button class="button-link" type="submit" name="clear" value="1" data-center-filter-clear>Limpiar</button>
+                    <button class="button button--primary" type="submit" data-center-filter-apply>Aplicar</button>
+                  </span>
+                </footer>
+              </form>
+            </section>
+          </div>
         {% elif is_backoffice_manager and operational_center %}
           <span class="staff-center-summary">{% include "components/backoffice_icon.html" with name="building" %}<span>{{ operational_center.name }}</span></span>
         {% elif staff_centers %}
@@ -97,6 +141,17 @@
               {% block staff_eyebrow %}{% endblock %}
               <h1>{% block staff_title %}Gestión{% endblock %}</h1>
               <div class="staff-content__subtitle">{% block staff_subtitle %}{% endblock %}</div>
+              {% if staff_section == 'dashboard' and admin_center_filter.is_active %}
+                <div class="staff-scope-indicator">
+                  {% include "components/backoffice_icon.html" with name="filter" %}
+                  <span><strong>Ámbito:</strong> {{ admin_center_filter.indicator_label }}</span>
+                  <form method="post" action="{% url 'backoffice:update_center_filter' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" name="clear" value="1" aria-label="Mostrar todos los centros">{% include "components/backoffice_icon.html" with name="x" %}</button>
+                  </form>
+                </div>
+              {% endif %}
             </div>
             <div class="staff-content__actions">{% block staff_actions %}{% endblock %}</div>
           </header>
@@ -109,5 +164,5 @@
 
 {% block extra_js %}
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
-  <script src="{% static 'js/backoffice_staff.js' %}" defer></script>
+  <script src="{% static 'js/backoffice_staff.js' %}?v=20260926-center-filter" defer></script>
 {% endblock %}

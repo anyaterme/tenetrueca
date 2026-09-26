@@ -16,6 +16,8 @@ class MultiplePublicationPhotoField(forms.FileField):
     widget = MultipleFileInput(
         attrs={
             'accept': '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
+            'class': 'publication-photo-input',
+            'data-photo-input': '',
         }
     )
 
@@ -108,6 +110,10 @@ class CitizenPublicationForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple,
         label='Eliminar fotografías',
     )
+    primary_photo = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(attrs={'data-primary-photo': ''}),
+    )
 
     class Meta:
         model = Publication
@@ -135,6 +141,10 @@ class CitizenPublicationForm(forms.ModelForm):
         self.fields['remove_photos'].queryset = (
             self.instance.photos.all() if self.instance.pk else PublicationPhoto.objects.none()
         )
+        if self.instance.pk:
+            primary = self.instance.photos.filter(is_primary=True).first()
+            if primary is not None:
+                self.initial['primary_photo'] = f'existing:{primary.pk}'
 
         selected_root = None
         root_value = self.data.get('parent_category') if self.is_bound else None
@@ -163,7 +173,15 @@ class CitizenPublicationForm(forms.ModelForm):
             subcategories = subcategories.filter(pk__in=descendant_ids)
         self.fields['category'].queryset = subcategories
         self.order_fields(
-            ('title', 'description', 'parent_category', 'category', 'photos', 'remove_photos')
+            (
+                'title',
+                'description',
+                'parent_category',
+                'category',
+                'photos',
+                'remove_photos',
+                'primary_photo',
+            )
         )
 
     def clean(self):
@@ -205,6 +223,24 @@ class CitizenPublicationForm(forms.ModelForm):
             )
         if self.require_photo and total_photos == 0:
             self.add_error('photos', 'Añade al menos una fotografía antes de enviar a revisión.')
+
+        primary_photo = cleaned_data.get('primary_photo', '')
+        if primary_photo:
+            kind, separator, raw_value = primary_photo.partition(':')
+            try:
+                value = int(raw_value)
+            except (TypeError, ValueError):
+                value = -1
+            if not separator or kind not in {'existing', 'new'} or value < 0:
+                self.add_error('primary_photo', 'Selecciona una fotografía principal válida.')
+            elif kind == 'existing':
+                photo = self.fields['remove_photos'].queryset.filter(pk=value).first()
+                if photo is None:
+                    self.add_error('primary_photo', 'Selecciona una fotografía principal válida.')
+                elif removed_photos is not None and removed_photos.filter(pk=value).exists():
+                    cleaned_data['primary_photo'] = ''
+            elif value >= len(new_photos):
+                self.add_error('primary_photo', 'Selecciona una fotografía principal válida.')
         return cleaned_data
 
 

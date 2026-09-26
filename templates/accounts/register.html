@@ -16,13 +16,22 @@
       {% include "components/form_field.html" with field=form.first_name %}
       {% include "components/form_field.html" with field=form.last_name %}
     </div>
-    {% include "components/form_field.html" with field=form.username icon="@" %}
-    {% include "components/form_field.html" with field=form.email icon="@" %}
     {% include "components/form_field.html" with field=form.nif_nie %}
-    {% include "components/form_field.html" with field=form.password1 password_toggle=True %}
-    {% include "components/form_field.html" with field=form.password2 password_toggle=True %}
+    {% include "components/form_field.html" with field=form.email icon="@" %}
     {% include "components/form_field.html" with field=form.accept_terms %}
+    <div class="turnstile-field">
+      {% if turnstile_site_key %}
+        <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="light"></div>
+      {% else %}
+        <p class="turnstile-field__unavailable" role="alert">La verificación de seguridad no está disponible temporalmente.</p>
+      {% endif %}
+    </div>
     {% include "components/button.html" with label="Crear una cuenta" button_type="submit" block=True extra_class="auth-submit" %}
   </form>
   <p class="auth-secondary-action">¿Ya tienes cuenta? <a href="{% url 'login' %}">Iniciar sesión</a></p>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 {% endblock %}

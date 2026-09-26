@@ -1,9 +1,9 @@
 from django import forms
-from django.conf import settings
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.utils import timezone
+from django.contrib.auth import password_validation
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
 
 from accounts.models import User
+from accounts.validators import normalize_nif_nie, validate_nif_nie
 from locations.models import RecyclingCenter
 
 
@@ -67,7 +67,7 @@ class MagicLinkRequestForm(AccessibleFieldsMixin, forms.Form):
         return self.cleaned_data['identifier'].strip()
 
 
-class RegistrationForm(AccessibleFieldsMixin, UserCreationForm):
+class RegistrationForm(AccessibleFieldsMixin, forms.Form):
     first_name = forms.CharField(
         label='Nombre',
         max_length=150,
@@ -82,11 +82,6 @@ class RegistrationForm(AccessibleFieldsMixin, UserCreationForm):
         label='Correo electrónico',
         widget=forms.EmailInput(attrs={'autocomplete': 'email'}),
     )
-    username = forms.CharField(
-        label='Nombre de usuario',
-        max_length=150,
-        widget=forms.TextInput(attrs={'autocomplete': 'username'}),
-    )
     nif_nie = forms.CharField(
         label='NIF/NIE',
         max_length=32,
@@ -98,42 +93,36 @@ class RegistrationForm(AccessibleFieldsMixin, UserCreationForm):
         error_messages={'required': 'Debes aceptar la política de privacidad y los términos de uso.'},
     )
 
-    class Meta(UserCreationForm.Meta):
-        model = User
-        fields = ('first_name', 'last_name', 'username', 'email', 'nif_nie')
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['password1'].widget.attrs['autocomplete'] = 'new-password'
-        self.fields['password2'].widget.attrs['autocomplete'] = 'new-password'
         self.mark_field_errors()
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
-        if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError('Ya existe una cuenta con este correo electrónico.')
         return email
 
-    def clean_username(self):
-        username = self.cleaned_data['username'].strip().lower()
-        if '@' in username:
-            raise forms.ValidationError('El nombre de usuario no puede contener @.')
-        if User.objects.filter(username__iexact=username).exists():
-            raise forms.ValidationError('Ya existe una cuenta con este nombre de usuario.')
-        return username
-
     def clean_nif_nie(self):
-        return self.cleaned_data['nif_nie'].strip().upper()
+        nif_nie = normalize_nif_nie(self.cleaned_data['nif_nie'])
+        validate_nif_nie(nif_nie)
+        return nif_nie
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.account_status = User.AccountStatus.ACTIVE
-        user.auth_source = User.AuthSource.LOCAL
-        user.consent_version = settings.TERMS_CONSENT_VERSION
-        user.consent_accepted_at = timezone.now()
-        if commit:
-            user.save()
-        return user
+
+class RegistrationPasswordForm(AccessibleFieldsMixin, SetPasswordForm):
+    new_password1 = forms.CharField(
+        label='Contraseña',
+        strip=False,
+        help_text=password_validation.password_validators_help_text_html(),
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+    )
+    new_password2 = forms.CharField(
+        label='Confirmar contraseña',
+        strip=False,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mark_field_errors()
 
 
 class ProfileUpdateForm(AccessibleFieldsMixin, forms.ModelForm):
@@ -175,7 +164,7 @@ class ProfileUpdateForm(AccessibleFieldsMixin, forms.ModelForm):
         self.mark_field_errors()
 
     def clean_nif_nie(self):
-        return self.cleaned_data['nif_nie'].strip().upper()
+        return normalize_nif_nie(self.cleaned_data['nif_nie'])
 
 
 class PreferencesForm(AccessibleFieldsMixin, forms.Form):

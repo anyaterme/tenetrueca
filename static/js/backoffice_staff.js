@@ -102,6 +102,106 @@
     });
   }
 
+  var centerFilter = document.querySelector('[data-center-filter]');
+  if (centerFilter) {
+    var toggle = centerFilter.querySelector('[data-center-filter-toggle]');
+    var panel = centerFilter.querySelector('[data-center-filter-panel]');
+    var form = centerFilter.querySelector('[data-center-filter-form]');
+    var search = centerFilter.querySelector('[data-center-filter-search]');
+    var allCenters = centerFilter.querySelector('[data-center-filter-all]');
+    var centerInputs = Array.prototype.slice.call(
+      centerFilter.querySelectorAll('[data-center-filter-center]')
+    );
+    var options = Array.prototype.slice.call(
+      centerFilter.querySelectorAll('[data-center-filter-option]')
+    );
+    var count = centerFilter.querySelector('[data-center-filter-count]');
+    var validation = centerFilter.querySelector('[data-center-filter-validation]');
+    var apply = centerFilter.querySelector('[data-center-filter-apply]');
+    var closeButtons = centerFilter.querySelectorAll('[data-center-filter-close]');
+
+    function selectedCenters() {
+      return centerInputs.filter(function (input) { return input.checked; });
+    }
+
+    function updateCenterFilterState() {
+      var selected = selectedCenters().length;
+      if (allCenters.checked) {
+        count.textContent = 'Todos los centros';
+        validation.textContent = '';
+        apply.disabled = false;
+        return;
+      }
+      count.textContent = selected + (selected === 1 ? ' centro seleccionado' : ' centros seleccionados');
+      validation.textContent = selected ? '' : 'Selecciona al menos un punto limpio o todos los centros.';
+      apply.disabled = selected === 0;
+    }
+
+    function resetCenterFilter() {
+      form.reset();
+      search.value = '';
+      options.forEach(function (option) { option.hidden = false; });
+      updateCenterFilterState();
+    }
+
+    function closeCenterFilter(restoreFocus) {
+      if (panel.hidden) return;
+      panel.hidden = true;
+      centerFilter.querySelector('.staff-center-filter__backdrop').hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      resetCenterFilter();
+      if (restoreFocus) toggle.focus();
+    }
+
+    function openCenterFilter() {
+      panel.hidden = false;
+      centerFilter.querySelector('.staff-center-filter__backdrop').hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      search.focus();
+    }
+
+    toggle.addEventListener('click', function () {
+      if (panel.hidden) openCenterFilter();
+      else closeCenterFilter(true);
+    });
+    closeButtons.forEach(function (button) {
+      button.addEventListener('click', function () { closeCenterFilter(true); });
+    });
+    document.addEventListener('click', function (event) {
+      if (!panel.hidden && !centerFilter.contains(event.target)) closeCenterFilter(false);
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !panel.hidden) closeCenterFilter(true);
+    });
+    allCenters.addEventListener('change', function () {
+      if (allCenters.checked) {
+        centerInputs.forEach(function (input) { input.checked = false; });
+      }
+      updateCenterFilterState();
+    });
+    centerInputs.forEach(function (input) {
+      input.addEventListener('change', function () {
+        if (input.checked) allCenters.checked = false;
+        updateCenterFilterState();
+      });
+    });
+    search.addEventListener('input', function () {
+      var query = search.value.trim().toLocaleLowerCase('es');
+      options.forEach(function (option) {
+        option.hidden = query && option.dataset.searchText.indexOf(query) === -1;
+      });
+    });
+    form.addEventListener('submit', function (event) {
+      if (!event.submitter || !event.submitter.matches('[data-center-filter-clear]')) {
+        if (!allCenters.checked && selectedCenters().length === 0) {
+          event.preventDefault();
+          updateCenterFilterState();
+        }
+      }
+    });
+    updateCenterFilterState();
+  }
+
   var prompt = document.getElementById('existing-account-prompt');
   var existingForm = document.getElementById('existing-account-form');
   if (!prompt || !existingForm) return;

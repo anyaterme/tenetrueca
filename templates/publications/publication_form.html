@@ -2,56 +2,169 @@
 {% load static %}
 
 {% block title %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %} · TRUEC@{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}">{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}?v=20260926-wizard-3">{% endblock %}
 {% block account_breadcrumb_label %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %}{% endblock %}
 {% block account_title %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %}{% endblock %}
-{% block account_subtitle %}<p>Describe el objeto y añade fotografías para que podamos revisarlo.</p>{% endblock %}
+{% block account_subtitle %}<p>Añade fotos y describe tu objeto para revisarlo.</p>{% endblock %}
+{% block account_actions %}<a class="publication-editor__cancel" href="{% if publication %}{% url 'publications:detail' publication.pk %}{% else %}{% url 'publications:list' %}{% endif %}">Salir</a>{% endblock %}
 
 {% block account_content %}
-  <div class="publication-process-note">
-    <span aria-hidden="true">1</span>
-    <p>Al enviarlo revisaremos la propuesta. El objeto solo llegará al catálogo después de su aprobación y validación física.</p>
-  </div>
+  <div class="publication-editor" data-publication-editor data-photo-max="{{ photo_max_count }}" data-photo-max-bytes="{% widthratio photo_max_mb 1 1048576 %}">
+    <ol class="publication-stepper" aria-label="Progreso de la publicación">
+      <li class="is-current" data-step-indicator="1"><button type="button" data-go-step="1" aria-current="step"><span>1</span><strong>Fotos</strong></button></li>
+      <li data-step-indicator="2"><button type="button" data-go-step="2" disabled><span>2</span><strong>Información</strong></button></li>
+      <li data-step-indicator="3"><button type="button" data-go-step="3" disabled><span>3</span><strong>Categoría</strong></button></li>
+      <li data-step-indicator="4"><button type="button" data-go-step="4" disabled><span>4</span><strong>Revisar</strong></button></li>
+    </ol>
 
-  <form class="publication-form" method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-    {% if form.non_field_errors %}
-      <ul class="publication-form__errors" role="alert">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
-    {% endif %}
-
-    <div class="publication-form__section">
-      <h2>Información del objeto</h2>
-      {% include "components/form_field.html" with field=form.title %}
-      {% include "components/form_field.html" with field=form.description %}
-      <div class="publication-form__category-grid">
-        {% include "components/form_field.html" with field=form.parent_category %}
-        {% include "components/form_field.html" with field=form.category %}
-      </div>
-    </div>
-
-    <div class="publication-form__section">
-      <h2>Fotografías</h2>
-      {% if publication and publication.photos.exists %}
-        <div class="publication-photo-grid">
-          {% for photo in publication.photos.all %}
-            <figure>
-              <img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:publication.title }}" width="240" height="180">
-            </figure>
-          {% endfor %}
-        </div>
-        <div class="publication-remove-photos">
-          <p>Marca las fotografías que quieres eliminar:</p>
-          {{ form.remove_photos }}
-          {{ form.remove_photos.errors }}
-        </div>
+    <form class="publication-form publication-wizard" method="post" enctype="multipart/form-data" novalidate data-publication-form>
+      {% csrf_token %}
+      {{ form.primary_photo }}
+      {% if form.non_field_errors %}
+        <ul class="publication-form__errors" role="alert">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
       {% endif %}
-      {% include "components/form_field.html" with field=form.photos %}
-    </div>
 
-    <div class="publication-form__actions">
-      <button class="button button--secondary" type="submit" name="action" value="save_draft">Guardar borrador</button>
-      <button class="button button--primary" type="submit" name="action" value="submit">Enviar a revisión</button>
-      <a href="{% if publication %}{% url 'publications:detail' publication.pk %}{% else %}{% url 'publications:list' %}{% endif %}">Cancelar</a>
-    </div>
-  </form>
+      <section class="publication-wizard__panel" data-step-panel="1" aria-labelledby="publication-photos-title">
+        <header class="publication-wizard__heading">
+          <h2 id="publication-photos-title">Fotografías</h2>
+          <p>Añade fotos del objeto para que podamos revisarlo mejor.</p>
+        </header>
+
+        <div class="publication-photo-picker{% if form.photos.errors %} has-error{% endif %}" data-photo-picker>
+          <div class="publication-photo-picker__dropzone">
+            <span class="publication-photo-picker__icon">{% include "components/backoffice_icon.html" with name="camera" %}</span>
+            <label class="button button--primary publication-photo-picker__camera" for="publication-camera">{% include "components/backoffice_icon.html" with name="camera" %}<span>Tomar foto</span></label>
+            <input class="visually-hidden" id="publication-camera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" data-photo-camera>
+            <label class="button button--secondary" for="{{ form.photos.id_for_label }}">{% include "components/backoffice_icon.html" with name="image" %}<span>Elegir de galería</span></label>
+            <span class="publication-photo-picker__native">{{ form.photos }}</span>
+          </div>
+
+          <div class="publication-photo-list" data-photo-list>
+            {% if publication %}
+              {% for photo in publication.photos.all %}
+                <article class="publication-photo-card{% if photo.is_primary %} is-primary{% endif %}" data-photo-card data-existing-photo="{{ photo.pk }}" data-photo-key="existing:{{ photo.pk }}">
+                  <img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:publication.title }}" width="240" height="180">
+                  <button class="publication-photo-card__remove" type="button" aria-label="Eliminar fotografía {{ forloop.counter }}" data-remove-photo>{% include "components/backoffice_icon.html" with name="x" %}</button>
+                  <input class="visually-hidden" id="remove-photo-{{ photo.pk }}" type="checkbox" name="remove_photos" value="{{ photo.pk }}" data-remove-existing>
+                  <button class="publication-photo-card__primary" type="button" data-make-primary><span data-primary-label>{% if photo.is_primary %}Principal{% else %}Hacer principal{% endif %}</span></button>
+                  <span class="publication-photo-card__status" data-photo-status>Guardada</span>
+                </article>
+              {% endfor %}
+            {% endif %}
+            <button class="publication-photo-add" type="button" data-add-photo aria-label="Añadir más fotografías">
+              <span aria-hidden="true">+</span><strong>Añadir</strong>
+            </button>
+          </div>
+
+          <div class="publication-photo-picker__meta">
+            <span data-photo-count>{% if publication %}{{ publication.photos.count }}{% else %}0{% endif %} de {{ photo_max_count }}</span>
+            <span>JPEG, PNG o WebP · Máx. {{ photo_max_mb }} MB por foto</span>
+          </div>
+          <p class="publication-photo-picker__message" role="status" aria-live="polite" data-photo-message></p>
+          {% if form.photos.errors %}<ul class="form-field__errors" role="alert">{% for error in form.photos.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+          {% if form.remove_photos.errors %}<ul class="form-field__errors" role="alert">{% for error in form.remove_photos.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+          {% if form.primary_photo.errors %}<ul class="form-field__errors" role="alert">{% for error in form.primary_photo.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      </section>
+
+      <section class="publication-wizard__panel" data-step-panel="2" aria-labelledby="publication-information-title" hidden>
+        <header class="publication-wizard__heading">
+          <h2 id="publication-information-title">Información del objeto</h2>
+          <p>Cuéntanos brevemente qué es y en qué estado se encuentra.</p>
+        </header>
+        <div class="publication-information-fields">
+          {% include "components/form_field.html" with field=form.title %}
+          <div class="publication-character-count"><span data-title-count>0</span> / 180</div>
+          {% include "components/form_field.html" with field=form.description %}
+        </div>
+      </section>
+
+      <section class="publication-wizard__panel" data-step-panel="3" aria-labelledby="publication-category-title" hidden>
+        <header class="publication-wizard__heading">
+          <h2 id="publication-category-title">Categoría</h2>
+          <p>Esto ayudará a que otras personas encuentren el objeto.</p>
+        </header>
+
+        <div class="publication-category-fields">
+          <div class="publication-category-field{% if form.parent_category.errors %} has-error{% endif %}" data-category-field="parent">
+            <label for="{{ form.parent_category.id_for_label }}">Categoría</label>
+            <div class="publication-native-select">{{ form.parent_category }}</div>
+            <button class="publication-category-trigger" type="button" data-category-trigger="parent" aria-haspopup="dialog">
+              {% include "components/backoffice_icon.html" with name="tag" %}<span data-category-label="parent">Selecciona una categoría</span>{% include "components/backoffice_icon.html" with name="chevron-down" %}
+            </button>
+            {% if form.parent_category.errors %}<ul class="form-field__errors" role="alert">{% for error in form.parent_category.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+          <div class="publication-category-field{% if form.category.errors %} has-error{% endif %}" data-category-field="child">
+            <label for="{{ form.category.id_for_label }}">Subcategoría</label>
+            <div class="publication-native-select">{{ form.category }}</div>
+            <button class="publication-category-trigger" type="button" data-category-trigger="child" aria-haspopup="dialog">
+              {% include "components/backoffice_icon.html" with name="list" %}<span data-category-label="child">Selecciona una subcategoría</span>{% include "components/backoffice_icon.html" with name="chevron-down" %}
+            </button>
+            {% if form.category.errors %}<ul class="form-field__errors" role="alert">{% for error in form.category.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+        </div>
+
+        <div class="publication-process-note">
+          <span aria-hidden="true">i</span>
+          <p>Revisaremos tu propuesta antes de publicarla en el catálogo. Después deberá validarse físicamente.</p>
+        </div>
+      </section>
+
+      <section class="publication-wizard__panel" data-step-panel="4" aria-labelledby="publication-review-title" hidden>
+        <header class="publication-wizard__heading">
+          <h2 id="publication-review-title">Revisa tu propuesta</h2>
+          <p>Comprueba que todo esté correcto antes de enviarla.</p>
+        </header>
+
+        <div class="publication-review">
+          <section class="publication-review__section">
+            <header><h3>Fotografías</h3><button type="button" data-edit-step="1">Editar</button></header>
+            <div class="publication-review__photos" data-review-photos></div>
+          </section>
+          <section class="publication-review__section">
+            <header><h3>Información</h3><button type="button" data-edit-step="2">Editar</button></header>
+            <strong data-review-title>Sin nombre</strong>
+            <p data-review-description>Sin descripción</p>
+          </section>
+          <section class="publication-review__section">
+            <header><h3>Categoría</h3><button type="button" data-edit-step="3">Editar</button></header>
+            <p><strong data-review-parent>Sin seleccionar</strong><span data-review-child></span></p>
+          </section>
+          <div class="publication-process-note">
+            <span aria-hidden="true">i</span>
+            <p>Al enviarla, revisaremos la propuesta. El objeto llegará al catálogo después de su aprobación y validación física.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="publication-wizard__actions">
+        <div class="publication-wizard__status" aria-live="polite" data-save-status>
+          <span aria-hidden="true">✓</span><span>Los datos se conservan mientras completas los pasos</span>
+        </div>
+        <div class="publication-wizard__buttons">
+          <button class="publication-wizard__back" type="button" data-step-back hidden>Volver</button>
+          <button class="publication-wizard__draft" type="submit" name="action" value="save_draft">Guardar borrador</button>
+          <button class="button button--primary publication-wizard__continue" type="button" data-step-next>Continuar {% include "components/backoffice_icon.html" with name="arrow-right" %}</button>
+          <button class="button button--primary publication-wizard__submit" type="submit" name="action" value="submit" data-submit-publication hidden>Enviar a revisión</button>
+        </div>
+      </footer>
+    </form>
+
+    <div class="publication-category-backdrop" data-category-close hidden></div>
+    <section class="publication-category-sheet" role="dialog" aria-modal="true" aria-labelledby="publication-category-sheet-title" hidden data-category-sheet>
+      <header>
+        <h2 id="publication-category-sheet-title" data-category-sheet-title>Selecciona una categoría</h2>
+        <button type="button" aria-label="Cerrar selector" data-category-close>{% include "components/backoffice_icon.html" with name="x" %}</button>
+      </header>
+      <label class="publication-category-search">
+        <span class="visually-hidden">Buscar categoría</span>
+        {% include "components/backoffice_icon.html" with name="search" %}
+        <input type="search" placeholder="Buscar..." autocomplete="off" data-category-search>
+      </label>
+      <div class="publication-category-options" data-category-options></div>
+    </section>
+  </div>
+  {{ publication_categories|json_script:"publication-category-data" }}
 {% endblock %}
+
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20260926-wizard-3" defer></script>{% endblock %}

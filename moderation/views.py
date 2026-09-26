@@ -7,6 +7,10 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 
 from audit.models import AuditEvent
+from backoffice.center_filter import (
+    filter_publications_by_admin_centers,
+    get_admin_center_filter,
+)
 from core.permissions import scope_publications, user_can_moderate
 from moderation.forms import ModerationDecisionForm, ModerationQueueFilterForm
 from moderation.models import ModerationDecision
@@ -69,8 +73,15 @@ def moderation_queue(request):
         filter_data.update(
             {'status': Publication.Status.PENDING_REVIEW, 'ordering': 'oldest'}
         )
-    filter_form = ModerationQueueFilterForm(filter_data, user=request.user)
-    publications = _staff_publications(request.user)
+    center_filter = get_admin_center_filter(request)
+    filter_form = ModerationQueueFilterForm(
+        filter_data,
+        user=request.user,
+        center_ids=center_filter.center_ids if center_filter.is_active else None,
+    )
+    publications = filter_publications_by_admin_centers(
+        request, _staff_publications(request.user)
+    )
 
     if filter_form.is_valid():
         status = filter_form.cleaned_data['status']

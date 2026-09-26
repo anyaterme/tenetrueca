@@ -8,6 +8,7 @@ app_name = 'backoffice'
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
+    path('ambito-centros/', views.update_center_filter, name='update_center_filter'),
     path('sin-asignacion/', views.no_assignment, name='no_assignment'),
     path('recogidas/', views.pickup_queue, name='pickup_queue'),
     path('usuarios/', views.user_list, name='user_list'),

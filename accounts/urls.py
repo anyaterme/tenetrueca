@@ -13,6 +13,9 @@ from accounts.views import (
     PreferencesView,
     ProfileUpdateView,
     ProfileView,
+    RegistrationActivateView,
+    RegistrationCheckEmailView,
+    RegistrationResendView,
     RegisterView,
 )
 
@@ -29,6 +32,21 @@ urlpatterns = [
     ),
     path('acceso/<str:token>/', MagicLinkConsumeView.as_view(), name='magic-login-consume'),
     path('registro/', RegisterView.as_view(), name='register'),
+    path(
+        'registro/revisa-tu-correo/',
+        RegistrationCheckEmailView.as_view(),
+        name='registration-check-email',
+    ),
+    path(
+        'registro/reenviar/',
+        RegistrationResendView.as_view(),
+        name='registration-resend',
+    ),
+    path(
+        'registro/activar/<str:token>/',
+        RegistrationActivateView.as_view(),
+        name='registration-activate',
+    ),
     path('recuperar-password/', AccountPasswordResetView.as_view(), name='password_reset'),
     path(
         'recuperar-password/enviado/',

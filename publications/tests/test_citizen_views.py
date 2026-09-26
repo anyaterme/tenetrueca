@@ -128,6 +128,125 @@ class CitizenPublicationViewsTests(TestCase):
         self.assertEqual(photo_response.status_code, 200)
         self.assertEqual(photo_response['Cache-Control'], 'private, no-store')
 
+    def test_publication_wizard_exposes_camera_gallery_and_four_steps(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('publications:create'))
+
+        self.assertContains(response, 'data-publication-editor')
+        self.assertContains(response, 'capture="environment"')
+        self.assertContains(response, 'multiple')
+        self.assertContains(response, 'Tomar foto')
+        self.assertContains(response, 'Elegir de galería')
+        for step in ('Fotos', 'Información', 'Categoría', 'Revisar'):
+            self.assertContains(response, step)
+
+    def test_category_tree_is_generated_from_active_database_categories(self):
+        inactive = Category.objects.create(name='Oculta', slug='oculta', is_active=False)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('publications:create'))
+
+        category_ids = {category['id'] for category in response.context['publication_categories']}
+        self.assertIn(self.parent_category.pk, category_ids)
+        self.assertIn(self.category.pk, category_ids)
+        self.assertNotIn(inactive.pk, category_ids)
+
+    def test_second_new_photo_can_be_selected_as_primary(self):
+        self.client.force_login(self.user)
+        data = self.publication_data(action='submit', primary_photo='new:1')
+        data['photos'] = [image_upload('one.jpg'), image_upload('two.jpg')]
+
+        response = self.client.post(reverse('publications:create'), data)
+
+        publication = Publication.objects.get(title='Lámpara ciudadana')
+        photos = list(publication.photos.order_by('sort_order'))
+        self.assertRedirects(response, reverse('publications:detail', args=[publication.pk]))
+        self.assertFalse(photos[0].is_primary)
+        self.assertTrue(photos[1].is_primary)
+
+    def test_existing_photo_can_be_changed_to_primary(self):
+        publication = self.create_publication(title='Borrador con fotos')
+        first = PublicationPhoto.objects.create(
+            publication=publication,
+            image=image_upload('first.jpg'),
+            sort_order=0,
+            is_primary=True,
+        )
+        second = PublicationPhoto.objects.create(
+            publication=publication,
+            image=image_upload('second.jpg'),
+            sort_order=1,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('publications:edit', args=[publication.pk]),
+            self.publication_data(
+                title=publication.title,
+                primary_photo=f'existing:{second.pk}',
+            ),
+        )
+
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertRedirects(response, reverse('publications:detail', args=[publication.pk]))
+        self.assertFalse(first.is_primary)
+        self.assertTrue(second.is_primary)
+
+    def test_removing_primary_photo_promotes_first_remaining_photo(self):
+        publication = self.create_publication(title='Borrador para limpiar')
+        first = PublicationPhoto.objects.create(
+            publication=publication,
+            image=image_upload('first.jpg'),
+            sort_order=0,
+            is_primary=True,
+        )
+        second = PublicationPhoto.objects.create(
+            publication=publication,
+            image=image_upload('second.jpg'),
+            sort_order=1,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('publications:edit', args=[publication.pk]),
+            self.publication_data(
+                title=publication.title,
+                remove_photos=[str(first.pk)],
+                primary_photo=f'existing:{first.pk}',
+            ),
+        )
+
+        second.refresh_from_db()
+        self.assertRedirects(response, reverse('publications:detail', args=[publication.pk]))
+        self.assertFalse(PublicationPhoto.objects.filter(pk=first.pk).exists())
+        self.assertTrue(second.is_primary)
+
+    def test_primary_photo_cannot_reference_another_users_publication(self):
+        publication = self.create_publication(title='Borrador propio')
+        other_publication = self.create_publication(
+            user=self.other_user,
+            title='Borrador ajeno con foto',
+        )
+        foreign_photo = PublicationPhoto.objects.create(
+            publication=other_publication,
+            image=image_upload('foreign.jpg'),
+            is_primary=True,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('publications:edit', args=[publication.pk]),
+            self.publication_data(
+                title=publication.title,
+                primary_photo=f'existing:{foreign_photo.pk}',
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Selecciona una fotografía principal válida')
+
     def test_edit_is_limited_by_owner_and_status(self):
         draft = self.create_publication(title='Borrador editable')
         changes = self.create_publication(

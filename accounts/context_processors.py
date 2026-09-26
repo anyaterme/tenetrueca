@@ -9,6 +9,7 @@ from core.permissions import (
     user_can_moderate,
 )
 from configuration.permissions import user_can_manage_email_configuration
+from backoffice.center_filter import get_admin_center_filter
 
 
 def authentication_capabilities(request):
@@ -23,6 +24,7 @@ def staff_capabilities(request):
     can_moderate = user_can_moderate(request.user)
     centers = allowed_reception_centers(request.user)
     can_receive = centers.exists()
+    center_filter = get_admin_center_filter(request)
     return {
         'can_moderate_publications': can_moderate,
         'can_receive_objects': can_receive,
@@ -34,4 +36,5 @@ def staff_capabilities(request):
         'is_backoffice_administrator': scope.is_administrator,
         'is_backoffice_manager': scope.is_manager,
         'operational_center': scope.center,
+        'admin_center_filter': center_filter,
     }

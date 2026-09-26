@@ -2,10 +2,12 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.db.models.functions import Lower
 from django.utils import timezone
 
 from accounts.managers import UserManager
+from accounts.validators import normalize_nif_nie, validate_nif_nie
 from core.models import TimeStampedModel
 
 
@@ -30,7 +32,12 @@ class User(AbstractUser):
     email = models.EmailField('email', unique=True)
     first_name = models.CharField('nombre', max_length=150)
     last_name = models.CharField('apellidos', max_length=150, blank=True)
-    nif_nie = models.CharField('NIF/NIE', max_length=32, blank=True)
+    nif_nie = models.CharField(
+        'NIF/NIE',
+        max_length=32,
+        blank=True,
+        validators=[validate_nif_nie],
+    )
     phone = models.CharField('telefono', max_length=32, blank=True)
     habitual_recycling_center = models.ForeignKey(
         'locations.RecyclingCenter',
@@ -77,6 +84,11 @@ class User(AbstractUser):
         constraints = [
             models.UniqueConstraint(Lower('email'), name='accounts_user_email_ci_unique'),
             models.UniqueConstraint(Lower('username'), name='accounts_user_username_ci_unique'),
+            models.UniqueConstraint(
+                Lower('nif_nie'),
+                condition=~Q(nif_nie=''),
+                name='accounts_user_nif_nie_ci_unique',
+            ),
         ]
         indexes = [
             models.Index(fields=['email']),
@@ -86,6 +98,34 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    def save(self, *args, **kwargs):
+        self.email = self.__class__.objects.normalize_email(self.email).strip().lower()
+        self.nif_nie = normalize_nif_nie(self.nif_nie)
+        return super().save(*args, **kwargs)
+
+
+class RegistrationVerificationToken(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='registration_verification_tokens',
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    expires_at = models.DateTimeField(db_index=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    invalidated_at = models.DateTimeField(null=True, blank=True)
+    requested_ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'used_at', 'expires_at']),
+        ]
+
+    def __str__(self):
+        return f'Verificación de registro {self.pk} · {self.user}'
 
 
 class MagicLoginToken(models.Model):

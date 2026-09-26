@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from accounts.models import MagicLoginToken, User, UserCenterAccess
+from accounts.models import MagicLoginToken, RegistrationVerificationToken, User, UserCenterAccess
 
 
 @admin.register(User)
@@ -51,6 +51,28 @@ class MagicLoginTokenAdmin(admin.ModelAdmin):
         'invalidated_at',
         'requested_ip',
         'redirect_path',
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(RegistrationVerificationToken)
+class RegistrationVerificationTokenAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'created_at', 'expires_at', 'used_at', 'invalidated_at')
+    list_filter = ('created_at', 'expires_at', 'used_at', 'invalidated_at')
+    search_fields = ('user__email',)
+    readonly_fields = (
+        'user',
+        'token_hash',
+        'created_at',
+        'expires_at',
+        'used_at',
+        'invalidated_at',
+        'requested_ip',
     )
 
     def has_add_permission(self, request):
