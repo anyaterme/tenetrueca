@@ -25,7 +25,7 @@
       <h2 id="footer-help-title">Centro de ayuda</h2>
       <a href="{% url 'faq:public_list' %}">Preguntas frecuentes</a>
       {% if user.is_authenticated %}
-        <a href="{% url 'profile' %}">Mi perfil</a>
+        <a href="{% if is_operations_staff %}{% url 'backoffice:dashboard' %}{% else %}{% url 'profile' %}{% endif %}">Mi perfil</a>
         <a href="{% url 'preferences' %}">Preferencias</a>
       {% else %}
         <a href="{% url 'login' %}">Iniciar sesión</a>

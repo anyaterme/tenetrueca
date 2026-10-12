@@ -24,7 +24,7 @@
           <a class="site-nav__web" href="{% url 'home' %}">Ver web <span aria-hidden="true">↗</span></a>
           <span class="site-nav__divider" aria-hidden="true"></span>
         {% endif %}
-        <a class="site-nav__identity" href="{% url 'profile' %}"{% if account_area %} aria-current="page"{% endif %}>
+        <a class="site-nav__identity" href="{% if is_operations_staff %}{% url 'backoffice:dashboard' %}{% else %}{% url 'profile' %}{% endif %}"{% if account_area and not is_operations_staff %} aria-current="page"{% endif %}>
           <span class="site-nav__avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
           <span>Mi Perfil</span>
         </a>
