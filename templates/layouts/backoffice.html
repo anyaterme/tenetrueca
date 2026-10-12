@@ -32,10 +32,11 @@
         </nav>
       </div>
 
-      {% if can_manage_users or can_manage_staff %}
+      {% if can_manage_users or can_manage_staff or can_manage_centers %}
         <div class="staff-nav__group">
           <p class="staff-nav__title">Administración</p>
           <nav>
+            {% if can_manage_centers %}<a href="{% url 'locations:manage_list' %}"{% if staff_section == 'centers' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="building" %}<span>Puntos limpios</span></a>{% endif %}
             {% if can_manage_users %}<a href="{% url 'backoffice:user_list' %}"{% if staff_section == 'users' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="users" %}<span>Usuarios</span></a>{% endif %}
             {% if can_manage_staff %}<a href="{% url 'backoffice:team_list' %}"{% if staff_section == 'team' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="team" %}<span>Equipo</span></a>{% endif %}
           </nav>

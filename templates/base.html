@@ -7,7 +7,7 @@
   <title>{% block title %}TRUEC@{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'img/brand/trueca-icon.png' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}?v=20261012-institutional-2">
   {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if user.is_authenticated and not is_operations_staff %} body--citizen-nav{% endif %}">

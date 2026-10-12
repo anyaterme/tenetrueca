@@ -10,6 +10,7 @@ from core.permissions import (
 )
 from configuration.permissions import user_can_manage_email_configuration
 from faq.permissions import user_can_manage_faq
+from locations.permissions import user_can_manage_centers
 from backoffice.center_filter import get_admin_center_filter
 
 
@@ -33,6 +34,7 @@ def staff_capabilities(request):
         'can_manage_staff': user_can_manage_staff(request.user),
         'can_manage_configuration': user_can_manage_email_configuration(request.user),
         'can_manage_faq': user_can_manage_faq(request.user),
+        'can_manage_centers': user_can_manage_centers(request.user),
         'is_operations_staff': user_can_access_backoffice(request.user),
         'staff_centers': centers,
         'is_backoffice_administrator': scope.is_administrator,

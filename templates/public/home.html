@@ -6,6 +6,7 @@
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/home.css' %}?v=20261012-video-poster">
+  <link rel="stylesheet" href="{% static 'css/locations.css' %}?v=20261012-map-2">
 {% endblock %}
 
 {% block content %}
@@ -69,6 +70,8 @@
   </div>
 </section>
 
+{% include "public/home/_centers.html" %}
+
 <section class="home-catalog" id="objetos" aria-labelledby="catalog-title">
   <div class="site-shell">
     <header class="home-section-heading">
@@ -109,4 +112,4 @@
 </section>
 {% endblock %}
 
-{% block extra_js %}{{ block.super }}<script src="{% static 'js/home_slider.js' %}?v=20261012-video-poster" defer></script>{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/home_slider.js' %}?v=20261012-video-poster" defer></script><script src="{% static 'js/centers_map.js' %}?v=20261012-map-2" defer></script>{% endblock %}

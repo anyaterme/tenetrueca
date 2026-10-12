@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'content',
-    'locations',
+    'locations.apps.LocationsConfig',
     'catalog',
     'publications',
     'moderation',
@@ -109,6 +109,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
+
+GOOGLE_MAPS_API_KEY = ''
+GOOGLE_MAPS_MAP_ID = ''
 
 PUBLICATION_PHOTO_MAX_BYTES = 8 * 1024 * 1024
 PUBLICATION_PHOTO_MAX_COUNT = 8

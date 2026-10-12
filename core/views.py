@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from inventory.models import InventoryItem
 from catalog.models import Favorite
+from locations.services import public_centers, center_map_data, maps_configuration
 
 
 def home(request):
@@ -37,6 +38,7 @@ def home(request):
         publish_url = reverse('register')
 
     start_url = reverse('profile') if request.user.is_authenticated else reverse('register')
+    centers = list(public_centers())
 
     return render(
         request,
@@ -45,6 +47,9 @@ def home(request):
             'featured_objects': featured_objects,
             'publish_url': publish_url,
             'start_url': start_url,
+            'public_centers': centers,
+            'centers_map_data': center_map_data(centers),
+            'maps_config': maps_configuration(),
             # No announcement feed exists yet; keep the board empty until supplied.
             'home_announcements': (),
             'home_video_url': getattr(settings, 'HOME_EXPLAINER_VIDEO_URL', '') or static('multimedia/tenetrueca.mp4'),

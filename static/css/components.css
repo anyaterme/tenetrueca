@@ -27,14 +27,40 @@
 .brand__logo {
   width: 255px;
   height: auto;
+  object-fit: contain;
 }
 
 .site-brand-lockup {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 1rem;
+  max-width: 100%;
+}
+
+.institutional-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.institutional-brand__logo {
+  width: auto;
+  height: 48px;
+  object-fit: contain;
+}
+
+.site-brand-lockup > .institutional-brand {
+  padding-left: 1rem;
+  border-left: 1px solid var(--color-border);
 }
 
 .site-nav {
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 1.15rem;
+  margin-left: auto;
 }
 
 .site-nav a {
@@ -243,7 +269,7 @@
 
 .site-footer__grid {
   display: grid;
-  grid-template-columns: minmax(250px, 1.45fr) repeat(2, minmax(150px, .8fr)) minmax(210px, 1fr);
+  grid-template-columns: minmax(250px, 1.45fr) repeat(2, minmax(150px, .8fr)) minmax(170px, 1fr);
   gap: 3rem;
   padding-top: 3.5rem;
   padding-bottom: 3rem;
@@ -308,12 +334,14 @@
 }
 
 .site-footer__social {
+  min-width: 0;
   padding-left: 2rem;
   border-left: 1px solid #40505e;
 }
 
 .site-footer__social-links {
   display: flex;
+  flex-wrap: wrap;
   gap: .65rem;
 }
 
@@ -332,6 +360,39 @@
   border-color: #fff;
   background: #fff;
   color: #17222e;
+}
+
+.site-footer__collaboration {
+  margin-top: .75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #40505e;
+}
+
+.site-footer__collaboration h3 {
+  margin: 0 0 .85rem;
+  color: #fff;
+  font-size: .75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.site-footer__collaboration-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: .75rem;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.site-footer__collaboration-logos .institutional-brand__logo {
+  height: 72px;
+}
+
+.site-footer__collaboration-logos .institutional-brand + .institutional-brand {
+  padding-left: 1rem;
+  border-left: 1px solid var(--color-border);
 }
 
 .site-footer__cabildo {
@@ -398,6 +459,21 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media (max-width: 1100px) {
+  .site-footer__collaboration-logos {
+    gap: .5rem;
+    padding: .5rem;
+  }
+
+  .site-footer__collaboration-logos .institutional-brand__logo {
+    height: 64px;
+  }
+
+  .site-footer__collaboration-logos .institutional-brand + .institutional-brand {
+    padding-left: .5rem;
+  }
 }
 
 @media (max-width: 900px) {
@@ -541,6 +617,18 @@
     width: 185px;
   }
 
+  .site-brand-lockup {
+    gap: .65rem;
+  }
+
+  .site-brand-lockup > .institutional-brand {
+    padding-left: .65rem;
+  }
+
+  .site-brand-lockup .institutional-brand__logo {
+    height: 36px;
+  }
+
   .site-nav__avatar {
     width: 36px;
     height: 36px;
@@ -577,6 +665,18 @@
 
   .brand__logo {
     width: 120px;
+  }
+
+  .site-brand-lockup {
+    gap: .5rem;
+  }
+
+  .site-brand-lockup > .institutional-brand {
+    padding-left: .5rem;
+  }
+
+  .site-brand-lockup .institutional-brand__logo {
+    height: 28px;
   }
 
   .site-header__inner,
