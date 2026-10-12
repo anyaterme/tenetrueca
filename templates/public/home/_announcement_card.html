@@ -1,0 +1,4 @@
+<article class="home-announcement-card">
+  {% if announcement.image_url %}<img src="{{ announcement.image_url }}" alt="{{ announcement.image_alt|default:'' }}" width="600" height="300" loading="lazy">{% endif %}
+  <div><h3>{{ announcement.title }}</h3><p>{{ announcement.description }}</p></div>
+</article>

@@ -1,0 +1,17 @@
+{% extends "faq/staff_base.html" %}
+
+{% block title %}{% if faq %}Editar pregunta{% else %}Nueva pregunta{% endif %} · TRUEC@{% endblock %}
+{% block staff_title %}{% if faq %}Editar pregunta{% else %}Nueva pregunta{% endif %}{% endblock %}
+{% block staff_subtitle %}<p>Configura la respuesta, su posición y su visibilidad en la web pública.</p>{% endblock %}
+
+{% block staff_content %}
+  <form class="staff-panel staff-form faq-form" method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="staff-form__errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% include "components/form_field.html" with field=form.question %}
+    {% include "components/form_field.html" with field=form.answer %}
+    {% include "components/form_field.html" with field=form.position %}
+    {% include "components/form_field.html" with field=form.is_published %}
+    <div class="team-form-actions"><a class="button button--secondary" href="{% url 'faq:manage_list' %}">Cancelar</a><button class="button button--primary" type="submit">Guardar pregunta</button></div>
+  </form>
+{% endblock %}

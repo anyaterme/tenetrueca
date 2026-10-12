@@ -1,0 +1,31 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+
+{% block title %}Preguntas frecuentes · TRUEC@{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/auth.css' %}"><link rel="stylesheet" href="{% static 'css/faq.css' %}">{% endblock %}
+
+{% block content %}
+  <section class="site-shell faq-public" aria-labelledby="faq-title" data-faq>
+    <nav class="breadcrumbs" aria-label="Migas de pan"><a href="{% url 'home' %}">Inicio</a><span aria-hidden="true"> › </span><span>Preguntas frecuentes</span></nav>
+    <header><h1 id="faq-title">Preguntas frecuentes</h1><p>Resuelve tus dudas sobre TRUEC@. Selecciona una pregunta para leer su respuesta.</p></header>
+    {% if faqs %}
+      <div class="faq-search" role="search" hidden data-faq-search>
+        <div class="form-field"><label class="form-field__label" for="faq-search">Buscar en preguntas y respuestas</label><div class="form-field__control"><input id="faq-search" type="search" placeholder="Escribe tu duda…" aria-controls="faq-items" autocomplete="off" data-faq-input></div></div>
+        <p class="faq-results" role="status" aria-live="polite" aria-atomic="true" data-faq-count></p>
+      </div>
+      <div id="faq-items" class="faq-items">
+        {% for faq in faqs %}
+          <details class="faq-item" data-faq-item>
+            <summary id="faq-question-{{ faq.pk }}"><h2>{{ faq.question }}</h2></summary>
+            <div class="faq-answer" role="region" aria-labelledby="faq-question-{{ faq.pk }}">{{ faq.answer|linebreaksbr }}</div>
+          </details>
+        {% endfor %}
+      </div>
+      <div hidden data-faq-no-results>{% include "components/state.html" with title="No hay resultados" message="Prueba con otras palabras o borra la búsqueda para ver todas las preguntas." %}</div>
+    {% else %}
+      {% include "components/state.html" with title="Todavía no hay preguntas frecuentes" message="Pronto encontrarás aquí respuestas a las dudas más habituales." %}
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/faq.js' %}" defer></script>{% endblock %}

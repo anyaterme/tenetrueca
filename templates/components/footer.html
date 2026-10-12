@@ -23,6 +23,7 @@
 
     <nav class="site-footer__links" aria-labelledby="footer-help-title">
       <h2 id="footer-help-title">Centro de ayuda</h2>
+      <a href="{% url 'faq:public_list' %}">Preguntas frecuentes</a>
       {% if user.is_authenticated %}
         <a href="{% url 'profile' %}">Mi perfil</a>
         <a href="{% url 'preferences' %}">Preferencias</a>

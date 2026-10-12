@@ -386,6 +386,10 @@
   text-decoration: none;
 }
 
+.body--login .auth-brand-panel {
+  background: #fafafa;
+}
+
 .brand-lockup__logo {
   width: 100%;
   height: auto;

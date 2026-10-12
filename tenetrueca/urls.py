@@ -24,6 +24,7 @@ from core.views import cookie_policy, health, home, legal_notice, privacy_policy
 
 urlpatterns = [
     path('', home, name='home'),
+    path('', include('faq.urls')),
     path('aviso-legal/', legal_notice, name='legal_notice'),
     path('politica-cookies/', cookie_policy, name='cookie_policy'),
     path('politica-privacidad/', privacy_policy, name='privacy_policy'),

@@ -1,0 +1,19 @@
+{% load static %}
+  <div class="site-shell home-hero__inner">
+    <div class="home-hero__content">
+      <p class="home-kicker">Intercambio sostenible en Tenerife</p>
+      <h2 id="home-title" class="home-hero__title">Dale una segunda vida a lo que ya no usas</h2>
+      <p class="home-hero__lead">Intercambia objetos con otras personas de Tenerife de forma sencilla y gratuita</p>
+      <div class="home-hero__actions" aria-label="Acciones principales">
+        {% url 'catalog:list' as catalog_url %}
+        {% include "components/button.html" with href=catalog_url label="Explorar el catálogo" trailing_icon="→" only %}
+        {% include "components/button.html" with href=publish_url label="Publicar un objeto" leading_icon="+" variant="secondary" extra_class="home-button--publish" only %}
+      </div>
+      <p class="home-hero__institution">
+        Una iniciativa del <strong>Cabildo Insular de Tenerife</strong>
+      </p>
+    </div>
+    <div class="home-hero__media">
+      <img src="{% static 'img/home/hero-exchange.png' %}" alt="Tres personas compartiendo cajas con objetos para darles una segunda vida" width="909" height="560" fetchpriority="high">
+    </div>
+  </div>

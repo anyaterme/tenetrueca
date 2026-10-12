@@ -1,4 +1,10 @@
 {% extends "layouts/auth.html" %}
+{% load static %}
+
+{% block body_class %}{{ block.super }} body--login{% endblock %}
+{% block auth_illustration %}
+  <img class="auth-brand-panel__illustration" src="{% static 'img/home/hero-exchange.png' %}" alt="Tres personas compartiendo cajas con objetos para darles una segunda vida" width="909" height="560">
+{% endblock %}
 
 {% block title %}Iniciar sesión · TRUEC@{% endblock %}
 {% block auth_title %}Iniciar sesión{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "faq/staff_base.html" %}
+
+{% block title %}Eliminar pregunta · TRUEC@{% endblock %}
+{% block staff_title %}Eliminar pregunta{% endblock %}
+{% block staff_subtitle %}<p>Confirma la eliminación antes de continuar.</p>{% endblock %}
+
+{% block staff_content %}
+  <section class="staff-panel faq-form">
+    <h2>{{ faq.question }}</h2>
+    <p>La pregunta y su respuesta se eliminarán definitivamente de TRUEC@.</p>
+    <form class="staff-form" method="post" action="{% url 'faq:delete' faq.pk %}" novalidate>
+      {% csrf_token %}
+      {% include "components/form_field.html" with field=form.confirm %}
+      <div class="team-form-actions"><a class="button button--secondary" href="{% url 'faq:manage_list' %}">Cancelar</a><button class="button button--primary faq-delete-button" type="submit">Eliminar pregunta</button></div>
+    </form>
+  </section>
+{% endblock %}

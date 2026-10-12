@@ -1,0 +1,32 @@
+{% extends "faq/staff_base.html" %}
+
+{% block title %}Gestión de preguntas frecuentes · TRUEC@{% endblock %}
+{% block staff_title %}Preguntas frecuentes{% endblock %}
+{% block staff_subtitle %}<p>Gestiona las respuestas que aparecen en la web pública, ordenadas por posición.</p>{% endblock %}
+{% block staff_actions %}<a class="button button--secondary" href="{% url 'faq:public_list' %}">Ver página pública</a>{% if can_add_faq %}<a class="button button--primary" href="{% url 'faq:create' %}">Nueva pregunta</a>{% endif %}{% endblock %}
+
+{% block staff_content %}
+  {% if faqs %}
+    <div class="staff-panel faq-table-panel">
+      <table class="faq-table">
+        <caption class="visually-hidden">Preguntas frecuentes ordenadas por posición</caption>
+        <thead><tr><th scope="col">Posición</th><th scope="col">Pregunta</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+        <tbody>
+          {% for faq in faqs %}
+            <tr>
+              <td><span class="faq-mobile-label" aria-hidden="true">Posición: </span>{{ faq.position }}</td>
+              <th scope="row">{{ faq.question }}</th>
+              <td><span class="backoffice-account-state{% if faq.is_published %} backoffice-account-state--active{% else %} backoffice-account-state--deactivated{% endif %}">{% if faq.is_published %}Publicada{% else %}No publicada{% endif %}</span></td>
+              <td><div class="faq-actions">
+                {% if can_change_faq %}<a class="button button--secondary" href="{% url 'faq:edit' faq.pk %}" aria-label="Editar: {{ faq.question }}">Editar</a>{% endif %}
+                {% if can_delete_faq %}<a class="button button--secondary" href="{% url 'faq:delete_confirm' faq.pk %}" aria-label="Eliminar: {{ faq.question }}">Eliminar</a>{% endif %}
+              </div></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="staff-empty"><h2>Todavía no hay preguntas frecuentes</h2><p>Crea la primera pregunta para ayudar a las personas que usan TRUEC@.</p>{% if can_add_faq %}<a class="button button--primary" href="{% url 'faq:create' %}">Nueva pregunta</a>{% endif %}</div>
+  {% endif %}
+{% endblock %}

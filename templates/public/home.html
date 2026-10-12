@@ -5,25 +5,32 @@
 {% block body_class %}home-page{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}?v=20261009-slider">
 {% endblock %}
 
 {% block content %}
-<section class="home-hero" aria-labelledby="home-title">
-  <div class="site-shell home-hero__inner">
-    <div class="home-hero__content">
-      <p class="home-kicker">Intercambio sostenible en Tenerife</p>
-      <h1 id="home-title">Dale una segunda vida a lo que ya no usas</h1>
-      <p class="home-hero__lead">Intercambia objetos con otras personas de Tenerife de forma sencilla y gratuita</p>
-      <div class="home-hero__actions" aria-label="Acciones principales">
-        {% url 'catalog:list' as catalog_url %}
-        {% include "components/button.html" with href=catalog_url label="Explorar el catálogo" trailing_icon="→" only %}
-        {% include "components/button.html" with href=publish_url label="Publicar un objeto" leading_icon="+" variant="secondary" extra_class="home-button--publish" only %}
-      </div>
-      <p class="home-hero__institution">
-        Una iniciativa del <strong>Cabildo Insular de Tenerife</strong>
-      </p>
+<section class="home-hero home-slider" role="region" aria-roledescription="carrusel" aria-label="Información de TRUEC@" tabindex="0" data-home-slider>
+  <h1 class="visually-hidden">TRUEC@ · Intercambio sostenible en Tenerife</h1>
+  <div id="home-slides" class="home-slider__track">
+    <article class="home-slide" role="group" aria-roledescription="diapositiva" aria-label="1 de 3: Tablón de anuncios" data-home-slide data-title="Tablón de anuncios">
+      {% include "public/home/_slide_announcements.html" %}
+    </article>
+    <article class="home-slide" role="group" aria-roledescription="diapositiva" aria-label="2 de 3: ¿Qué es Trueca?" data-home-slide data-title="¿Qué es Trueca?">
+      {% include "public/home/_slide_about.html" %}
+    </article>
+    <article class="home-slide" role="group" aria-roledescription="diapositiva" aria-label="3 de 3: Dale una segunda vida a lo que ya no usas" data-home-slide data-title="Dale una segunda vida a lo que ya no usas">
+      {% include "public/home/_slide_exchange.html" %}
+    </article>
+  </div>
+  <div class="site-shell home-slider__controls" hidden data-home-controls>
+    <button class="button button--secondary home-slider__arrow" type="button" aria-label="Diapositiva anterior" aria-controls="home-slides" data-home-previous><span aria-hidden="true">←</span></button>
+    <div class="home-slider__indicators" role="group" aria-label="Elegir diapositiva">
+      <button class="home-slider__dot" type="button" aria-label="Mostrar diapositiva 1: Tablón de anuncios" aria-controls="home-slides" data-home-index="0"><span aria-hidden="true"></span></button>
+      <button class="home-slider__dot" type="button" aria-label="Mostrar diapositiva 2: ¿Qué es Trueca?" aria-controls="home-slides" data-home-index="1"><span aria-hidden="true"></span></button>
+      <button class="home-slider__dot" type="button" aria-label="Mostrar diapositiva 3: Dale una segunda vida a lo que ya no usas" aria-controls="home-slides" data-home-index="2"><span aria-hidden="true"></span></button>
     </div>
+    <button class="button button--secondary home-slider__arrow" type="button" aria-label="Diapositiva siguiente" aria-controls="home-slides" data-home-next><span aria-hidden="true">→</span></button>
+    <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-home-status></p>
   </div>
 </section>
 
@@ -40,7 +47,7 @@
           <img src="{% static 'img/home/step-publish.png' %}" alt="Persona publicando la fotografía de un objeto desde su teléfono" width="1536" height="1024">
         </div>
         <h3>Publica</h3>
-        <p>Añade una descripción y publica lo que ya no necesitas en pocos minutos.</p>
+        <p>Publica lo que ya no necesitas.</p>
       </article>
       <article class="home-step">
         <div class="home-step__media">
@@ -48,15 +55,15 @@
           <img src="{% static 'img/home/step-find.png' %}" alt="Lupa mostrando un objeto encontrado entre artículos reutilizables" width="1536" height="1024">
         </div>
         <h3>Encuentra</h3>
-        <p>Descubre objetos disponibles en Tenerife y encuentra aquello que te puede ser útil.</p>
+        <p>Descubre objetos disponibles en Tenerife y encuentra lo que buscas.</p>
       </article>
       <article class="home-step">
         <div class="home-step__media">
           <span class="home-step__number" aria-hidden="true">3</span>
           <img src="{% static 'img/home/step-exchange.png' %}" alt="Dos personas acordando el intercambio de una caja con objetos" width="1536" height="1024">
         </div>
-        <h3>Acuerda el intercambio</h3>
-        <p>Contacta con uno de nuestros gestores y acuerda la entrega en un punto de intercambio.</p>
+        <h3>Intercambia</h3>
+        <p>Elige tu objeto y recógelo en el Punto Limpio indicado.</p>
       </article>
     </div>
   </div>
@@ -101,3 +108,5 @@
   </div>
 </section>
 {% endblock %}
+
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/home_slider.js' %}?v=20261009-slider" defer></script>{% endblock %}

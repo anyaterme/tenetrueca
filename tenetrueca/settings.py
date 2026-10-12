@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'audit',
     'operations',
     'configuration',
+    'faq.apps.FaqConfig',
     'api',
 ]
 

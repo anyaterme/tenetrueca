@@ -570,6 +570,11 @@
 }
 
 @media (max-width: 480px) {
+  .site-header__inner,
+  .site-nav {
+    flex-wrap: wrap;
+  }
+
   .brand__logo {
     width: 120px;
   }

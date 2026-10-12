@@ -4,7 +4,7 @@
 {% block body_class %}body--auth{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=20261009-login-image">
 {% endblock %}
 
 {% block body %}
@@ -43,13 +43,13 @@
           <h2>Damos una segunda vida a las cosas</h2>
           <p>Personas, recursos y comunidad por un Tenerife más sostenible.</p>
         </div>
-        <img
+        {% block auth_illustration %}<img
           class="auth-brand-panel__illustration"
           src="{% static 'img/auth-circular-exchange.png' %}"
           alt="Dos personas intercambian una caja con objetos reutilizables"
           width="1672"
           height="941"
-        >
+        >{% endblock %}
         <div class="institution-lockup" aria-label="Cabildo de Tenerife. Un territorio más sostenible">
           <span class="institution-lockup__cabildo">Cabildo<br>de Tenerife</span>
           <span class="institution-lockup__divider" aria-hidden="true"></span>

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import connection
 from django.db.models import BooleanField, Exists, OuterRef, Value
 from django.http import JsonResponse
@@ -43,6 +44,10 @@ def home(request):
             'featured_objects': featured_objects,
             'publish_url': publish_url,
             'start_url': start_url,
+            # No announcement feed exists yet; keep the board empty until supplied.
+            'home_announcements': (),
+            'home_video_url': getattr(settings, 'HOME_EXPLAINER_VIDEO_URL', ''),
+            'home_video_captions_url': getattr(settings, 'HOME_EXPLAINER_VIDEO_CAPTIONS_URL', ''),
         },
     )
 

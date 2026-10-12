@@ -14,6 +14,7 @@
     </div>
     <nav class="site-nav" aria-label="Navegación principal">
       <a class="site-nav__catalog" href="{% url 'catalog:list' %}">Catálogo</a>
+      <a href="{% url 'faq:public_list' %}"{% if request.resolver_match.namespace == 'faq' and request.resolver_match.url_name == 'public_list' %} aria-current="page"{% endif %}>Preguntas frecuentes</a>
       {% if user.is_authenticated %}
         {% if can_moderate_publications %}<a href="{% url 'moderation:queue' %}">Moderación</a>{% endif %}
         {% if can_receive_objects %}<a href="{% url 'inventory:reception_queue' %}">Recepción</a>{% endif %}
@@ -23,7 +24,7 @@
         {% endif %}
         <a class="site-nav__identity" href="{% url 'profile' %}"{% if account_area %} aria-current="page"{% endif %}>
           <span class="site-nav__avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
-          <span>{{ user.first_name|default:user.email }}</span>
+          <span>Mi Perfil</span>
         </a>
         <form class="site-nav__logout" method="post" action="{% url 'logout' %}">
           {% csrf_token %}
@@ -33,7 +34,7 @@
           </button>
         </form>
       {% else %}
-        <a href="{% url 'login' %}">Iniciar sesión</a>
+        <a href="{% url 'login' %}">Mi perfil</a>
       {% endif %}
     </nav>
   </div>

@@ -1,0 +1,18 @@
+<div class="site-shell home-hero__inner">
+  <div class="home-hero__content">
+    <p class="home-kicker">Actualidad de TRUEC@</p>
+    <h2 class="home-hero__title">Tablón de anuncios</h2>
+    <p class="home-hero__lead">Un espacio para conocer las novedades y los anuncios de nuestra comunidad.</p>
+  </div>
+  <div class="home-announcements">
+    {% for announcement in home_announcements %}
+      {% include "public/home/_announcement_card.html" %}
+    {% empty %}
+      <div class="home-announcements__empty">
+        <span class="home-announcements__icon" aria-hidden="true">✦</span>
+        <h3>Todavía no hay anuncios</h3>
+        <p>Las novedades de TRUEC@ aparecerán aquí. Vuelve pronto para descubrirlas.</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>

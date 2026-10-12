@@ -28,6 +28,7 @@
             <a href="{% url 'inventory:reception_queue' %}"{% if staff_section == 'reception' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="package" %}<span>Recepción</span></a>
             <a href="{% url 'backoffice:pickup_queue' %}"{% if staff_section == 'pickup' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="qr" %}<span>Recogidas QR</span></a>
           {% endif %}
+          {% if can_manage_faq %}<a href="{% url 'faq:manage_list' %}" aria-label="Preguntas frecuentes" title="Preguntas frecuentes"{% if staff_section == 'faq' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="file-check" %}<span>Preguntas frecuentes</span></a>{% endif %}
         </nav>
       </div>
 
