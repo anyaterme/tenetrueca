@@ -1,0 +1,38 @@
+{% extends "faq/staff_base.html" %}
+{% block title %}Historial de preguntas frecuentes · TRUEC@{% endblock %}
+{% block staff_title %}Historial de preguntas frecuentes{% if faq_id %} · #{{ faq_id }}{% endif %}{% endblock %}
+{% block staff_subtitle %}<p>Consulta quién realizó cada acción, cuándo y qué cambió. Las acciones anteriores a la activación de la trazabilidad no están registradas.</p>{% endblock %}
+{% block staff_actions %}<a class="button button--secondary" href="{% url 'faq:manage_list' %}">Volver a preguntas frecuentes</a>{% if faq_id %}<a class="button button--secondary" href="{% url 'faq:history' %}">Todo el historial</a>{% endif %}{% endblock %}
+{% block staff_content %}
+  <form class="staff-panel faq-history-filter" method="get">
+    <label for="faq-history-action">Tipo de acción</label>
+    <select id="faq-history-action" name="action">
+      <option value="">Todas las acciones</option>
+      {% for value, label in actions.items %}<option value="{{ value }}"{% if selected_action == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button class="button button--secondary" type="submit">Filtrar</button>
+  </form>
+  <div class="faq-history">
+    {% for item in history_items %}
+      <article class="staff-panel faq-history-event">
+        <header>
+          <div><span class="faq-history-action">{{ item.action_label }}</span><h2>{{ item.question }}</h2></div>
+          <time datetime="{{ item.event.created_at|date:'c' }}">{{ item.event.created_at|date:"d/m/Y H:i:s" }}</time>
+        </header>
+        <p class="staff-muted">Por <strong>{{ item.actor_label }}</strong> · Pregunta #{{ item.event.entity_id }}{% if item.event.source == 'django_admin' %} · Administrador de Django{% endif %}</p>
+        <details>
+          <summary>Ver cambios</summary>
+          <div class="faq-history-changes">
+            {% for change in item.changes %}
+              <section><h3>{{ change.label }}</h3><div class="faq-history-values">
+                <div><h4>Antes</h4><p>{{ change.before|linebreaksbr }}</p></div>
+                <div><h4>Después</h4><p>{{ change.after|linebreaksbr }}</p></div>
+              </div></section>
+            {% endfor %}
+          </div>
+        </details>
+      </article>
+    {% empty %}<div class="staff-empty"><h2>No hay actividad registrada</h2><p>El historial conservará las próximas creaciones, modificaciones y eliminaciones de preguntas frecuentes.</p></div>{% endfor %}
+  </div>
+  {% include "components/staff_pagination.html" %}
+{% endblock %}
