@@ -3,7 +3,7 @@
 {% block title %}Gestión de preguntas frecuentes · TRUEC@{% endblock %}
 {% block staff_title %}Preguntas frecuentes{% endblock %}
 {% block staff_subtitle %}<p>Gestiona las respuestas que aparecen en la web pública, ordenadas por posición.</p>{% endblock %}
-{% block staff_actions %}<a class="button button--secondary" href="{% url 'faq:public_list' %}">Ver página pública</a>{% if can_add_faq %}<a class="button button--primary" href="{% url 'faq:create' %}">Nueva pregunta</a>{% endif %}{% endblock %}
+{% block staff_actions %}<a class="button button--secondary" href="{% url 'faq:history' %}">Historial</a><a class="button button--secondary" href="{% url 'faq:public_list' %}">Ver página pública</a>{% if can_add_faq %}<a class="button button--primary" href="{% url 'faq:create' %}">Nueva pregunta</a>{% endif %}{% endblock %}
 
 {% block staff_content %}
   {% if faqs %}
@@ -18,6 +18,7 @@
               <th scope="row">{{ faq.question }}</th>
               <td><span class="backoffice-account-state{% if faq.is_published %} backoffice-account-state--active{% else %} backoffice-account-state--deactivated{% endif %}">{% if faq.is_published %}Publicada{% else %}No publicada{% endif %}</span></td>
               <td><div class="faq-actions">
+                <a class="button button--secondary" href="{% url 'faq:question_history' faq.pk %}" aria-label="Historial: {{ faq.question }}">Historial</a>
                 {% if can_change_faq %}<a class="button button--secondary" href="{% url 'faq:edit' faq.pk %}" aria-label="Editar: {{ faq.question }}">Editar</a>{% endif %}
                 {% if can_delete_faq %}<a class="button button--secondary" href="{% url 'faq:delete_confirm' faq.pk %}" aria-label="Eliminar: {{ faq.question }}">Eliminar</a>{% endif %}
               </div></td>

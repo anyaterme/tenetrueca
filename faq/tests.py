@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from unittest.mock import patch
 
 from accounts.models import UserCenterAccess
 from core.roles import ROLE_STAFF_ADMIN, ROLE_STAFF_MANAGER
@@ -9,6 +10,7 @@ from faq.forms import FAQForm
 from faq.models import FAQ
 from faq.permissions import user_can_manage_faq
 from locations.models import RecyclingCenter
+from audit.models import AuditEvent
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -273,3 +275,144 @@ class FAQTests(TestCase):
         faq.refresh_from_db()
         self.assertEqual(faq.created_at, created_at)
         self.assertGreater(faq.updated_at, updated_at)
+
+    def test_creation_is_audited_with_actor_and_full_snapshot(self):
+        self.client.force_login(self.admin)
+        self.client.post(reverse('faq:create'), self.payload())
+        faq = FAQ.objects.get()
+        event = AuditEvent.objects.get(entity='FAQ')
+        self.assertEqual(event.action, 'faq.created')
+        self.assertEqual(event.entity_id, str(faq.pk))
+        self.assertEqual(event.actor, self.admin)
+        self.assertEqual(event.metadata['actor_label'], 'Ada')
+        self.assertIsNone(event.before)
+        self.assertEqual(event.after, {'question': faq.question, 'answer': faq.answer, 'position': 3, 'is_published': True})
+        self.assertIsNotNone(event.created_at)
+
+    def test_edit_records_changed_content_position_and_publication(self):
+        self.client.force_login(self.manager)
+        faq = self.faq()
+        self.client.post(reverse('faq:edit', args=[faq.pk]), self.payload(question='Pregunta nueva', answer='Respuesta nueva', position=8, is_published=''))
+        event = AuditEvent.objects.get(entity='FAQ')
+        self.assertEqual(event.action, 'faq.updated')
+        self.assertEqual(event.actor, self.manager)
+        self.assertEqual(event.before, {'question': '¿Cómo funciona?', 'answer': 'Intercambia tus objetos.', 'position': 0, 'is_published': True})
+        self.assertEqual(event.after, {'question': 'Pregunta nueva', 'answer': 'Respuesta nueva', 'position': 8, 'is_published': False})
+        response = self.client.get(reverse('faq:question_history', args=[faq.pk]))
+        self.assertContains(response, 'Marta')
+        self.assertContains(response, 'Pregunta nueva')
+        self.assertContains(response, '¿Cómo funciona?')
+        self.assertEqual(len(response.context['history_items'][0]['changes']), 4)
+
+    def test_unchanged_invalid_and_get_requests_do_not_create_history(self):
+        self.client.force_login(self.admin)
+        faq = self.faq()
+        updated_at = faq.updated_at
+        self.client.get(reverse('faq:edit', args=[faq.pk]))
+        self.client.post(reverse('faq:create'), self.payload(question=''))
+        self.client.post(reverse('faq:edit', args=[faq.pk]), self.payload(question=faq.question, answer=faq.answer, position=faq.position))
+        self.client.post(reverse('faq:delete', args=[faq.pk]), {})
+        self.assertFalse(AuditEvent.objects.filter(entity='FAQ').exists())
+        faq.refresh_from_db()
+        self.assertEqual(faq.updated_at, updated_at)
+
+    def test_deletion_retains_snapshot_and_history_after_actor_removal(self):
+        self.client.force_login(self.admin)
+        faq = self.faq()
+        faq_id = faq.pk
+        self.client.post(reverse('faq:delete', args=[faq_id]), {'confirm': 'on'})
+        event = AuditEvent.objects.get(entity='FAQ')
+        self.assertEqual(event.action, 'faq.deleted')
+        self.assertIsNone(event.after)
+        self.assertEqual(event.before['question'], faq.question)
+        self.assertFalse(FAQ.objects.filter(pk=faq_id).exists())
+        self.admin.delete()
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse('faq:question_history', args=[faq_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Eliminación')
+        self.assertContains(response, faq.question)
+        self.assertContains(response, 'Ada')
+        event.refresh_from_db()
+        self.assertIsNone(event.actor)
+
+    def test_audit_failure_rolls_back_creates_edits_and_deletions(self):
+        self.client.force_login(self.admin)
+        faq = self.faq()
+        original_answer = faq.answer
+        requests = (
+            (reverse('faq:create'), self.payload()),
+            (reverse('faq:edit', args=[faq.pk]), self.payload(answer='No debe guardarse')),
+            (reverse('faq:delete', args=[faq.pk]), {'confirm': 'on'}),
+        )
+        for url, payload in requests:
+            with self.subTest(url=url), patch('faq.audit.AuditEvent.objects.create', side_effect=RuntimeError('Audit unavailable')):
+                with self.assertRaises(RuntimeError):
+                    self.client.post(url, payload)
+            self.assertEqual(FAQ.objects.count(), 1)
+            faq.refresh_from_db()
+            self.assertEqual(faq.answer, original_answer)
+        self.assertFalse(AuditEvent.objects.filter(entity='FAQ').exists())
+
+    def test_history_permissions_filtering_pagination_and_html_escaping(self):
+        from faq.audit import record_faq_event
+        faq = self.faq(question='<script>alert(1)</script>')
+        second = self.faq(question='Otra pregunta')
+        for index in range(21):
+            record_faq_event(actor=self.admin, faq_id=faq.pk, action='faq.updated',
+                             before={'question': 'Anterior', 'answer': str(index)},
+                             after={'question': faq.question, 'answer': str(index + 1)})
+        record_faq_event(actor=self.admin, faq_id=second.pk, action='faq.created', after={'question': second.question})
+        url = reverse('faq:history')
+        self.assertEqual(self.client.get(url).status_code, 302)
+        for user in (self.citizen, self.staff_without_permissions):
+            self.client.force_login(user)
+            self.assertEqual(self.client.get(url).status_code, 403)
+            self.assertEqual(self.client.get(reverse('faq:question_history', args=[faq.pk])).status_code, 403)
+        self.client.force_login(self.admin)
+        response = self.client.get(url, {'action': 'faq.updated'})
+        self.assertEqual(response.context['paginator'].count, 21)
+        self.assertEqual(len(response.context['history_items']), 20)
+        self.assertContains(response, 'action=faq.updated&amp;page=2')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+        self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        response = self.client.get(url, {'action': 'faq.updated', 'page': 2})
+        self.assertEqual(len(response.context['history_items']), 1)
+        response = self.client.get(reverse('faq:question_history', args=[faq.pk]))
+        self.assertNotContains(response, second.question)
+        self.assertEqual(response.context['paginator'].count, 21)
+        self.assertEqual(self.client.post(url).status_code, 405)
+        self.assertNotContains(self.client.get(reverse('faq:public_list')), 'faq-history')
+
+    def test_django_admin_changes_and_bulk_deletions_are_audited(self):
+        from django.contrib import admin
+        from django.test import RequestFactory
+        from faq.admin import FAQAdmin
+        model_admin = FAQAdmin(FAQ, admin.site)
+        request = RequestFactory().post('/admin/faq/faq/')
+        request.user = self.admin
+        faq = FAQ(question='Creación desde admin', answer='Respuesta')
+        model_admin.save_model(request, faq, None, change=False)
+        self.assertEqual(AuditEvent.objects.get(entity='FAQ').action, 'faq.created')
+        faq.answer = 'Actualización desde admin'
+        model_admin.save_model(request, faq, None, change=True)
+        event = AuditEvent.objects.filter(action='faq.updated').get()
+        self.assertEqual(event.before['answer'], 'Respuesta')
+        self.assertEqual(event.after['answer'], faq.answer)
+        self.assertEqual(event.source, 'django_admin')
+        second = self.faq()
+        ids = {str(faq.pk), str(second.pk)}
+        model_admin.delete_queryset(request, FAQ.objects.filter(pk__in=ids))
+        self.assertEqual(set(AuditEvent.objects.filter(action='faq.deleted').values_list('entity_id', flat=True)), ids)
+        self.assertEqual(FAQ.objects.count(), 0)
+        third = self.faq()
+        model_admin.delete_model(request, third)
+        self.assertEqual(AuditEvent.objects.filter(action='faq.deleted').count(), 3)
+
+    def test_history_navigation_is_available_for_existing_questions_without_events(self):
+        self.client.force_login(self.admin)
+        faq = self.faq()
+        history_url = reverse('faq:question_history', args=[faq.pk])
+        self.assertContains(self.client.get(reverse('faq:manage_list')), f'href="{history_url}"')
+        self.assertContains(self.client.get(reverse('faq:edit', args=[faq.pk])), 'Ver historial')
+        self.assertContains(self.client.get(history_url), 'No hay actividad registrada')

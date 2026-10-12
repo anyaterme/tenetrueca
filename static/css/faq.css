@@ -33,7 +33,25 @@
 .faq-mobile-label { display: none; }
 .faq-public [hidden], .faq-item[hidden] { display: none; }
 
+.faq-history-filter { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+.faq-history-filter select { padding: .65rem; border: 1px solid var(--color-border); border-radius: 6px; font: inherit; max-width: 100%; }
+.faq-history { display: grid; gap: 1rem; }
+.faq-history-event { min-width: 0; overflow-wrap: anywhere; }
+.faq-history-event header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 1rem; }
+.faq-history-event h2 { margin: .35rem 0 0; font-size: 1.2rem; }
+.faq-history-event time { color: var(--color-muted); font-size: .9rem; }
+.faq-history-action { color: var(--color-blue-dark); font-size: .85rem; font-weight: 700; }
+.faq-history-event summary { cursor: pointer; padding: .5rem 0; font-weight: 650; }
+.faq-history-changes { display: grid; gap: 1rem; padding-top: .5rem; }
+.faq-history-changes h3, .faq-history-values h4 { margin: 0 0 .5rem; }
+.faq-history-changes h3 { font-size: 1rem; }
+.faq-history-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.faq-history-values > div { padding: 1rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-soft); }
+.faq-history-values h4 { color: var(--color-muted); font-size: .85rem; }
+.faq-history-values p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
 @media (max-width: 700px) {
+  .faq-history-values { grid-template-columns: 1fr; }
   .faq-table-panel { padding: 16px; }
   .faq-table, .faq-table tbody, .faq-table tr, .faq-table th, .faq-table td { display: block; width: 100%; }
   .faq-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }

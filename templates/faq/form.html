@@ -3,6 +3,7 @@
 {% block title %}{% if faq %}Editar pregunta{% else %}Nueva pregunta{% endif %} · TRUEC@{% endblock %}
 {% block staff_title %}{% if faq %}Editar pregunta{% else %}Nueva pregunta{% endif %}{% endblock %}
 {% block staff_subtitle %}<p>Configura la respuesta, su posición y su visibilidad en la web pública.</p>{% endblock %}
+{% block staff_actions %}{% if faq %}<a class="button button--secondary" href="{% url 'faq:question_history' faq.pk %}">Ver historial</a>{% endif %}{% endblock %}
 
 {% block staff_content %}
   <form class="staff-panel staff-form faq-form" method="post" novalidate>
