@@ -3,6 +3,7 @@ from django.db import connection
 from django.db.models import BooleanField, Exists, OuterRef, Value
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.templatetags.static import static
 from django.urls import reverse
 
 from inventory.models import InventoryItem
@@ -46,7 +47,7 @@ def home(request):
             'start_url': start_url,
             # No announcement feed exists yet; keep the board empty until supplied.
             'home_announcements': (),
-            'home_video_url': getattr(settings, 'HOME_EXPLAINER_VIDEO_URL', ''),
+            'home_video_url': getattr(settings, 'HOME_EXPLAINER_VIDEO_URL', '') or static('multimedia/tenetrueca.mp4'),
             'home_video_captions_url': getattr(settings, 'HOME_EXPLAINER_VIDEO_CAPTIONS_URL', ''),
         },
     )

@@ -1,4 +1,34 @@
 (() => {
+  document.querySelectorAll('[data-home-video]').forEach((container) => {
+    const video = container.querySelector('video');
+    const playButton = container.querySelector('[data-home-video-play]');
+    if (!video || !playButton) return;
+
+    video.controls = false;
+    video.tabIndex = -1;
+    playButton.hidden = false;
+    video.addEventListener('playing', () => {
+      video.controls = true;
+      video.tabIndex = 0;
+      if (!playButton.hidden && !container.closest('[inert]')) video.focus({ preventScroll: true });
+      playButton.hidden = true;
+    });
+    playButton.addEventListener('click', async () => {
+      playButton.disabled = true;
+      try {
+        await video.play();
+      } catch {
+        // Keep the poster and offer native controls if playback cannot start.
+        video.controls = true;
+        video.tabIndex = 0;
+        playButton.hidden = true;
+        video.focus({ preventScroll: true });
+      } finally {
+        playButton.disabled = false;
+      }
+    });
+  });
+
   const root = document.querySelector('[data-home-slider]');
   if (!root) return;
   const slides = Array.from(root.querySelectorAll('[data-home-slide]'));

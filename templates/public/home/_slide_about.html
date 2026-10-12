@@ -2,17 +2,23 @@
 <div class="site-shell home-hero__inner">
   <div class="home-hero__content">
     <p class="home-kicker">Reutilizar, compartir, cuidar</p>
-    <h2 class="home-hero__title">¿Qué es Trueca?</h2>
+    <h2 class="home-hero__title">¿Qué es TRUEC@?</h2>
     <p class="home-hero__lead">TRUEC@ promueve la reutilización y el intercambio sostenible de objetos entre personas de Tenerife.</p>
     <p class="home-about__description">Damos una segunda vida a lo que ya no usamos, reducimos residuos y construimos una comunidad más sostenible.</p>
   </div>
   <div class="home-video" data-home-video>
     {% if home_video_url %}
-      <video controls playsinline preload="none" aria-label="Vídeo explicativo de TRUEC@">
+      <video controls playsinline preload="none" poster="{% static 'img/home/hero-exchange.png' %}" aria-label="Vídeo explicativo de TRUEC@" tabindex="0">
         <source src="{{ home_video_url }}">
         {% if home_video_captions_url %}<track kind="captions" src="{{ home_video_captions_url }}" srclang="es" label="Español" default>{% endif %}
         Tu navegador no admite la reproducción de vídeo. <a href="{{ home_video_url }}">Ver el vídeo explicativo</a>.
       </video>
+      <button class="home-video__play" type="button" aria-label="Reproducir el vídeo explicativo de TRUEC@" data-home-video-play hidden>
+        <span class="home-video__play-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="32" height="32" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        </span>
+        <span class="home-video__play-label" aria-hidden="true">Reproducir vídeo</span>
+      </button>
     {% else %}
       <div class="home-video__placeholder">
         <img src="{% static 'img/brand/trueca-icon.png' %}" alt="" width="400" height="400">
