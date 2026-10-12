@@ -1,0 +1,27 @@
+{% extends "locations/staff_base.html" %}
+{% block title %}Puntos limpios · TRUEC@{% endblock %}
+{% block staff_title %}Puntos limpios{% endblock %}
+{% block staff_subtitle %}<p>Configura los datos y la visibilidad de los centros en el mapa público.</p>{% endblock %}
+{% block staff_actions %}<a class="button button--secondary" href="{% url 'home' %}#puntos-limpios">Ver web pública</a>{% if can_add_center %}<a class="button button--primary" href="{% url 'locations:create' %}">Nuevo punto limpio</a>{% endif %}{% endblock %}
+{% block staff_content %}
+  <form class="staff-panel centers-search" method="get" role="search">
+    <label for="center-search">Buscar punto limpio</label>
+    <input id="center-search" type="search" name="q" value="{{ query }}" placeholder="Nombre o dirección">
+    <button class="button button--secondary" type="submit">Buscar</button>
+  </form>
+  <div class="centers-admin-grid">
+    {% for center in centers %}
+      <article class="staff-panel centers-admin-card">
+        <h2>{{ center.name }}</h2>
+        <p>{{ center.address|default:"Dirección pendiente" }}</p>
+        <dl>
+          <div><dt>Estado operativo</dt><dd>{{ center.get_operational_status_display }}</dd></div>
+          <div><dt>Mapa público</dt><dd>{% if center.show_on_public_map and center.is_active and center.has_coordinates %}Visible{% else %}Oculto{% endif %}</dd></div>
+          <div><dt>Ubicación</dt><dd>{% if center.has_coordinates %}Configurada{% else %}Pendiente{% endif %}</dd></div>
+          {% if not center.is_active %}<div><dt>Centro</dt><dd>Inactivo</dd></div>{% endif %}
+        </dl>
+        {% if can_change_center %}<a class="button button--secondary" href="{% url 'locations:edit' center.pk %}" aria-label="Editar {{ center.name }}">Editar</a>{% endif %}
+      </article>
+    {% empty %}<p class="staff-empty">No hay puntos limpios que mostrar.</p>{% endfor %}
+  </div>
+{% endblock %}

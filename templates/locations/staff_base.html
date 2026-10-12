@@ -1,0 +1,4 @@
+{% extends "layouts/backoffice.html" %}
+{% load static %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/locations.css' %}?v=20261012-map-2">{% endblock %}
+{% block staff_breadcrumb %}Puntos limpios{% endblock %}

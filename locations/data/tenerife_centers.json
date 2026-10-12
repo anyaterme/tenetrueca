@@ -1,0 +1,80 @@
+{
+  "source": "https://datos.tenerife.es/es/datos/conjuntos-de-datos/instalaciones-de-tratamiento-de-residuos-de-tenerife",
+  "source_updated": "2026-01-08",
+  "information_source": "https://www.tenerife.es/es/puntos-limpios",
+  "license": "CC BY — Cabildo Insular de Tenerife",
+  "centers": [
+    {
+      "name": "Punto Limpio de Buenavista del Norte",
+      "slug": "punto-limpio-buenavista-del-norte",
+      "address": "Carretera El Palmar (TF-436), s/n. 38480. Buenavista del Norte",
+      "latitude": "28.361512",
+      "longitude": "-16.848231",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    },
+    {
+      "name": "Punto Limpio de La Guancha",
+      "slug": "punto-limpio-la-guancha",
+      "address": "Carretera TF-352 (Travesía Cabo Verde), s/n, 38441 La Guancha",
+      "latitude": "28.385161",
+      "longitude": "-16.66144",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    },
+    {
+      "name": "Punto Limpio de La Orotava",
+      "slug": "punto-limpio-la-orotava",
+      "address": "Calle Ganaderia, 4, 38312 La Orotava",
+      "latitude": "28.397123",
+      "longitude": "-16.542072",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    },
+    {
+      "name": "Punto Limpio de Jagua",
+      "slug": "punto-limpio-jagua",
+      "address": "Camino Principal Jagua,s/n, 38120 Santa Cruz de Tenerife",
+      "latitude": "28.500707",
+      "longitude": "-16.206969",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    },
+    {
+      "name": "Punto Limpio de Taco",
+      "slug": "punto-limpio-taco",
+      "address": "Carretera Cuesta Taco (TF-194), s/n, 38108 San Cristóbal de La Laguna",
+      "latitude": "28.454207",
+      "longitude": "-16.292419",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    },
+    {
+      "name": "Punto Limpio de Güímar",
+      "slug": "punto-limpio-guimar",
+      "address": "Polígono Industrial Valle de Güímar, s/n, 38508 Güímar",
+      "latitude": "28.320666",
+      "longitude": "-16.377271",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    },
+    {
+      "name": "Punto Limpio de Arona",
+      "slug": "punto-limpio-arona",
+      "address": "Carretera General TF-66 Buzanada, 350, 38627 Arona",
+      "latitude": "28.064351",
+      "longitude": "-16.663834",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    },
+    {
+      "name": "Punto Limpio de Adeje",
+      "slug": "punto-limpio-adeje",
+      "address": "Carretera de Armeñime a Puerto de Santiago (TF-47), 370, 38678 Adeje",
+      "latitude": "28.127393",
+      "longitude": "-16.745678",
+      "phone": "900 305 000",
+      "schedule": "Lunes: 8:00–16:00.\nMartes a viernes: 8:00–20:00.\nSábados: 9:00–20:00.\nDomingos: 9:00–14:00."
+    }
+  ]
+}

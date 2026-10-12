@@ -1,0 +1,47 @@
+<section class="home-centers" id="puntos-limpios" aria-labelledby="centers-title">
+  <div class="site-shell">
+    <header class="home-section-heading">
+      <p class="home-kicker">Cerca de ti</p>
+      <h2 id="centers-title">Puntos limpios de Tenerife</h2>
+      <p>Encuentra tu punto limpio y consulta su ubicación y horario.</p>
+    </header>
+    {% if public_centers %}
+      <div class="centers-layout" data-centers-map data-map-mode="public">
+        <div class="centers-map-panel">
+          <div id="centers-map" class="centers-map" data-map-canvas hidden aria-label="Mapa de los puntos limpios de Tenerife"></div>
+          <div class="centers-map-intro" data-map-intro>
+            <span class="centers-map-symbol" aria-hidden="true">⌖</span>
+            <h3>Localiza tu punto limpio</h3>
+            {% if maps_config.apiKey and maps_config.mapId %}
+              <p>Al mostrar el mapa conectarás con Google Maps. Google recibirá datos de conexión, como tu dirección IP. Puedes consultar los centros en el listado sin cargar el mapa.</p>
+              <button class="button button--primary" type="button" data-map-load>Mostrar mapa</button>
+              <a href="{% url 'privacy_policy' %}#mapas-google">Información de privacidad</a>
+            {% else %}<p>Consulta las ubicaciones y los horarios en el listado de puntos limpios.</p>{% endif %}
+          </div>
+          <p class="centers-map-status" role="status" aria-live="polite" data-map-status></p>
+        </div>
+        <div class="centers-list" aria-label="Listado de puntos limpios">
+          {% for center in public_centers %}
+            <article class="center-card" data-center-card="{{ center.pk }}">
+              <div class="center-card__heading">
+                <h3>{{ center.name }}</h3>
+                <span class="center-status{% if center.operational_status != 'open' %} center-status--closed{% endif %}">{{ center.get_operational_status_display }}</span>
+              </div>
+              <p>{{ center.address }}</p>
+              {% if center.schedule %}<p class="center-card__schedule"><strong>Horario</strong><br>{{ center.schedule|linebreaksbr }}</p>{% endif %}
+              {% if center.phone %}<p><strong>Teléfono:</strong> {{ center.phone }}</p>{% endif %}
+              {% if center.public_information %}<p>{{ center.public_information|linebreaksbr }}</p>{% endif %}
+              <div class="center-card__actions">
+                {% if maps_config.apiKey and maps_config.mapId %}<button class="button button--secondary" type="button" data-center-select="{{ center.pk }}" aria-controls="centers-map" hidden>Ver en el mapa</button>{% endif %}
+                <a class="button button--secondary" href="{{ center.directions_url }}" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar a {{ center.name }} en Google Maps (nueva pestaña)">Cómo llegar <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}<p class="centers-empty">Próximamente podrás consultar aquí la ubicación de los puntos limpios.</p>{% endif %}
+    {% if public_centers %}<p class="centers-source">Ubicaciones iniciales: <a href="https://datos.tenerife.es/es/datos/conjuntos-de-datos/instalaciones-de-tratamiento-de-residuos-de-tenerife" target="_blank" rel="noopener noreferrer">datos abiertos del Cabildo de Tenerife (CC BY)</a>.</p>{% endif %}
+  </div>
+  {{ maps_config|json_script:"google-maps-config" }}
+  {{ centers_map_data|json_script:"centers-map-data" }}
+</section>

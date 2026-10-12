@@ -1,0 +1,34 @@
+{% extends "locations/staff_base.html" %}
+{% load static %}
+{% block title %}{% if center %}Editar punto limpio{% else %}Nuevo punto limpio{% endif %} · TRUEC@{% endblock %}
+{% block staff_title %}{% if center %}{{ center.name }}{% else %}Nuevo punto limpio{% endif %}{% endblock %}
+{% block staff_subtitle %}<p>Indica la ubicación exacta y decide si aparece en la web pública.</p>{% endblock %}
+{% block staff_content %}
+  <form class="staff-panel staff-form center-form" method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="staff-form__errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% include "components/form_field.html" with field=form.name %}
+    {% include "components/form_field.html" with field=form.slug %}
+    {% include "components/form_field.html" with field=form.address %}
+    <div class="center-coordinates">
+      {% include "components/form_field.html" with field=form.latitude %}
+      {% include "components/form_field.html" with field=form.longitude %}
+    </div>
+    <section class="centers-map-panel" data-centers-map data-map-mode="editor" aria-label="Seleccionar ubicación del punto limpio">
+      <div class="centers-map" data-map-canvas hidden></div>
+      <div class="centers-map-intro" data-map-intro>
+        <p>Selecciona la ubicación haciendo clic en el mapa o arrastrando el marcador. También puedes escribir las coordenadas en los campos anteriores.</p>
+        {% if maps_config.apiKey and maps_config.mapId %}<button class="button button--secondary" type="button" data-map-load>Mostrar mapa de ubicación</button>{% else %}<p class="staff-muted">La previsualización estará disponible al configurar Google Maps. Puedes guardar la ubicación mediante coordenadas.</p>{% endif %}
+      </div>
+      <p class="centers-map-status" role="status" aria-live="polite" data-map-status></p>
+    </section>
+    {% include "components/form_field.html" with field=form.phone %}
+    {% include "components/form_field.html" with field=form.schedule %}
+    {% include "components/form_field.html" with field=form.operational_status %}
+    {% include "components/form_field.html" with field=form.public_information %}
+    {% include "components/form_field.html" with field=form.show_on_public_map %}
+    <div class="team-form-actions"><a class="button button--secondary" href="{% url 'locations:manage_list' %}">Cancelar</a><button class="button button--primary" type="submit">Guardar punto limpio</button></div>
+  </form>
+  {{ maps_config|json_script:"google-maps-config" }}
+{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/centers_map.js' %}?v=20261012-map-2" defer></script>{% endblock %}
