@@ -7,7 +7,7 @@
   <title>{% block title %}TRUEC@{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'img/brand/trueca-icon.png' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/components.css' %}?v=20261012-institutional-2">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}?v=20261019-mobile-menu">
   {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if user.is_authenticated and not is_operations_staff %} body--citizen-nav{% endif %}">
@@ -23,6 +23,7 @@
       {% include "components/mobile_nav.html" %}
     {% endif %}
   {% endblock %}
+  <script src="{% static 'js/site_navigation.js' %}?v=20261019-mobile-menu" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

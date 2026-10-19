@@ -63,6 +63,57 @@
   margin-left: auto;
 }
 
+.site-nav[hidden],
+.site-menu-toggle {
+  display: none;
+}
+
+.site-menu-toggle {
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin-left: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-soft);
+  color: var(--color-blue-dark);
+  cursor: pointer;
+}
+
+.site-menu-toggle:hover {
+  background: #dff2fc;
+}
+
+.site-menu-toggle__icon,
+.site-menu-toggle__icon::before,
+.site-menu-toggle__icon::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.site-menu-toggle__icon {
+  position: relative;
+}
+
+.site-menu-toggle__icon::before,
+.site-menu-toggle__icon::after {
+  position: absolute;
+  left: 0;
+  content: "";
+}
+
+.site-menu-toggle__icon::before { top: -6px; }
+.site-menu-toggle__icon::after { top: 6px; }
+.site-menu-toggle[aria-expanded="true"] .site-menu-toggle__icon { background: transparent; }
+.site-menu-toggle[aria-expanded="true"] .site-menu-toggle__icon::before { top: 0; transform: rotate(45deg); }
+.site-menu-toggle[aria-expanded="true"] .site-menu-toggle__icon::after { top: 0; transform: rotate(-45deg); }
+
 .site-nav a {
   color: var(--color-muted);
   font-weight: 650;
@@ -595,22 +646,42 @@
     content: "";
   }
 
-  .site-header--citizen .site-nav__catalog {
-    display: none;
-  }
-
   .hero__grid {
     display: block;
   }
 
   .site-header__inner {
+    flex-wrap: wrap;
     gap: 12px;
     min-height: 70px;
     padding: 10px 0;
   }
 
   .site-nav {
-    gap: 10px;
+    flex: 0 0 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin-left: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .site-menu-toggle:not([hidden]) {
+    display: inline-flex;
+  }
+
+  .site-nav > a,
+  .site-nav__logout button {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 1rem;
+  }
+
+  .site-nav__logout button {
+    width: 100%;
   }
 
   .brand__logo {
@@ -682,23 +753,6 @@
   .site-header__inner,
   .site-nav {
     gap: 8px;
-  }
-
-  .site-nav > a {
-    font-size: .82rem;
-  }
-
-  .site-nav__identity > span:last-child,
-  .site-nav__logout-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
   }
 
   .site-footer {

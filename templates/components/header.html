@@ -1,5 +1,5 @@
 {% load static %}
-<header class="site-header{% if user.is_authenticated and not is_operations_staff %} site-header--citizen{% endif %}">
+<header class="site-header{% if user.is_authenticated and not is_operations_staff %} site-header--citizen{% endif %}" data-site-header>
   <div class="site-shell site-header__inner">
     <div class="site-brand-lockup">
       <a class="brand" href="{% if user.is_authenticated and not is_operations_staff %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}" aria-label="TRUEC@, inicio">
@@ -12,7 +12,10 @@
         >
       </a>
     </div>
-    <nav class="site-nav" aria-label="Navegación principal">
+    <button class="site-menu-toggle" type="button" aria-label="Abrir menú" aria-controls="site-navigation" aria-expanded="false" hidden data-site-menu-toggle>
+      <span class="site-menu-toggle__icon" aria-hidden="true"></span>
+    </button>
+    <nav class="site-nav" id="site-navigation" aria-label="Navegación principal" data-site-nav>
       <a class="site-nav__catalog" href="{% url 'catalog:list' %}">Catálogo</a>
       <a href="{% url 'home' %}#como-funciona">¿Cómo funciona TRUEC@?</a>
       <a href="{% url 'home' %}#puntos-limpios">Localizaciones</a>
