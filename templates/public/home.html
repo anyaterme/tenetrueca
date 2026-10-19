@@ -5,7 +5,7 @@
 {% block body_class %}home-page{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/home.css' %}?v=20261012-video-poster">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}?v=20261019-process">
   <link rel="stylesheet" href="{% static 'css/locations.css' %}?v=20261012-map-2">
 {% endblock %}
 
@@ -41,32 +41,68 @@
       <p class="home-kicker">Así funciona TRUEC@</p>
       <h2 id="process-title">Intercambiar es muy fácil</h2>
     </header>
-    <div class="home-process__grid">
-      <article class="home-step">
-        <div class="home-step__media">
-          <span class="home-step__number" aria-hidden="true">1</span>
-          <img src="{% static 'img/home/step-publish.png' %}" alt="Persona publicando la fotografía de un objeto desde su teléfono" width="1536" height="1024">
-        </div>
-        <h3>Publica</h3>
-        <p>Publica lo que ya no necesitas.</p>
-      </article>
-      <article class="home-step">
-        <div class="home-step__media">
-          <span class="home-step__number" aria-hidden="true">2</span>
-          <img src="{% static 'img/home/step-find.png' %}" alt="Lupa mostrando un objeto encontrado entre artículos reutilizables" width="1536" height="1024">
-        </div>
-        <h3>Encuentra</h3>
-        <p>Descubre objetos disponibles en Tenerife y encuentra lo que buscas.</p>
-      </article>
-      <article class="home-step">
-        <div class="home-step__media">
-          <span class="home-step__number" aria-hidden="true">3</span>
-          <img src="{% static 'img/home/step-exchange.png' %}" alt="Dos personas acordando el intercambio de una caja con objetos" width="1536" height="1024">
-        </div>
-        <h3>Intercambia</h3>
-        <p>Elige tu objeto y recógelo en el Punto Limpio indicado.</p>
-      </article>
-    </div>
+    <section class="home-process__group home-process__group--share" aria-labelledby="process-share-title">
+      <h3 id="process-share-title">Comparte tus objetos y consigue puntos</h3>
+      <ol class="home-process__grid" role="list">
+        <li class="home-step">
+          <div class="home-step__media">
+            <span class="home-step__number" aria-hidden="true">1</span>
+            <img src="{% static 'img/home/step-publish.png' %}" alt="Persona publicando la fotografía de un objeto desde su teléfono" width="1536" height="1024" loading="lazy">
+          </div>
+          <h4>Publica</h4>
+          <p>Publica en la plataforma el objeto que ya no necesitas. De esta manera, quedará a disposición de otras personas interesadas.</p>
+        </li>
+        <li class="home-step">
+          <div class="home-step__media">
+            <span class="home-step__number" aria-hidden="true">2</span>
+            <img src="{% static 'img/home/step-exchange.png' %}" alt="Dos personas entregando una caja con objetos reutilizables" width="1536" height="1024" loading="lazy">
+          </div>
+          <h4>Entrega</h4>
+          <p>Lleva el objeto que has publicado al <strong>Punto Limpio de tu preferencia</strong> para incorporarlo al sistema de TRUEC@. El personal operario validará cada objeto entregado.</p>
+        </li>
+        <li class="home-step">
+          <div class="home-step__media">
+            <span class="home-step__number" aria-hidden="true">3</span>
+            <span class="home-step__reward"><strong>+100</strong><span>puntos</span></span>
+          </div>
+          <h4>Consigue puntos</h4>
+          <p>Una vez validado tu objeto, consigue puntos (<strong>100 puntos</strong>) para canjearlos en algún objeto que encuentres en el catálogo.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="home-process__group home-process__group--collect" aria-labelledby="process-collect-title">
+      <h3 id="process-collect-title">Reserva y recoge objetos</h3>
+      <ol class="home-process__grid home-process__grid--collect" role="list">
+        <li class="home-step home-step--reservation">
+          <div class="home-step__media">
+            <span class="home-step__number" aria-hidden="true">1</span>
+            <img src="{% static 'img/home/step-find.png' %}" alt="Lupa mostrando un objeto encontrado entre artículos reutilizables" width="1536" height="1024" loading="lazy">
+            <span class="home-step__cost">−50 puntos</span>
+          </div>
+          <div class="home-step__content">
+            <h4>Reserva y recoge</h4>
+            <p>Cuando encuentres un objeto que te interese, resérvalo a través de la plataforma (<strong>gastarás 50 puntos</strong>) con los puntos que tienes disponibles. Dispondrás de <strong>7 días para recogerlo</strong> en el Punto Limpio donde se encuentre. En caso de encontrarse en almacén, será distribuido a tu Punto Limpio asignado. Para recoger el objeto es necesario presentar el <strong>DNI en físico</strong> en el Punto Limpio, para que el personal operario verifique tu identidad.</p>
+          </div>
+        </li>
+        <li class="home-step">
+          <div class="home-step__media">
+            <span class="home-step__number" aria-hidden="true">2</span>
+            <span class="home-step__deadline"><strong>7 días</strong><span>para recogerlo</span></span>
+          </div>
+          <h4>Si no puedes recogerlo a tiempo</h4>
+          <p>Si transcurridos los <strong>7 días</strong> no has recogido el objeto, <strong>no podrás reservar objetos en 7 días</strong> y perderás la reserva.</p>
+        </li>
+        <li class="home-step">
+          <div class="home-step__media">
+            <span class="home-step__number" aria-hidden="true">3</span>
+            <img src="{% static 'img/auth-circular-exchange.png' %}" alt="Personas dando una nueva vida a los objetos mediante el intercambio circular" width="1672" height="941" loading="lazy">
+          </div>
+          <h4>Vuelve al catálogo</h4>
+          <p>Una vez se cancela la reserva o pasa el tiempo disponible para su recogida, el objeto se encontrará de nuevo disponible para reservar en el Punto Limpio donde se encuentre, o posteriormente en almacén.</p>
+        </li>
+      </ol>
+    </section>
   </div>
 </section>
 

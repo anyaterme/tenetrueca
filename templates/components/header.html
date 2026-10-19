@@ -14,6 +14,7 @@
     </div>
     <nav class="site-nav" aria-label="Navegación principal">
       <a class="site-nav__catalog" href="{% url 'catalog:list' %}">Catálogo</a>
+      <a href="{% url 'home' %}#como-funciona">¿Cómo funciona TRUEC@?</a>
       <a href="{% url 'home' %}#puntos-limpios">Localizaciones</a>
       <a href="{% url 'faq:public_list' %}"{% if request.resolver_match.namespace == 'faq' and request.resolver_match.url_name == 'public_list' %} aria-current="page"{% endif %}>Preguntas frecuentes</a>
       {% if user.is_authenticated %}
