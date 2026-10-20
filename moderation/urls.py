@@ -9,4 +9,5 @@ urlpatterns = [
     path('', views.moderation_queue, name='queue'),
     path('<int:pk>/', views.moderation_detail, name='detail'),
     path('<int:pk>/decision/', views.moderation_decide, name='decide'),
+    path('<int:pk>/evaluacion/', views.moderation_reevaluate, name='reevaluate'),
 ]

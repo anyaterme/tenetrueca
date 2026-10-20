@@ -1,0 +1,73 @@
+{
+  "overall": "issues",
+  "identified_object": "Pelota deportiva",
+  "checks": {
+    "identification": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "photo_consistency": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "title": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "description": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "category": {
+      "status": "CORRECTO",
+      "explanation": "La pelota corresponde a la categoría Deporte."
+    },
+    "subcategory": {
+      "status": "INCIDENCIA",
+      "explanation": "La pelota no corresponde a Deporte / Raquetas; debe seleccionarse Pelotas."
+    },
+    "admission": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "prohibited_items": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "photo_quality": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "dimensions": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    }
+  },
+  "issues": [
+    "Subcategoría incorrecta: se ha seleccionado Raquetas para una pelota."
+  ],
+  "recommendations": [
+    "Seleccionar Pelotas dentro de Deporte."
+  ],
+  "alternative_category_ids": [],
+  "dimensions": {
+    "method": "declared",
+    "height": {
+      "minimum_cm": 20.0,
+      "maximum_cm": 20.0
+    },
+    "width": {
+      "minimum_cm": 20.0,
+      "maximum_cm": 20.0
+    },
+    "depth": {
+      "minimum_cm": 20.0,
+      "maximum_cm": 20.0
+    },
+    "evidence": "El texto de prueba declara 20 × 20 × 20 cm.",
+    "limitations": "Comprobar durante la recepción.",
+    "source": null,
+    "physical_verification": false
+  },
+  "unverifiable": []
+}

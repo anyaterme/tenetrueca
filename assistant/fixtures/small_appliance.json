@@ -1,0 +1,73 @@
+{
+  "overall": "issues",
+  "identified_object": "Tostadora eléctrica pequeña",
+  "checks": {
+    "identification": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "photo_consistency": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "title": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "description": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "category": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "subcategory": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "admission": {
+      "status": "INCIDENCIA",
+      "explanation": "Puede entregarse para obtener puntos, pero no publicarse en el catálogo de intercambio."
+    },
+    "prohibited_items": {
+      "status": "INCIDENCIA",
+      "explanation": "Puede entregarse para obtener puntos, pero no publicarse en el catálogo de intercambio."
+    },
+    "photo_quality": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "dimensions": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    }
+  },
+  "issues": [
+    "Puede entregarse para obtener puntos, pero no publicarse en el catálogo de intercambio."
+  ],
+  "recommendations": [
+    "Revisar la incidencia antes de decidir."
+  ],
+  "alternative_category_ids": [],
+  "dimensions": {
+    "method": "declared",
+    "height": {
+      "minimum_cm": 20.0,
+      "maximum_cm": 20.0
+    },
+    "width": {
+      "minimum_cm": 20.0,
+      "maximum_cm": 20.0
+    },
+    "depth": {
+      "minimum_cm": 20.0,
+      "maximum_cm": 20.0
+    },
+    "evidence": "El texto de prueba declara 20 × 20 × 20 cm.",
+    "limitations": "Comprobar durante la recepción.",
+    "source": null,
+    "physical_verification": false
+  },
+  "unverifiable": []
+}

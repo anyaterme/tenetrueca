@@ -27,6 +27,11 @@ class ModerationDecision(models.Model):
     reason_code = models.CharField(max_length=80, blank=True, db_index=True)
     notes = models.TextField(blank=True)
     decided_at = models.DateTimeField(default=timezone.now, db_index=True)
+    ai_evaluation = models.ForeignKey(
+        'assistant.PublicationEvaluation', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='moderation_decisions',
+    )
+    publication_fingerprint = models.CharField(max_length=64, blank=True)
 
     class Meta:
         ordering = ['-decided_at']

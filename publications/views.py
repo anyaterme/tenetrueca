@@ -23,6 +23,7 @@ from publications.forms import (
 from publications.images import ALLOWED_IMAGE_FORMATS
 from publications.models import Publication, PublicationPhoto
 from publications.services import user_can_submit_today
+from assistant.services import schedule_evaluation
 
 
 EDITABLE_STATUSES = {
@@ -265,6 +266,8 @@ def publication_create(request):
                         publication.status = Publication.Status.DRAFT
                     publication.save()
                     _apply_photo_changes(publication, form)
+                    if action == 'submit':
+                        schedule_evaluation(publication.pk)
                     _audit_publication(
                         request,
                         publication,
@@ -321,6 +324,8 @@ def publication_edit(request, pk):
                         publication.reviewed_at = None
                     publication.save()
                     _apply_photo_changes(publication, form)
+                    if action == 'submit':
+                        schedule_evaluation(publication.pk)
                     _audit_publication(
                         request,
                         publication,

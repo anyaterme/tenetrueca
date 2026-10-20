@@ -1,0 +1,71 @@
+{
+  "overall": "apparently_suitable",
+  "identified_object": "Pelota deportiva",
+  "checks": {
+    "identification": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "photo_consistency": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "title": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "description": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "category": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "subcategory": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "admission": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "prohibited_items": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "photo_quality": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    },
+    "dimensions": {
+      "status": "CORRECTO",
+      "explanation": "Caso de prueba: información coherente con una pelota deportiva."
+    }
+  },
+  "issues": [],
+  "recommendations": [
+    "Comprobar el objeto y las fotografías manualmente."
+  ],
+  "alternative_category_ids": [],
+  "dimensions": {
+    "method": "visual",
+    "height": {
+      "minimum_cm": 40.0,
+      "maximum_cm": 55.0
+    },
+    "width": {
+      "minimum_cm": 25.0,
+      "maximum_cm": 35.0
+    },
+    "depth": {
+      "minimum_cm": 15.0,
+      "maximum_cm": 25.0
+    },
+    "evidence": "Intervalos aproximados por comparación visual con una mano.",
+    "limitations": "Perspectiva y escala inciertas; comprobar físicamente.",
+    "source": null,
+    "physical_verification": false
+  },
+  "unverifiable": []
+}

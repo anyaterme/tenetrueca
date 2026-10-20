@@ -1,0 +1,23 @@
+# Local simulation only. Use after docker-compose.yml and app/compose.openai.yml.
+x-mock-environment: &mock-environment
+  OPENAI_EVALUATION_BACKEND: mock
+  OPENAI_LIVE_ENABLED: "False"
+  OPENAI_API_KEY: ""
+  OPENAI_MODEL: mock
+  OPENAI_DAILY_REQUEST_LIMIT: "0"
+  OPENAI_DAILY_BUDGET_USD: "0"
+
+services:
+  app:
+    environment: *mock-environment
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health/', timeout=5).close()"]
+      interval: 10s
+      timeout: 6s
+      start_period: 30s
+      retries: 6
+  evaluation_worker:
+    environment: *mock-environment
+    depends_on:
+      app:
+        condition: service_healthy

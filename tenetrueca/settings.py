@@ -1,3 +1,5 @@
+import os
+from decimal import Decimal
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -157,6 +159,34 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
+
+# No network is needed for normal development or automated tests.
+TEST_RUNNER = 'assistant.testing.NoOpenAITestRunner'
+OPENAI_EVALUATION_BACKEND = os.getenv('OPENAI_EVALUATION_BACKEND', 'disabled')
+OPENAI_LIVE_ENABLED = os.getenv('OPENAI_LIVE_ENABLED', '').lower() in ('1', 'true', 'yes')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', '')
+OPENAI_TIMEOUT_SECONDS = int(os.getenv('OPENAI_TIMEOUT_SECONDS', '45'))
+OPENAI_MAX_OUTPUT_TOKENS = int(os.getenv('OPENAI_MAX_OUTPUT_TOKENS', '2400'))
+# AI derivatives only; validate lazily when building an evaluation, not at web startup.
+# Legacy environment name remains a fallback for existing deployments.
+AI_IMAGE_MAX_DIMENSION = os.getenv('AI_IMAGE_MAX_DIMENSION', os.getenv('OPENAI_IMAGE_MAX_SIDE', '1024'))
+AI_IMAGE_JPEG_QUALITY = os.getenv('AI_IMAGE_JPEG_QUALITY', '80')
+AI_IMAGE_FORMAT = os.getenv('AI_IMAGE_FORMAT', 'JPEG').upper()
+AI_IMAGE_DETAIL = os.getenv('AI_IMAGE_DETAIL', 'high').lower()
+AI_IMAGE_REMOVE_EXIF = os.getenv('AI_IMAGE_REMOVE_EXIF', 'True').lower() in ('1', 'true', 'yes')
+AI_IMAGE_MAX_COUNT = os.getenv('AI_IMAGE_MAX_COUNT', '3')
+OPENAI_IMAGE_MAX_SIDE = AI_IMAGE_MAX_DIMENSION  # Deprecated alias; use AI_IMAGE_MAX_DIMENSION.
+OPENAI_IMAGE_TOKEN_RESERVE = int(os.getenv('OPENAI_IMAGE_TOKEN_RESERVE', '8192'))
+OPENAI_MAX_ATTEMPTS = int(os.getenv('OPENAI_MAX_ATTEMPTS', '2'))
+OPENAI_RETRY_DELAY_SECONDS = int(os.getenv('OPENAI_RETRY_DELAY_SECONDS', '120'))
+OPENAI_DAILY_REQUEST_LIMIT = int(os.getenv('OPENAI_DAILY_REQUEST_LIMIT', '20'))
+OPENAI_DAILY_BUDGET_USD = Decimal(os.getenv('OPENAI_DAILY_BUDGET_USD', '1'))
+# No assumed tariffs. Real calls fail closed until rates for OPENAI_MODEL are configured.
+OPENAI_INPUT_USD_PER_MILLION = Decimal(os.getenv('OPENAI_INPUT_USD_PER_MILLION', '0'))
+OPENAI_OUTPUT_USD_PER_MILLION = Decimal(os.getenv('OPENAI_OUTPUT_USD_PER_MILLION', '0'))
+OPENAI_REQUEST_RESERVE_USD = Decimal(os.getenv('OPENAI_REQUEST_RESERVE_USD', '0.10'))
+OPENAI_MAX_INPUT_BYTES = int(os.getenv('OPENAI_MAX_INPUT_BYTES', '30000'))
 
 try:
     from .local_settings import *

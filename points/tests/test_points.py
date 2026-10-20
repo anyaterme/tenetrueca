@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import close_old_connections
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, skipUnlessDBFeature
 from django.urls import reverse
 
 from points.models import PointMovement
@@ -60,6 +60,7 @@ class PointLedgerTests(TestCase):
         self.assertNotContains(response, other.email)
 
 
+@skipUnlessDBFeature('has_select_for_update')
 class ConcurrentPointChargeTests(TransactionTestCase):
     reset_sequences = True
 

@@ -70,7 +70,7 @@ class ModerationDecisionForm(forms.Form):
     decision = forms.ChoiceField(
         label='Decisión',
         choices=ModerationDecision.Decision.choices,
-        widget=forms.RadioSelect,
+        widget=forms.RadioSelect(attrs={'class': 'moderation-decision-options'}),
     )
     notes = forms.CharField(
         required=False,
@@ -78,7 +78,7 @@ class ModerationDecisionForm(forms.Form):
         max_length=2000,
         widget=forms.Textarea(
             attrs={
-                'rows': 5,
+                'rows': 14,
                 'placeholder': 'Explica los cambios necesarios o el motivo del rechazo.',
             }
         ),

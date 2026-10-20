@@ -1,0 +1,28 @@
+<section class="staff-panel" aria-labelledby="decision-title">
+  <h2 id="decision-title">Decisión de moderación</h2>
+  {% if can_decide %}
+    {% if ai_decision_proposal %}
+      <div class="staff-guidance moderation-proposal" id="decision-proposal" role="note">
+        <strong>Recomendación IA: {{ ai_decision_proposal.label }}</strong>
+        <p>Propuesta basada en la evaluación #{{ ai_decision_proposal.evaluation_id }}{% if ai_decision_proposal.is_simulated %} (simulada){% endif %}. Revisa y modifica la selección, el motivo y las indicaciones antes de registrar tu decisión.</p>
+      </div>
+    {% endif %}
+    <form class="staff-form"{% if ai_decision_proposal %} data-decision-drafts="moderation-decision-drafts"{% endif %} method="post" action="{% url 'moderation:decide' publication.pk %}" novalidate>
+      {% csrf_token %}
+      {% if decision_form.non_field_errors %}<div class="staff-form__errors" role="alert">{{ decision_form.non_field_errors }}</div>{% endif %}
+      <fieldset class="moderation-decision-field{% if decision_form.decision.errors %} form-field--error{% endif %}"{% if ai_decision_proposal %} aria-describedby="decision-proposal"{% endif %}>
+        <legend class="form-field__label">{{ decision_form.decision.label }}</legend>
+        {{ decision_form.decision }}
+        {% if decision_form.decision.errors %}<div class="form-field__errors" role="alert">{{ decision_form.decision.errors }}</div>{% endif %}
+      </fieldset>
+      {% include "components/form_field.html" with field=decision_form.notes %}
+      {% if ai_decision_proposal %}
+        {{ ai_decision_proposal.drafts|json_script:"moderation-decision-drafts" }}
+        <p class="staff-muted" id="decision-draft-help">Cada opción tiene su propio borrador. Tus ediciones se conservan al cambiar de opción mientras esta página siga abierta.</p>
+      {% endif %}
+      <button class="button button--primary" type="submit">Registrar decisión</button>
+    </form>
+  {% else %}
+    <p class="staff-guidance">Esta revisión ya tiene una decisión. Solo las publicaciones pendientes pueden resolverse.</p>
+  {% endif %}
+</section>

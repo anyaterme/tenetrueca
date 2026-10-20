@@ -17,6 +17,8 @@ class ModerationDecisionAdmin(admin.ModelAdmin):
         'reason_code',
         'notes',
         'decided_at',
+        'ai_evaluation',
+        'publication_fingerprint',
     )
 
     def has_add_permission(self, request):

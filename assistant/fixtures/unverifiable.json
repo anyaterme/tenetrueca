@@ -1,0 +1,73 @@
+{
+  "overall": "needs_verification",
+  "identified_object": "Simulación: objeto sin identificar",
+  "checks": {
+    "identification": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "photo_consistency": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "title": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "description": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "category": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "subcategory": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "admission": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "prohibited_items": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "photo_quality": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    },
+    "dimensions": {
+      "status": "NO_VERIFICABLE",
+      "explanation": "Respuesta simulada; verificar manualmente."
+    }
+  },
+  "issues": [],
+  "recommendations": [
+    "Comprobar el objeto y las fotografías manualmente."
+  ],
+  "alternative_category_ids": [],
+  "dimensions": {
+    "method": "unverifiable",
+    "height": {
+      "minimum_cm": null,
+      "maximum_cm": null
+    },
+    "width": {
+      "minimum_cm": null,
+      "maximum_cm": null
+    },
+    "depth": {
+      "minimum_cm": null,
+      "maximum_cm": null
+    },
+    "evidence": "No se han analizado fotografías: respuesta simulada.",
+    "limitations": "La simulación no permite medir el objeto.",
+    "source": null,
+    "physical_verification": true
+  },
+  "unverifiable": [
+    "Dimensiones y condiciones reales del objeto."
+  ]
+}

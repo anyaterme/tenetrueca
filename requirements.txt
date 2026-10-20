@@ -6,3 +6,5 @@ Pillow>=11,<12
 djangorestframework>=3.16,<4
 qrcode[pil]>=8,<9
 cryptography>=45,<47
+openai>=2,<3
+pydantic>=2.11,<3

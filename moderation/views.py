@@ -14,8 +14,11 @@ from backoffice.center_filter import (
 from core.permissions import scope_publications, user_can_moderate
 from moderation.forms import ModerationDecisionForm, ModerationQueueFilterForm
 from moderation.models import ModerationDecision
+from moderation.recommendations import decision_proposal
 from moderation.services import moderate_publication
 from publications.models import Publication, PublicationPhoto
+from assistant.services import enqueue_evaluation, evaluation_context
+from django.views.decorators.http import require_POST
 
 
 REVIEWABLE_STATUSES = {
@@ -122,17 +125,26 @@ def moderation_queue(request):
     )
 
 
-def _review_context(publication, decision_form):
+def _review_context(publication, decision_form=None):
     audit_events = AuditEvent.objects.filter(
         entity='Publication',
         entity_id=str(publication.pk),
     ).select_related('actor')[:20]
+    ai_context = evaluation_context(publication)
+    can_decide = publication.status == Publication.Status.PENDING_REVIEW
+    proposal = decision_proposal(ai_context['ai_evaluation']) if can_decide else None
+    if decision_form is None:
+        decision_form = ModerationDecisionForm(initial={
+            'decision': proposal['decision'], 'notes': proposal['notes'],
+        } if proposal else None)
     return {
         'publication': publication,
         'decision_form': decision_form,
-        'can_decide': publication.status == Publication.Status.PENDING_REVIEW,
+        'can_decide': can_decide,
+        'ai_decision_proposal': proposal,
         'audit_events': audit_events,
         'staff_section': 'moderation',
+        **ai_context,
     }
 
 
@@ -143,7 +155,7 @@ def moderation_detail(request, pk):
     return render(
         request,
         'moderation/detail.html',
-        _review_context(publication, ModerationDecisionForm()),
+        _review_context(publication),
     )
 
 
@@ -171,3 +183,17 @@ def moderation_decide(request, pk):
             )
             return redirect('moderation:detail', pk=publication.pk)
     return render(request, 'moderation/detail.html', _review_context(publication, form))
+
+
+@login_required
+@require_POST
+def moderation_reevaluate(request, pk):
+    _require_moderator(request.user)
+    publication = get_object_or_404(_staff_publications(request.user), pk=pk)
+    try:
+        _, created = enqueue_evaluation(publication.pk, requested_by=request.user, force=True)
+    except ValidationError as error:
+        messages.error(request, error.message)
+    else:
+        messages.success(request, 'Análisis programado.' if created else 'El análisis ya está en curso.')
+    return redirect('moderation:detail', pk=pk)

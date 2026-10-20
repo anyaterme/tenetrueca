@@ -1,0 +1,84 @@
+<section class="staff-panel" aria-labelledby="ai-evaluation-title">
+  <div class="staff-panel__heading">
+    <h2 id="ai-evaluation-title">Evaluación automática</h2>
+    {% if ai_evaluation %}<span class="publication-status">{{ ai_evaluation.get_status_display }}</span>{% endif %}
+  </div>
+  <p class="staff-guidance">La IA solo orienta. La decisión corresponde siempre al personal autorizado y puede registrarse aunque el análisis falle.</p>
+  {% if ai_backend == 'disabled' %}<p class="staff-muted">El servicio está deshabilitado. La revisión manual está disponible.</p>{% endif %}
+  {% if ai_evaluation %}
+    {% if ai_evaluation.is_simulated %}<p class="staff-guidance"><strong>Simulación de desarrollo.</strong> No se ha consultado OpenAI ni analizado realmente las fotografías.</p>{% endif %}
+    {% if ai_evaluation.status == 'completed' %}
+      <h3>{{ ai_overall }}</h3>
+      <dl class="review-data">
+        <div><dt>Objeto identificado</dt><dd>{{ ai_evaluation.result.identified_object }}</dd></div>
+        <div><dt>Evaluación</dt><dd>{{ ai_evaluation.finished_at|date:"d/m/Y H:i" }} · {% if ai_evaluation.is_simulated %}Simulada{% else %}{{ ai_evaluation.model }}{% endif %} · {{ ai_evaluation.rules_version }}</dd></div>
+      </dl>
+      <ul class="staff-history">
+        {% for check in ai_checks %}
+          <li>
+            <strong>{{ check.label }}</strong>
+            {% if check.selection %}<p class="staff-muted">Selección evaluada: {{ check.selection }}</p>{% endif %}
+            <span class="ai-check ai-check--{{ check.status }}">{% if check.status == 'CORRECTO' %}✓ Correcto{% elif check.status == 'INCIDENCIA' %}! Incidencia{% else %}? No verificable{% endif %}</span>
+            <p>{{ check.explanation }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+      {% if ai_alternative_categories %}<h3>Categorías alternativas sugeridas</h3><ul>{% for name in ai_alternative_categories %}<li>{{ name }}</li>{% endfor %}</ul><p class="staff-muted">La categoría seleccionada no se modifica automáticamente.</p>{% endif %}
+      <h3>Estimación de dimensiones</h3>
+      <p class="staff-muted">Método: {% if ai_evaluation.result.dimensions.method == 'declared' %}dimensiones declaradas{% elif ai_evaluation.result.dimensions.method == 'visual' %}estimación visual aproximada{% elif ai_evaluation.result.dimensions.method == 'documented' %}documentación técnica verificada{% else %}no verificable{% endif %}.</p>
+      <p>{{ ai_evaluation.result.dimensions.evidence }}</p>
+      <dl class="review-data">
+        {% for axis in ai_evaluation.result.dimensions.axis_comparison %}
+          <div><dt>{{ axis.label }} (límite: {{ ai_evaluation.result.dimensions.limit_cm }} cm)</dt><dd>{% if axis.minimum_cm %}{{ axis.minimum_cm|floatformat:"-1" }}–{{ axis.maximum_cm|floatformat:"-1" }} cm{% else %}No verificable{% endif %} · {{ axis.status }}</dd></div>
+        {% endfor %}
+      </dl>
+      <p>{{ ai_evaluation.result.dimensions.limitations }}</p>
+      {% if ai_evaluation.result.dimensions.physical_verification %}<p class="staff-guidance">Verificar físicamente las dimensiones antes de la admisión.</p>{% endif %}
+      {% if ai_evaluation.result.issues %}<h3>Incidencias</h3><ul>{% for issue in ai_evaluation.result.issues %}<li>{{ issue }}</li>{% endfor %}</ul>{% endif %}
+      {% if ai_evaluation.result.recommendations %}<h3>Recomendaciones</h3><ul>{% for item in ai_evaluation.result.recommendations %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+      {% if ai_evaluation.result.unverifiable %}<h3>Aspectos pendientes de verificar</h3><ul>{% for item in ai_evaluation.result.unverifiable %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+    {% elif ai_evaluation.status == 'error' %}
+      <p role="status">El análisis no ha podido completarse. Puedes continuar con la revisión manual o repetirlo.</p>
+      {% if ai_error_message %}<p>{{ ai_error_message }}</p>{% endif %}
+      <p class="staff-muted">Referencia técnica: {{ ai_evaluation.error_code }}</p>
+      {% if ai_evaluation.error_details.reason == 'max_output_tokens' %}<p>Se alcanzó el límite de tokens de salida.</p>{% endif %}
+      {% if ai_evaluation.error_details.reason == 'content_filter' %}<p>La respuesta se interrumpió por un filtro de contenido.</p>{% endif %}
+      {% if ai_evaluation.error_details.violations %}
+        <ul>{% for violation in ai_evaluation.error_details.violations %}<li>{{ violation.field }}: {{ violation.type }}</li>{% endfor %}</ul>
+      {% endif %}
+    {% else %}
+      <p role="status">El análisis está {{ ai_evaluation.get_status_display|lower }}. Actualiza esta página más tarde para consultar el resultado.</p>
+    {% endif %}
+  {% else %}
+    <p class="staff-muted">No hay una evaluación vigente para esta versión de la publicación.</p>
+  {% endif %}
+  {% if ai_can_repeat %}
+    <form method="post" action="{% url 'moderation:reevaluate' publication.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="button button--secondary" {% if ai_evaluation.status == 'pending' or ai_evaluation.status == 'processing' %}disabled{% endif %}>Repetir análisis</button>
+    </form>
+  {% endif %}
+  {% if ai_history %}
+    <details>
+      <summary>Historial de evaluaciones</summary>
+      <ol class="staff-history">
+        {% for previous in ai_history %}
+          <li>
+            <strong>#{{ previous.pk }} · {{ previous.get_status_display }}{% if previous.pk == ai_evaluation.pk %} · Vigente{% else %} · Histórica{% endif %}</strong>
+            <span>{{ previous.created_at|date:"d/m/Y H:i" }} · {{ previous.model }} · {{ previous.rules_version }}{% if previous.is_simulated %} · Simulada{% endif %}</span>
+            {% if previous.result %}
+              <details><summary>Consultar resultado guardado</summary>
+                <p>{{ previous.result.identified_object }}</p>
+                <ul>{% for name, check in previous.result.checks.items %}<li>{{ check.status }}: {{ check.explanation }}</li>{% endfor %}</ul>
+                <p>{{ previous.result.dimensions.evidence }} {{ previous.result.dimensions.limitations }}</p>
+                <ul>{% for recommendation in previous.result.recommendations %}<li>{{ recommendation }}</li>{% endfor %}</ul>
+              </details>
+            {% endif %}
+            {% if previous.error_code %}<p>{{ previous.error_code }}</p>{% endif %}
+            {% if not previous.is_simulated %}<p class="staff-muted">Tokens: {{ previous.input_tokens }} entrada / {{ previous.output_tokens }} salida. Coste estimado: {{ previous.estimated_cost_usd }} USD. Los errores sin respuesta pueden tener consumo desconocido.</p>{% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    </details>
+  {% endif %}
+</section>

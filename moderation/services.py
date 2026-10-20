@@ -3,6 +3,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit.models import AuditEvent
+from assistant.services import current_evaluation
+from assistant.snapshots import publication_snapshot
 from core.permissions import scope_publications, user_can_moderate
 from moderation.models import ModerationDecision
 from publications.models import Publication
@@ -43,6 +45,8 @@ def moderate_publication(*, publication_id, reviewer, decision, notes=''):
     previous_status = publication.status
     resulting_status = DECISION_STATUS[decision]
     decided_at = timezone.now()
+    evaluation = current_evaluation(publication)
+    fingerprint, _ = publication_snapshot(publication)
     moderation_decision = ModerationDecision.objects.create(
         publication=publication,
         reviewer=reviewer,
@@ -58,6 +62,8 @@ def moderate_publication(*, publication_id, reviewer, decision, notes=''):
         ),
         notes=notes,
         decided_at=decided_at,
+        ai_evaluation=evaluation if evaluation and evaluation.status == 'completed' else None,
+        publication_fingerprint=fingerprint,
     )
 
     publication.status = resulting_status

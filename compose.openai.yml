@@ -1,0 +1,26 @@
+# Run from the parent folder:
+# docker compose -f docker-compose.yml -f app/compose.openai.yml ...
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile.openai
+  evaluation_worker:
+    build:
+      context: .
+      dockerfile: app/Dockerfile.openai
+    container_name: tenetrueca_evaluation_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-tenetrueca.settings}
+      TZ: ${TZ:-Atlantic/Canary}
+    volumes:
+      - ./app:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: python manage.py evaluation_worker
+    networks:
+      - tenetrueca_network
