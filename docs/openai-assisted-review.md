@@ -671,3 +671,21 @@ migración ignorada, migración base ausente, configuración inválida y fallo a
 comprobado además que el validador acepta la configuración real esperada y rechaza `mock` en
 un contenedor sin red, con clave ficticia y el SDK bloqueado por CI. No se ha ejecutado el
 despliegue contra el servidor ni alterado los servicios locales. **0 llamadas reales nuevas.**
+
+#### Corrección de permisos de estáticos tras el despliegue
+
+El primer script mantenía `umask 077` también durante la actualización con Git. Se reprodujo
+localmente que esto crea archivos CSS/JS con modo `0600`, frente a `0644` con `umask 022`.
+La comprobación pública de producción devolvió 403 para `backoffice.css` (con y sin parámetro
+de versión) y el JavaScript de decisiones, mientras `base.css` devolvía 200. Apache respondía
+al 403. Esto es compatible con permisos restrictivos en los archivos recién actualizados;
+la confirmación de permisos efectivos del servidor requiere inspeccionarlos allí.
+
+El script actualizado conserva la máscara privada para lock/backups y cambia a `022` antes
+de modificar el checkout. Tras `collectstatic`, normaliza únicamente `app/static/` y
+`app/staticfiles/`: directorios `0755`, archivos `0644`, sin seguir enlaces simbólicos.
+No modifica los permisos de `.env`, configuración local, fotografías privadas ni backups.
+La regresión `python3 deploy/tests/test_update.py -v` simula los ocho escenarios de despliegue,
+comprueba el orden de arranque, repara estáticos antiguos `0600/0700` y confirma que los archivos
+privados y las copias siguen con permisos privados. Las pruebas y la sintaxis Bash pasan.
+No se han aplicado cambios remotos ni realizado solicitudes de IA para este diagnóstico.
