@@ -48,13 +48,13 @@ class EmailAuthenticationForm(AccessibleFieldsMixin, AuthenticationForm):
 
 class MagicLinkRequestForm(AccessibleFieldsMixin, forms.Form):
     identifier = forms.CharField(
-        label='Correo electrónico o nombre de usuario',
+        label='Correo electrónico o nombre de usuari@',
         max_length=254,
         widget=forms.TextInput(
             attrs={
                 'autocomplete': 'username',
                 'autofocus': True,
-                'placeholder': 'tu correo o nombre de usuario',
+                'placeholder': 'tu correo o nombre de usuari@',
             }
         ),
     )

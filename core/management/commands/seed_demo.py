@@ -10,7 +10,7 @@ from django.utils import timezone
 from accounts.models import UserCenterAccess
 from catalog.models import Category, ReusableObject
 from configuration.models import FunctionalRule
-from core.roles import ROLE_DEFINITIONS, ROLE_OPERATOR, ROLE_SUPERVISOR
+from core.roles import ROLE_CITIZEN, ROLE_DEFINITIONS, ROLE_OPERATOR, ROLE_SUPERVISOR
 from locations.models import RecyclingCenter
 from operations.models import Operation
 from publications.models import Publication
@@ -180,7 +180,7 @@ class Command(BaseCommand):
             )
 
         User = get_user_model()
-        citizens_group = Group.objects.get(name='Usuario registrado')
+        citizens_group = Group.objects.get(name=ROLE_CITIZEN)
         operator_group = Group.objects.get(name=ROLE_OPERATOR)
         supervisor_group = Group.objects.get(name=ROLE_SUPERVISOR)
 

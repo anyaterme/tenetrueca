@@ -37,7 +37,7 @@ class EmailConfigurationForm(AccessibleFieldsMixin, forms.Form):
     )
     override_security = forms.BooleanField(label='Personalizar', required=False)
     email_host_user = forms.CharField(
-        label='Usuario SMTP',
+        label='Cuenta SMTP',
         max_length=255,
         required=False,
         widget=forms.TextInput(attrs={'autocomplete': 'off'}),
@@ -206,7 +206,7 @@ class EmailConfigurationForm(AccessibleFieldsMixin, forms.Form):
 
 class EmailTestForm(AccessibleFieldsMixin, forms.Form):
     recipient = forms.EmailField(
-        label='Destinatario',
+        label='Correo de destino',
         widget=forms.EmailInput(attrs={'autocomplete': 'email'}),
     )
 

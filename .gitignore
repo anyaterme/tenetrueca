@@ -30,6 +30,9 @@ db.sqlite3
 !assistant/migrations/0001_initial.py
 !assistant/migrations/0002_evaluation_error_details.py
 !moderation/migrations/0002_moderationdecision_ai_evaluation_and_more.py
+!accounts/migrations/0007_inclusive_labels.py
+!backoffice/migrations/0004_inclusive_role_labels.py
+!core/migrations/0001_inclusive_role_names.py
 
 # Local and secret settings
 local_settings.py

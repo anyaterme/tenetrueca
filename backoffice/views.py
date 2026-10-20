@@ -48,6 +48,7 @@ from core.permissions import (
     user_can_manage_users,
     user_can_moderate,
 )
+from core.roles import ROLE_STAFF_ADMIN, ROLE_STAFF_MANAGER
 from publications.models import Publication
 from reservations.models import Reservation
 
@@ -250,7 +251,7 @@ def dashboard(request):
     if can_manage_users:
         metrics.append(
             {
-                'label': 'Usuarios activos',
+                'label': 'Usuari@s activ@s',
                 'value': User.objects.filter(
                     is_staff=False,
                     is_active=True,
@@ -446,14 +447,14 @@ def team_list(request):
     if role == StaffInvitation.Role.ADMINISTRATOR:
         members = members.filter(
             Q(is_superuser=True)
-            | Q(groups__name='Administrador')
+            | Q(groups__name=ROLE_STAFF_ADMIN)
             | Q(
                 user_permissions__content_type__app_label='accounts',
                 user_permissions__codename='manage_staff',
             )
         ).distinct()
     elif role == StaffInvitation.Role.MANAGER:
-        members = members.filter(groups__name='Gestor').distinct()
+        members = members.filter(groups__name=ROLE_STAFF_MANAGER).distinct()
     if status == 'active':
         members = members.filter(is_active=True)
     elif status == 'inactive':
@@ -781,7 +782,7 @@ def team_detail(request, pk):
                         metadata={'from': current_role, 'to': new_role},
                     )
                     invalidate_user_sessions(member)
-            messages.success(request, 'Los datos del miembro se han actualizado.')
+            messages.success(request, 'Los datos de la persona del equipo se han actualizado.')
             return redirect('backoffice:team_detail', pk=member.pk)
 
     activity = member.staff_audit_events.select_related('actor')[:20]
@@ -837,7 +838,7 @@ def _member_state_change(request, pk, action):
             ).update(invalidated_at=timezone.now())
             invalidate_user_sessions(member)
             audit_action = StaffAuditEvent.Action.DEACTIVATED
-            message = 'El acceso del miembro se ha desactivado.'
+            message = 'El acceso de la persona del equipo se ha desactivado.'
         elif action == 'reactivate':
             member.is_active = True
             member.account_status = User.AccountStatus.ACTIVE
@@ -846,7 +847,7 @@ def _member_state_change(request, pk, action):
                 update_fields=['is_active', 'account_status', 'deactivated_at']
             )
             audit_action = StaffAuditEvent.Action.ACTIVATED
-            message = 'El acceso del miembro se ha reactivado.'
+            message = 'El acceso de la persona del equipo se ha reactivado.'
         else:
             ensure_admin_safeguards(
                 actor=request.user,
@@ -857,7 +858,7 @@ def _member_state_change(request, pk, action):
             member.is_staff = False
             member.save(update_fields=['is_staff'])
             member.groups.remove(
-                *member.groups.filter(name__in=('Administrador', 'Gestor'))
+                *member.groups.filter(name__in=(ROLE_STAFF_ADMIN, ROLE_STAFF_MANAGER))
             )
             member.user_permissions.remove(
                 *member.user_permissions.filter(

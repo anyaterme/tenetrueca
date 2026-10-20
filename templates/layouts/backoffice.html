@@ -37,7 +37,7 @@
           <p class="staff-nav__title">Administración</p>
           <nav>
             {% if can_manage_centers %}<a href="{% url 'locations:manage_list' %}"{% if staff_section == 'centers' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="building" %}<span>Puntos limpios</span></a>{% endif %}
-            {% if can_manage_users %}<a href="{% url 'backoffice:user_list' %}"{% if staff_section == 'users' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="users" %}<span>Usuarios</span></a>{% endif %}
+            {% if can_manage_users %}<a href="{% url 'backoffice:user_list' %}"{% if staff_section == 'users' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="users" %}<span>Usuari@s</span></a>{% endif %}
             {% if can_manage_staff %}<a href="{% url 'backoffice:team_list' %}"{% if staff_section == 'team' %} class="is-active" aria-current="page"{% endif %}>{% include "components/backoffice_icon.html" with name="team" %}<span>Equipo</span></a>{% endif %}
           </nav>
         </div>
@@ -62,8 +62,8 @@
       <header class="staff-topbar">
         {% if can_manage_users %}
           <form class="staff-global-search" method="get" action="{% url 'backoffice:user_list' %}" role="search">
-            <label class="visually-hidden" for="staff-global-search">Buscar usuarios</label>
-            <span class="staff-global-search__field">{% include "components/backoffice_icon.html" with name="search" %}<input id="staff-global-search" name="q" type="search" placeholder="Buscar usuario por nombre, email o NIF…"></span>
+            <label class="visually-hidden" for="staff-global-search">Buscar usuari@s</label>
+            <span class="staff-global-search__field">{% include "components/backoffice_icon.html" with name="search" %}<input id="staff-global-search" name="q" type="search" placeholder="Buscar usuari@ por nombre, email o NIF…"></span>
             <button type="submit">Buscar</button>
           </form>
         {% else %}
@@ -123,7 +123,7 @@
         {% endif %}
         <a class="staff-account" href="{% url 'profile' %}">
           <span class="staff-account__avatar" aria-hidden="true">{{ user.first_name|default:user.email|first|upper }}</span>
-          <span class="staff-account__copy"><strong>{{ user.get_full_name|default:user.email }}</strong><small>{% if is_backoffice_administrator %}Administrador{% elif is_backoffice_manager %}Gestor{% elif can_manage_staff %}Gestión funcional{% elif can_moderate_publications %}Moderación{% else %}Operaciones{% endif %}</small></span>
+          <span class="staff-account__copy"><strong>{{ user.get_full_name|default:user.email }}</strong><small>{% if is_backoffice_administrator %}Administración{% elif is_backoffice_manager %}Gestión{% elif can_manage_staff %}Gestión funcional{% elif can_moderate_publications %}Moderación{% else %}Operaciones{% endif %}</small></span>
         </a>
         <form class="staff-logout" method="post" action="{% url 'logout' %}">
           {% csrf_token %}

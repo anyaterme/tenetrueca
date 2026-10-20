@@ -402,7 +402,7 @@ class StaffManagementTests(TestCase):
         self.assertTrue(self.admin.is_staff)
         self.assertContains(
             response,
-            'El sistema debe conservar al menos un administrador activo.',
+            'El sistema debe conservar al menos una persona administradora activa.',
         )
 
     def test_administrator_can_remove_another_admin_only_when_one_remains(self):

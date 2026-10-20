@@ -36,7 +36,7 @@ class HealthTests(TestCase):
         pages = (
             ('legal_notice', 'Titularidad y alcance'),
             ('cookie_policy', 'Cookies utilizadas por TRUEC@'),
-            ('privacy_policy', 'Responsable y encargado del tratamiento'),
+            ('privacy_policy', 'Entidades responsable y encargada del tratamiento'),
         )
 
         for url_name, expected_text in pages:

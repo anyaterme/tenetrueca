@@ -9,7 +9,7 @@ class ReceptionQueueFilterForm(forms.Form):
         required=False,
         label='Buscar publicación',
         max_length=180,
-        widget=forms.TextInput(attrs={'placeholder': 'Título, correo o nombre de usuario'}),
+        widget=forms.TextInput(attrs={'placeholder': 'Título, correo o nombre de usuari@'}),
     )
     ordering = forms.ChoiceField(
         required=False,

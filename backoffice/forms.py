@@ -34,7 +34,7 @@ class StaffInviteForm(AccessibleFieldsMixin, forms.Form):
         queryset=RecyclingCenter.objects.filter(is_active=True),
         required=False,
         empty_label='Sin asignación',
-        help_text='Opcional. Cada gestor puede trabajar en un único punto limpio.',
+        help_text='Opcional. Cada persona gestora puede trabajar en un único punto limpio.',
     )
     provisioning_method = forms.ChoiceField(
         label='Método de acceso',
@@ -104,7 +104,7 @@ class StaffMemberForm(AccessibleFieldsMixin, forms.Form):
         queryset=RecyclingCenter.objects.filter(is_active=True),
         required=False,
         empty_label='Sin asignación',
-        help_text='El cambio de centro se aplica en la siguiente petición del gestor.',
+        help_text='El cambio de centro se aplica en la siguiente petición de la persona gestora.',
     )
 
     def __init__(

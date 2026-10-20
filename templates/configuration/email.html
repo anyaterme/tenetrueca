@@ -30,7 +30,7 @@
 
         <div class="email-configuration-row email-configuration-row--connection">
           {% include "configuration/_override_field.html" with field=form.email_host toggle=form.override_email_host source=field_sources.EMAIL_HOST help_text="Nombre o dirección del servidor SMTP." %}
-          {% include "configuration/_override_field.html" with field=form.email_port toggle=form.override_email_port source=field_sources.EMAIL_PORT help_text="Puerto de conexión del proveedor." %}
+          {% include "configuration/_override_field.html" with field=form.email_port toggle=form.override_email_port source=field_sources.EMAIL_PORT help_text="Puerto de conexión del servicio de correo." %}
         </div>
 
         {% include "configuration/_override_field.html" with field=form.security toggle=form.override_security source=field_sources.EMAIL_SECURITY help_text="STARTTLS y SSL/TLS son opciones excluyentes." %}
@@ -77,7 +77,7 @@
           <ul>
             <li>STARTTLS suele utilizar el puerto 587.</li>
             <li>SSL/TLS suele utilizar el puerto 465.</li>
-            <li>Confirma siempre los datos con tu proveedor.</li>
+            <li>Confirma siempre los datos con tu servicio de correo.</li>
           </ul>
         </div>
       </section>

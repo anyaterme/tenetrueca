@@ -5,8 +5,8 @@ from django.utils import timezone
 
 class StaffInvitation(models.Model):
     class Role(models.TextChoices):
-        ADMINISTRATOR = 'administrator', 'Administrador'
-        MANAGER = 'manager', 'Gestor'
+        ADMINISTRATOR = 'administrator', 'Administración'
+        MANAGER = 'manager', 'Gestión'
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

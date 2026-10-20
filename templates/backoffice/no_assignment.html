@@ -17,9 +17,9 @@
         <span><strong>truec@</strong><small>Backoffice</small></span>
       </div>
       <span class="no-assignment-icon" aria-hidden="true">{% include "components/backoffice_icon.html" with name="map-pin" %}</span>
-      <p class="staff-eyebrow">Backoffice · Gestor</p>
+      <p class="staff-eyebrow">Backoffice · Gestión</p>
       <h1 id="no-assignment-title">No tienes ningún punto limpio asignado</h1>
-      <p>En estos momentos tu cuenta no tiene ningún punto limpio asociado. Para poder acceder a las operaciones de la plataforma, ponte en contacto con un administrador.</p>
+      <p>En estos momentos tu cuenta no tiene ningún punto limpio asociado. Para poder acceder a las operaciones de la plataforma, ponte en contacto con el equipo de administración.</p>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button class="button button--primary" type="submit">{% include "components/backoffice_icon.html" with name="log-out" %}<span>Cerrar sesión</span></button>

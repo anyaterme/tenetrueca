@@ -112,7 +112,7 @@ def active_administrators():
 def ensure_admin_safeguards(*, actor, target, operation, new_role=None):
     if target.is_superuser and operation in {'change_role', 'remove'}:
         raise ValidationError(
-            'El rol y acceso staff de una cuenta de superusuario se gestionan fuera de este panel.'
+            'El rol y acceso staff de una cuenta de superusuari@ se gestionan fuera de este panel.'
         )
     target_is_admin = staff_role_value(target) == StaffInvitation.Role.ADMINISTRATOR
     removes_admin = operation in {'deactivate', 'remove'} or (
@@ -126,7 +126,7 @@ def ensure_admin_safeguards(*, actor, target, operation, new_role=None):
             raise ValidationError('No puedes desactivar tu propia cuenta.')
         raise ValidationError('No puedes retirar tus propios privilegios administrativos.')
     if not active_administrators().exclude(pk=target.pk).exists():
-        raise ValidationError('El sistema debe conservar al menos un administrador activo.')
+        raise ValidationError('El sistema debe conservar al menos una persona administradora activa.')
 
 
 def invalidate_user_sessions(user):

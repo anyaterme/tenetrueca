@@ -19,7 +19,7 @@ def record_faq_event(*, actor, faq_id, action, before=None, after=None, source='
         actor=actor, action=action, entity='FAQ', entity_id=str(faq_id),
         source=source, before=before, after=after,
         metadata={
-            'actor_label': actor.get_full_name() or actor.username or f'Usuario #{actor.pk}',
+            'actor_label': actor.get_full_name() or actor.username or f'Usuari@ #{actor.pk}',
             'actor_id': actor.pk,
         },
     )

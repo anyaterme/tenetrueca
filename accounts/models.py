@@ -23,7 +23,7 @@ class User(AbstractUser):
         EXTERNAL = 'external', 'Externa'
 
     username = models.CharField(
-        'nombre de usuario',
+        'nombre de usuari@',
         max_length=150,
         null=True,
         blank=True,
@@ -154,8 +154,8 @@ class MagicLoginToken(models.Model):
 
 class UserCenterAccess(TimeStampedModel):
     class ScopeRole(models.TextChoices):
-        OPERATOR = 'operator', 'Operador de punto limpio'
-        SUPERVISOR = 'supervisor', 'Supervisor de punto limpio'
+        OPERATOR = 'operator', 'Operaciones de punto limpio'
+        SUPERVISOR = 'supervisor', 'Supervisión de punto limpio'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='center_accesses')
     center = models.ForeignKey('locations.RecyclingCenter', on_delete=models.CASCADE, related_name='staff_accesses')
@@ -187,7 +187,7 @@ class UserCenterAccess(TimeStampedModel):
             conflicting = conflicting.exclude(pk=self.pk)
         if conflicting.exists():
             raise ValidationError(
-                'Un gestor no puede tener más de un punto limpio activo.'
+                'Una persona gestora no puede tener más de un punto limpio activo.'
             )
 
     def save(self, *args, **kwargs):

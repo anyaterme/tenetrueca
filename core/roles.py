@@ -8,19 +8,19 @@ class RoleDefinition:
 
 
 ROLE_VISITOR = 'Visitante'
-ROLE_CITIZEN = 'Usuario registrado'
-ROLE_STAFF_ADMIN = 'Administrador'
-ROLE_STAFF_MANAGER = 'Gestor'
-ROLE_OPERATOR = 'Operador de punto limpio'
-ROLE_SUPERVISOR = 'Supervisor de punto limpio'
-ROLE_MODERATOR = 'Moderador de catalogo'
-ROLE_AUCTION_MANAGER = 'Gestor de subastas'
+ROLE_CITIZEN = 'Usuari@ registrad@'
+ROLE_STAFF_ADMIN = 'Administración'
+ROLE_STAFF_MANAGER = 'Gestión'
+ROLE_OPERATOR = 'Operaciones de punto limpio'
+ROLE_SUPERVISOR = 'Supervisión de punto limpio'
+ROLE_MODERATOR = 'Moderación de catálogo'
+ROLE_AUCTION_MANAGER = 'Gestión de subastas'
 ROLE_ANALYST = 'Analista / consulta'
-ROLE_FUNCTIONAL_ADMIN = 'Administrador funcional'
-ROLE_TECH_ADMIN = 'Administrador tecnico'
+ROLE_FUNCTIONAL_ADMIN = 'Administración funcional'
+ROLE_TECH_ADMIN = 'Administración técnica'
 
 ROLE_DEFINITIONS = [
-    RoleDefinition(ROLE_CITIZEN, 'Ciudadano autenticado.'),
+    RoleDefinition(ROLE_CITIZEN, 'Ciudadan@ autenticad@.'),
     RoleDefinition(ROLE_STAFF_ADMIN, 'Administra el equipo y su acceso al backoffice.'),
     RoleDefinition(ROLE_STAFF_MANAGER, 'Accede a las funciones operativas asignadas.'),
     RoleDefinition(ROLE_OPERATOR, 'Opera recepciones, inspecciones y entregas en centros autorizados.'),

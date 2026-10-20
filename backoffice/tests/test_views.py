@@ -124,7 +124,7 @@ class BackofficeViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Buenos días, Staff')
-        self.assertNotContains(response, 'Buscar usuario')
+        self.assertNotContains(response, 'Buscar usuari@')
         self.assertNotContains(response, 'Nueva recepción')
 
     def test_moderator_sees_moderation_work_only(self):
