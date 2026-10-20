@@ -55,3 +55,6 @@ htmlcov/
 *.swo
 .DS_Store
 Thumbs.db
+
+deploy
+*.md

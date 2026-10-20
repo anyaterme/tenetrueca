@@ -632,3 +632,42 @@ SDK completamente simulada, originales intactos, errores con revisión manual, d
 la excepción manual de coste controlado. Consumo nuevo: **0 llamadas reales, 0 tokens, 0 USD**.
 No se ha hecho una evaluación real; la calidad semántica con fotografías reales no se ha medido
 contra OpenAI. La comprobación real no es necesaria para verificar esta implementación.
+
+### Script de actualización de producción
+
+`deploy/update.sh` se instala como `/srv/docker/tenetrueca/update.sh`, fuera del checkout
+`app/`, y se ejecuta como el usuario propietario del repositorio. Requiere el `.env` real ya
+configurado (`live`, `gpt-6-luna`, clave de servidor, tarifas y límites positivos, una tentativa).
+No escribe variables, claves ni tarifas en el archivo. Conserva el Compose base del servidor,
+incluido el puerto ligado a `127.0.0.1`, añadiendo únicamente `app/compose.openai.yml`.
+No incluye el override local de simulación.
+
+El script usa bloqueo para impedir dos actualizaciones simultáneas y exige un checkout limpio.
+Descarga `origin/openai` y permite únicamente avance directo, sin descartar commits. Detecta
+migraciones ignoradas que serían sustituidas por versiones diferentes del remoto. Detiene
+worker y aplicación, manteniendo PostgreSQL; guarda el dump y un archivo del código/fotos,
+configuración local, estáticos y migraciones antiguas, más `.env`, Compose y revisión previa,
+en `backups/FECHA-PID/` con permisos privados. No copia directamente `pg_data` mientras la
+base está arrancada. Después actualiza la rama, comprueba dependencias de migraciones,
+reconstruye imágenes, valida la configuración, verifica que no faltan migraciones de modelos,
+aplica las existentes y recoge estáticos.
+
+Las operaciones administrativas usan contenedores efímeros con OpenAI deshabilitado, clave
+vacía y bloqueo de SDK por CI. La validación de la configuración real usa también CI, lee los
+ajustes sin mostrar la clave y no instancia el cliente. No ejecuta pruebas, evaluaciones,
+`evaluation_worker --once` ni el comando de integración real. Finalmente recrea app y worker
+con el `.env` real. **A partir de ese arranque, el procesamiento normal de trabajos pendientes
+puede generar consumo**; el arranque no es una solicitud de prueba.
+
+Ante un fallo el script se detiene e informa de la etapa y de la copia disponible. No realiza
+rollback ni vuelve a arrancar automáticamente servicios detenidos: tras una migración parcial
+o incompatible es necesaria una revisión del error. Las copias se conservan sin purga automática;
+hay que disponer de espacio y gestionarlas con la política de backups del servidor. El servidor
+de estáticos debe continuar sirviendo `app/staticfiles/`.
+
+Validación del script: sintaxis Bash y del Python incrustado, y ocho escenarios de shell con
+Docker/Git simulados (éxito, checkout sucio, bloqueo ocupado, rama divergente, colisión de
+migración ignorada, migración base ausente, configuración inválida y fallo al migrar). Se ha
+comprobado además que el validador acepta la configuración real esperada y rechaza `mock` en
+un contenedor sin red, con clave ficticia y el SDK bloqueado por CI. No se ha ejecutado el
+despliegue contra el servidor ni alterado los servicios locales. **0 llamadas reales nuevas.**
