@@ -1,0 +1,31 @@
+# Local opt-in. Replaces compose.mock.yml; the API key stays in the parent .env.
+x-local-live-environment: &local-live-environment
+  OPENAI_EVALUATION_BACKEND: live
+  OPENAI_LIVE_ENABLED: "True"
+  OPENAI_MODEL: gpt-6-luna
+  OPENAI_REASONING_EFFORT: none
+  OPENAI_INPUT_USD_PER_MILLION: "0.10"
+  OPENAI_OUTPUT_USD_PER_MILLION: "0.50"
+  OPENAI_TOTAL_BUDGET_USD: "1"
+  OPENAI_DAILY_BUDGET_USD: "1"
+  OPENAI_DAILY_REQUEST_LIMIT: "20"
+  OPENAI_REQUEST_RESERVE_USD: "0.05"
+  OPENAI_MAX_ATTEMPTS: "1"
+  OPENAI_MAX_OUTPUT_TOKENS: "4096"
+  OPENAI_TIMEOUT_SECONDS: "60"
+  AI_PREANALYSIS_TIMEOUT_SECONDS: "60"
+
+services:
+  app:
+    environment: *local-live-environment
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health/', timeout=5).close()"]
+      interval: 10s
+      timeout: 6s
+      start_period: 30s
+      retries: 6
+  evaluation_worker:
+    environment: *local-live-environment
+    depends_on:
+      app:
+        condition: service_healthy

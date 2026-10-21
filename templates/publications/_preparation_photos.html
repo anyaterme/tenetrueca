@@ -1,0 +1,17 @@
+<details class="ai-review-section" open>
+  <summary><span class="ai-review-step" aria-hidden="true">{{ photo_step }}</span><h2>Fotografías</h2><span class="ai-review-section__hint">Revisa tus imágenes y elige la principal.</span>{% include 'components/backoffice_icon.html' with name='chevron-down' %}</summary>
+  <div class="ai-review-section__body" data-review-photos>
+    <p class="ai-review-photo-help">JPEG, PNG o WebP · Hasta {{ photo_max_count }} fotografías · Máximo {{ photo_max_mb }} MB por foto.<span data-review-photo-count></span></p>
+    {{ form.photos.errors }}{{ form.remove_photos.errors }}{{ form.primary_photo.errors }}
+    <div class="ai-review-gallery" data-review-gallery>
+      {% for row in photo_rows %}<figure class="ai-review-photo{% if row.removed %} is-removed{% endif %}{% if row.primary %} is-primary{% endif %}" data-review-photo="{{ row.photo.pk }}" data-removed="{{ row.removed|yesno:'true,false' }}" data-added-photo="{{ row.added|yesno:'true,false' }}" data-stored-primary="{{ row.primary|yesno:'true,false' }}">
+        <div class="ai-review-photo__image"><img src="{% url 'publications:preparation_photo' preparation.pk row.photo.pk %}" alt="Fotografía {{ forloop.counter }} de tu propuesta" width="240" height="180"><span class="ai-review-photo__badge" data-review-primary-badge {% if not row.primary %}hidden{% endif %}>★ Principal</span><span class="ai-review-photo__removed">Se eliminará al guardar</span></div>
+        <figcaption><span class="ai-review-sr-only">Foto {{ forloop.counter }}</span><div class="ai-review-photo__actions"><button class="ai-review-link ai-review-enhancement" type="button" data-review-primary data-review-mutation aria-label="Establecer foto {{ forloop.counter }} como principal" aria-pressed="{{ row.primary|yesno:'true,false' }}">{% if row.primary %}Principal{% else %}Hacer principal{% endif %}</button><label class="ai-review-photo__remove"><input type="checkbox" name="remove_photos" value="{{ row.photo.pk }}" {% if row.removed %}checked{% endif %} data-review-remove><span data-review-remove-label>{% if row.removed %}Restaurar{% else %}Eliminar{% endif %}</span><span class="ai-review-sr-only"> foto {{ forloop.counter }}</span></label></div></figcaption>
+      </figure>{% endfor %}
+      <label class="ai-review-photo-picker" for="{{ form.photos.id_for_label }}"><span aria-hidden="true">{% include 'components/backoffice_icon.html' with name='plus-circle' %}</span><strong>Añadir fotografías</strong><span>Selecciona tus imágenes</span>{{ form.photos }}</label>
+    </div>
+    <p class="ai-review-photo-message" role="status" aria-live="polite" data-review-photo-message></p>
+    <div class="ai-review-camera ai-review-enhancement"><button class="ai-review-link" type="button" data-review-camera-button data-review-mutation>{% include 'components/backoffice_icon.html' with name='camera' %} Usar cámara</button><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" data-review-camera hidden></div>
+    <div class="ai-review-native-primary">{% include 'components/form_field.html' with field=form.primary_photo %}</div>
+  </div>
+</details>

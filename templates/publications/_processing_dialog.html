@@ -1,0 +1,7 @@
+<dialog class="ai-processing-dialog" data-ai-dialog aria-labelledby="ai-processing-title" aria-describedby="ai-processing-message">
+  <h2 id="ai-processing-title" tabindex="-1">Analizando tu propuesta</h2>
+  <p id="ai-processing-message" role="status" aria-live="polite" data-ai-message>Estamos procesando tu solicitud con ayuda de la IA. El tiempo máximo de análisis es de {{ preanalysis_timeout }} segundos.</p>
+  <progress aria-label="Análisis en curso" data-ai-progress></progress>
+  <p data-ai-errors hidden></p>
+  <button type="button" class="button button--secondary" data-ai-close hidden>Volver al formulario</button>
+</dialog>

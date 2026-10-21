@@ -1,0 +1,64 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+{% block title %}Revisa tu publicación · TRUEC@{% endblock %}
+{% block account_breadcrumb_label %}Publicar objeto{% endblock %}
+{% block account_title %}{% if evaluation.status == 'completed' %}Revisa las sugerencias de la IA{% else %}Revisa tu publicación{% endif %}{% endblock %}
+{% block account_subtitle %}<p>{% if evaluation.status == 'completed' %}Tu objeto aún no se ha enviado a revisión. Decide qué cambios quieres incorporar.{% else %}Comprueba los datos antes de enviarlos. El análisis con IA es opcional.{% endif %}</p>{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/preparation_review.css' %}?v=20261021-redesign">{% endblock %}
+{% block account_content %}
+<div class="ai-review" data-ai-review>
+  {% if evaluation.is_simulated %}<p class="ai-review__simulation"><strong>Simulación de desarrollo.</strong> No se ha consultado la IA real ni analizado realmente las fotografías.</p>{% endif %}
+  {% if evaluation.status == 'completed' %}
+    <section class="ai-review-banner" aria-label="Resultado del análisis">
+      <span class="ai-review-banner__icon" aria-hidden="true">{% include 'components/backoffice_icon.html' with name='bolt' %}</span>
+      <div><strong>{% if suggestion_rows %}La IA ha detectado {{ suggestion_rows|length }} sugerencia{{ suggestion_rows|length|pluralize }} para ayudarte.{% else %}El análisis ha finalizado sin sugerencias de cambios.{% endif %}</strong><p>Las sugerencias son opcionales. Tú decides qué incorporar.</p></div>
+      {% if has_applicable_suggestions %}<button class="button button--secondary" type="submit" form="ai-review-form" name="action" value="accept_applicable" data-accept-applicable data-review-mutation>{% include 'components/backoffice_icon.html' with name='moderation' %} Aceptar todas las aplicables</button>{% endif %}
+    </section>
+  {% elif evaluation.status == 'processing' or evaluation.status == 'pending' %}
+    <section class="ai-review-banner" role="status"><span class="ai-review-banner__icon">{% include 'components/backoffice_icon.html' with name='clock' %}</span><div><strong>Estamos revisando tu objeto con ayuda de la IA</strong><p>Este análisis ya está en curso. Actualizar la página no inicia otro.</p></div><a class="button button--secondary" href="{% url 'publications:preparation' preparation.pk %}">Consultar resultado</a></section>
+  {% else %}
+    <section class="ai-review-banner ai-review-banner--warning" role="status">
+      <span class="ai-review-banner__icon" aria-hidden="true">!</span>
+      <div><h2>No hemos podido revisar tu objeto con la IA</h2><p>Tus datos y fotografías están guardados. Puedes enviarlos a revisión humana o reintentar el análisis.</p>{% if evaluation.error_code == 'timeout_unknown_usage' %}<p>Se ha alcanzado el tiempo máximo de espera de {{ preanalysis_timeout }} segundos.</p>{% endif %}</div>
+      <button class="button button--secondary" type="submit" form="ai-review-form" name="action" value="retry" data-review-mutation>{% include 'components/backoffice_icon.html' with name='reset' %} Reintentar análisis</button>
+    </section>
+  {% endif %}
+  <p class="ai-review__announcement" role="status" aria-live="polite" data-review-announcement></p>
+  <form id="ai-review-form" method="post" enctype="multipart/form-data" data-suggestions-form data-ai-request data-ai-timeout="{{ preanalysis_timeout }}" data-photo-max="{{ photo_max_count }}" data-photo-max-bytes="{{ photo_max_bytes }}">
+    {% csrf_token %}{{ form.version }}<input type="hidden" name="action" value="confirm_selected" data-review-action>
+    {% if form.errors %}<div class="ai-review-errors" role="alert" tabindex="-1" data-review-errors><strong>Revisa los campos indicados antes de continuar.</strong>{{ form.non_field_errors }}{{ form.version.errors }}{{ form.accepted_suggestions.errors }}{{ form.discarded_suggestions.errors }}</div>{% endif %}
+    <details class="ai-review-section" open>
+      <summary><span class="ai-review-step" aria-hidden="true">1</span><h2>Información del objeto</h2><span class="ai-review-section__hint">Puedes editar estos datos antes de enviarlos.</span>{% include 'components/backoffice_icon.html' with name='chevron-down' %}</summary>
+      <div class="ai-review-section__body ai-review-fields">
+        <div>{% include 'components/form_field.html' with field=form.title %}</div>
+        <div>{% include 'components/form_field.html' with field=form.description %}<p class="ai-review-counter" data-description-count>{{ form.description.value|default:''|length }} caracteres</p></div>
+        <div>{% include 'components/form_field.html' with field=form.category %}</div>
+      </div>
+    </details>
+    {% if suggestion_rows %}
+    <details class="ai-review-section" open>
+      <summary><span class="ai-review-step" aria-hidden="true">2</span><h2>Sugerencias de la IA</h2><span class="ai-review-section__hint">Revisa cada propuesta y decide si quieres incorporarla.</span>{% include 'components/backoffice_icon.html' with name='chevron-down' %}</summary>
+      <div class="ai-review-section__body ai-review-suggestions">
+        <p class="ai-review-section__note">Aceptar todas incorpora solo sustituciones aplicables. El nombre, la información pendiente y las fotografías requieren tu confirmación individual.</p>
+        {% for suggestion in suggestion_rows %}{% include 'publications/_preparation_suggestion.html' %}{% endfor %}
+      </div>
+    </details>
+    {% endif %}
+    {% include 'publications/_preparation_photos.html' %}
+    {% if has_summary %}{% include 'publications/_preparation_summary.html' %}{% endif %}
+    {% if preview %}<section class="ai-review-preview" aria-live="polite" tabindex="-1" data-review-preview><span class="ai-review-kicker">Así recibirá tu propuesta el personal de TRUEC@</span><h2>Vista previa del envío</h2><h3>{{ preview.title }}</h3><p class="ai-review-preview__description">{{ preview.description }}</p><p><strong>Clasificación:</strong> {{ preview_category }}</p><p>Se enviarán las fotografías de la galería. Tu objeto seguirá sujeto a revisión humana.</p></section>{% endif %}
+    <footer class="ai-review-footer">
+      <p>{% include 'components/backoffice_icon.html' with name='moderation' %}<span>El personal de TRUEC@ revisará el contenido antes de publicarlo.</span></p>
+      <div class="ai-review-footer__actions">
+        <button class="button button--primary" type="submit" name="action" value="confirm_selected" data-review-mutation {% if evaluation.status != 'completed' and evaluation.status != 'error' %}disabled{% endif %}>{% include 'components/backoffice_icon.html' with name='send' %} Enviar a revisión</button>
+        <button class="button button--secondary" type="submit" name="action" value="preview" data-review-mutation>{% include 'components/backoffice_icon.html' with name='search' %} Vista previa</button>
+        <button class="ai-review-link" type="submit" form="ai-review-cancel" data-review-cancel data-review-mutation>Cancelar envío</button>
+      </div>
+    </footer>
+  </form>
+  <form id="ai-review-cancel" method="post">{% csrf_token %}<input type="hidden" name="action" value="cancel"></form>
+  <dialog class="ai-review-cancel-dialog" data-review-cancel-dialog aria-labelledby="cancel-review-title"><h2 id="cancel-review-title">¿Cancelar el envío?</h2><p>Los cambios que todavía no has guardado se perderán. Tu borrador anterior, si existe, se conservará.</p><div><button class="button button--secondary" type="button" data-keep-editing>Seguir editando</button><button class="button button--primary" type="submit" form="ai-review-cancel" data-confirm-cancel>Cancelar envío</button></div></dialog>
+  {% include 'publications/_processing_dialog.html' %}
+</div>
+{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/preanalysis.js' %}?v=20261021-review" defer></script><script src="{% static 'js/preparation_review.js' %}?v=20261021-redesign" defer></script>{% endblock %}
