@@ -166,7 +166,10 @@ OPENAI_EVALUATION_BACKEND = os.getenv('OPENAI_EVALUATION_BACKEND', 'disabled')
 OPENAI_LIVE_ENABLED = os.getenv('OPENAI_LIVE_ENABLED', '').lower() in ('1', 'true', 'yes')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 OPENAI_MODEL = os.getenv('OPENAI_MODEL', '')
+OPENAI_REASONING_EFFORT = os.getenv('OPENAI_REASONING_EFFORT', 'none')
 OPENAI_TIMEOUT_SECONDS = int(os.getenv('OPENAI_TIMEOUT_SECONDS', '45'))
+AI_PREANALYSIS_TIMEOUT_SECONDS = int(os.getenv('AI_PREANALYSIS_TIMEOUT_SECONDS', '60'))
+AI_PREPARATION_TTL_HOURS = int(os.getenv('AI_PREPARATION_TTL_HOURS', '24'))
 OPENAI_MAX_OUTPUT_TOKENS = int(os.getenv('OPENAI_MAX_OUTPUT_TOKENS', '2400'))
 # AI derivatives only; validate lazily when building an evaluation, not at web startup.
 # Legacy environment name remains a fallback for existing deployments.
@@ -182,6 +185,9 @@ OPENAI_MAX_ATTEMPTS = int(os.getenv('OPENAI_MAX_ATTEMPTS', '2'))
 OPENAI_RETRY_DELAY_SECONDS = int(os.getenv('OPENAI_RETRY_DELAY_SECONDS', '120'))
 OPENAI_DAILY_REQUEST_LIMIT = int(os.getenv('OPENAI_DAILY_REQUEST_LIMIT', '20'))
 OPENAI_DAILY_BUDGET_USD = Decimal(os.getenv('OPENAI_DAILY_BUDGET_USD', '1'))
+# Optional cumulative cap, including known costs and unresolved reservations on every date.
+_openai_total_budget = os.getenv('OPENAI_TOTAL_BUDGET_USD', '').strip()
+OPENAI_TOTAL_BUDGET_USD = Decimal(_openai_total_budget) if _openai_total_budget else None
 # No assumed tariffs. Real calls fail closed until rates for OPENAI_MODEL are configured.
 OPENAI_INPUT_USD_PER_MILLION = Decimal(os.getenv('OPENAI_INPUT_USD_PER_MILLION', '0'))
 OPENAI_OUTPUT_USD_PER_MILLION = Decimal(os.getenv('OPENAI_OUTPUT_USD_PER_MILLION', '0'))

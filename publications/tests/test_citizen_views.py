@@ -14,6 +14,8 @@ from configuration.models import FunctionalRule
 from inventory.models import InventoryItem
 from moderation.models import ModerationDecision
 from publications.models import Publication, PublicationPhoto
+from assistant.models import PublicationPreparation
+from assistant.preparations import digest
 
 
 def image_upload(name='object.jpg', image_format='JPEG'):
@@ -78,6 +80,16 @@ class CitizenPublicationViewsTests(TestCase):
             submitted_at=timezone.now() if status != Publication.Status.DRAFT else None,
         )
 
+    def confirm_without_suggestions(self, response):
+        self.assertEqual(response.status_code, 302)
+        preparation = PublicationPreparation.objects.latest('created_at')
+        return self.client.post(response.url, {
+            'action': 'confirm_none', 'version': digest(preparation.working_data),
+            'title': preparation.working_data['title'],
+            'description': preparation.working_data['description'],
+            'category': preparation.working_data['category_id'],
+        })
+
     def test_authentication_is_required_for_panel_and_creation(self):
         for url in (reverse('publications:list'), reverse('publications:create')):
             with self.subTest(url=url):
@@ -113,7 +125,8 @@ class CitizenPublicationViewsTests(TestCase):
         data['photos'] = image_upload()
 
         response = self.client.post(reverse('publications:create'), data)
-
+        self.assertFalse(Publication.objects.filter(title=data['title']).exists())
+        response = self.confirm_without_suggestions(response)
         publication = Publication.objects.get(title='Lámpara ciudadana')
         photo = publication.photos.get()
         self.assertRedirects(response, reverse('publications:detail', args=[publication.pk]))
@@ -158,7 +171,7 @@ class CitizenPublicationViewsTests(TestCase):
         data['photos'] = [image_upload('one.jpg'), image_upload('two.jpg')]
 
         response = self.client.post(reverse('publications:create'), data)
-
+        response = self.confirm_without_suggestions(response)
         publication = Publication.objects.get(title='Lámpara ciudadana')
         photos = list(publication.photos.order_by('sort_order'))
         self.assertRedirects(response, reverse('publications:detail', args=[publication.pk]))
@@ -297,7 +310,10 @@ class CitizenPublicationViewsTests(TestCase):
             reverse('publications:edit', args=[publication.pk]),
             self.publication_data(title='Objeto corregido', action='submit'),
         )
-
+        publication.refresh_from_db()
+        self.assertEqual(publication.status, Publication.Status.CHANGES_REQUESTED)
+        self.assertEqual(publication.title, 'Objeto a corregir')
+        response = self.confirm_without_suggestions(response)
         publication.refresh_from_db()
         self.assertRedirects(response, reverse('publications:detail', args=[publication.pk]))
         self.assertEqual(publication.title, 'Objeto corregido')

@@ -1,5 +1,7 @@
+import asyncio
 import base64
 import json
+import time
 from dataclasses import dataclass
 from itertools import islice
 
@@ -49,33 +51,46 @@ def request_content(evaluation, photos, *, max_side=None, detail=None):
 class OpenAIProvider:
     is_simulated = False
 
-    def evaluate(self, evaluation, photos, *, max_side=None, max_output_tokens=None):
+    def evaluate(self, evaluation, photos, *, max_side=None, max_output_tokens=None,
+                 timeout_seconds=None):
         require_live_access()
         from openai import OpenAI
 
         output_limit = max_output_tokens or settings.OPENAI_MAX_OUTPUT_TOKENS
         if not 256 <= output_limit <= 4096 or not 5 <= settings.OPENAI_TIMEOUT_SECONDS <= 120:
             raise ValueError('Límites de salida o timeout no válidos.')
+        started = time.monotonic()
         content = request_content(evaluation, photos, max_side=max_side,
                                   detail='low' if evaluation.is_manual else None)
-        manual_options = {}
-        if evaluation.is_manual and evaluation.model == 'gpt-6-luna':
-            # Keep the explicitly authorized manual check on standard pricing, without
-            # spending the small output allowance on internal reasoning.
-            manual_options = {'reasoning': {'effort': 'none'}, 'service_tier': 'default'}
-        # SDK retries are always disabled; only the durable queue may retry safe 429s.
-        with OpenAI(api_key=settings.OPENAI_API_KEY, max_retries=0,
-                    timeout=settings.OPENAI_TIMEOUT_SECONDS,
-                    base_url='https://api.openai.com/v1') as client:
-            response = client.responses.create(
+        model_options = {}
+        if evaluation.model == 'gpt-6-luna':
+            effort = 'none' if evaluation.is_manual else settings.OPENAI_REASONING_EFFORT
+            if effort not in ('none', 'low', 'medium', 'high', 'xhigh', 'max'):
+                raise ValueError('Esfuerzo de razonamiento no válido.')
+            # Bound latency/output for synchronous checks; keep billing on standard pricing.
+            model_options = {'reasoning': {'effort': effort}, 'service_tier': 'default'}
+        arguments = dict(
                 model=evaluation.model, instructions=SYSTEM_INSTRUCTIONS,
                 input=[{'role': 'user', 'content': content}],
                 text={'format': {'type': 'json_schema', 'name': 'publication_evaluation',
                                  'schema': response_json_schema(), 'strict': True}},
                 max_output_tokens=output_limit,
                 store=False,
-                **manual_options,
-            )
+                **model_options,
+        )
+        # A transport read timeout alone is not a wall-clock deadline. The synchronous
+        # preanalysis waits for this cancellable coroutine, without a background job.
+        if timeout_seconds is not None:
+            remaining = timeout_seconds - (time.monotonic() - started)
+            if remaining <= 0:
+                raise TimeoutError
+            response = asyncio.run(self._with_deadline(arguments, remaining))
+        else:
+            # SDK retries are always disabled; only the durable queue may retry safe 429s.
+            with OpenAI(api_key=settings.OPENAI_API_KEY, max_retries=0,
+                        timeout=settings.OPENAI_TIMEOUT_SECONDS,
+                        base_url='https://api.openai.com/v1') as client:
+                response = client.responses.create(**arguments)
         # Use create + local Pydantic validation to retain usage even on invalid/refused output.
         usage = response.usage
         refused = any(
@@ -95,6 +110,15 @@ class OpenAIProvider:
             refused=refused,
         )
 
+    async def _with_deadline(self, arguments, timeout_seconds):
+        from openai import AsyncOpenAI
+
+        async with asyncio.timeout(timeout_seconds):
+            async with AsyncOpenAI(api_key=settings.OPENAI_API_KEY, max_retries=0,
+                                   timeout=timeout_seconds,
+                                   base_url='https://api.openai.com/v1') as client:
+                return await client.responses.create(**arguments)
+
 
 class MockProvider:
     is_simulated = True
@@ -110,6 +134,11 @@ class MockProvider:
                 payload['checks'][field]['explanation'] = (
                     f'Simulación: comprobar manualmente si el objeto corresponde a «{selected["name"]}».'
                 )
+        payload['suggestions'] = [{
+            'id': 'complete_description', 'field': 'description', 'kind': 'information',
+            'proposed_text': None, 'category_id': None,
+            'reason': 'Simulación: indica el estado real del objeto y las piezas incluidas.',
+        }]
         return ProviderResponse(payload=payload)
 
 

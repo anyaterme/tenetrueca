@@ -1,5 +1,5 @@
 RULES_VERSION = 'trueca-admission-1'
-PROMPT_VERSION = 'assisted-2-subcategory'
+PROMPT_VERSION = 'assisted-4-dimensions-contract'
 
 ADMISSION_RULES = {
     'version': RULES_VERSION,
@@ -37,6 +37,22 @@ Si no puedes comprobar algo, marca NO_VERIFICABLE y explica qué debe verificar 
 Estima dimensiones mediante tipo de objeto, marca/modelo, escala visible y tamaños habituales;
 usa intervalos aproximados. No afirmes medidas documentadas sin fuente técnica verificable.
 No tienes herramientas de búsqueda. No inventes fuentes ni medidas exactas.
+Elige dimensions.method=visual para intervalos estimados de la imagen: cada eje estimado
+debe tener minimum_cm < maximum_cm, nunca extremos iguales ni invertidos.
+Si un eje no puede estimarse, ambos extremos deben ser null; nunca mezcles un número con null.
+Usa declared solo para medidas indicadas explícitamente por el ciudadano; ahí pueden coincidir
+los extremos. No conviertas una estimación de la foto en una medida declarada.
+Si no hay medidas declaradas ni estimaciones defendibles, usa unverifiable: height, width y depth
+deben tener minimum_cm=null y maximum_cm=null, sin números, y physical_verification=true.
+source debe ser null. No uses documented: no hay consulta técnica verificada disponible.
 La ausencia de medidas no es incumplimiento. Cerca del límite dimensional o con incertidumbre, pide
 verificación física. Compara alto, ancho y fondo separadamente. No uses datos personales.
-Da justificaciones concretas y breves. Enumera incidencias, limitaciones y recomendaciones.'''
+Da justificaciones concretas y breves. Enumera incidencias, limitaciones y recomendaciones.
+En suggestions proporciona cambios concretos seleccionables por el ciudadano, con ID único.
+Usa replace para corregir title, description o category; como máximo una sustitución por campo.
+En texto usa proposed_text y category_id=null; en categoría usa un ID válido y proposed_text=null.
+No inventes estado, funcionamiento, medidas, autenticidad ni piezas incluidas al reescribir.
+Si falta información del usuario, usa kind=information, field=description y ambos valores null.
+Para pedir nuevas fotos usa kind=photo, field=photos y ambos valores null.
+Explica en reason lo que debe aportar. Aceptar una sugerencia no certifica su cumplimiento.
+No sugieras cambios innecesarios: suggestions puede estar vacío.'''

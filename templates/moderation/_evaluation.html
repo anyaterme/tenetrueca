@@ -6,6 +6,7 @@
   <p class="staff-guidance">La IA solo orienta. La decisión corresponde siempre al personal autorizado y puede registrarse aunque el análisis falle.</p>
   {% if ai_backend == 'disabled' %}<p class="staff-muted">El servicio está deshabilitado. La revisión manual está disponible.</p>{% endif %}
   {% if ai_evaluation %}
+    {% if ai_evaluation.origin == 'preanalysis' %}<p class="staff-guidance">Preanálisis reutilizado: el contenido enviado coincide con el analizado antes de la confirmación.</p>{% endif %}
     {% if ai_evaluation.is_simulated %}<p class="staff-guidance"><strong>Simulación de desarrollo.</strong> No se ha consultado OpenAI ni analizado realmente las fotografías.</p>{% endif %}
     {% if ai_evaluation.status == 'completed' %}
       <h3>{{ ai_overall }}</h3>

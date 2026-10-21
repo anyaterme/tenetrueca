@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -75,6 +76,31 @@ class Dimensions(StrictModel):
         return self
 
 
+class Suggestion(StrictModel):
+    id: Annotated[str, Field(pattern=r'^[a-z][a-z0-9_]{0,39}$')]
+    field: Literal['title', 'description', 'category', 'photos']
+    kind: Literal['replace', 'information', 'photo']
+    proposed_text: Annotated[str, Field(min_length=1, max_length=4000)] | None
+    category_id: int | None
+    reason: Text
+
+    @model_validator(mode='after')
+    def applicable_value(self):
+        if self.kind == 'replace':
+            if self.field == 'category':
+                if self.category_id is None or self.proposed_text is not None:
+                    raise ValueError('La clasificación necesita un ID válido.')
+            elif self.field not in ('title', 'description') or not self.proposed_text or self.category_id is not None:
+                raise ValueError('La sustitución necesita texto y un campo editable.')
+            if self.field == 'title' and len(self.proposed_text) > 180:
+                raise ValueError('El título supera el límite.')
+        elif (self.kind == 'information' and self.field != 'description'
+              or self.kind == 'photo' and self.field != 'photos'
+              or self.category_id is not None or self.proposed_text is not None):
+            raise ValueError('Los datos pendientes debe aportarlos el usuario.')
+        return self
+
+
 class EvaluationResult(StrictModel):
     overall: Annotated[str, Field(pattern='^(apparently_suitable|issues|needs_verification)$')]
     identified_object: Text
@@ -84,6 +110,57 @@ class EvaluationResult(StrictModel):
     alternative_category_ids: list[int]
     dimensions: Dimensions
     unverifiable: list[Text]
+    # Defaults preserve validation of historical results and offline fixtures.
+    suggestions: Annotated[list[Suggestion], Field(max_length=12)] = Field(default_factory=list)
+
+    @model_validator(mode='after')
+    def unique_suggestions(self):
+        ids = [item.id for item in self.suggestions]
+        fields = [item.field for item in self.suggestions if item.kind == 'replace']
+        if len(ids) != len(set(ids)) or len(fields) != len(set(fields)):
+            raise ValueError('Las propuestas deben ser independientes y únicas.')
+        return self
+
+
+class UnknownAxis(Axis):
+    minimum_cm: None
+    maximum_cm: None
+
+
+class MeasuredAxis(Axis):
+    minimum_cm: Annotated[float, Field(gt=0, le=10000)]
+    maximum_cm: Annotated[float, Field(gt=0, le=10000)]
+
+
+class UnverifiableDimensions(Dimensions):
+    method: Annotated[str, Field(pattern='^unverifiable$')]
+    height: UnknownAxis
+    width: UnknownAxis
+    depth: UnknownAxis
+    source: None
+
+
+class VisualDimensions(Dimensions):
+    method: Annotated[str, Field(pattern='^visual$')]
+    height: MeasuredAxis | UnknownAxis
+    width: MeasuredAxis | UnknownAxis
+    depth: MeasuredAxis | UnknownAxis
+    source: None
+
+
+class DeclaredDimensions(Dimensions):
+    method: Annotated[str, Field(pattern='^declared$')]
+    height: MeasuredAxis | UnknownAxis
+    width: MeasuredAxis | UnknownAxis
+    depth: MeasuredAxis | UnknownAxis
+    source: None
+
+
+class ProviderEvaluationResult(EvaluationResult):
+    # Nested anyOf makes the method/axes relationship part of the API contract.
+    # Keep the historical model and its semantic validators as the local boundary.
+    # Documented measurements require verified lookup, which is not integrated.
+    dimensions: UnverifiableDimensions | VisualDimensions | DeclaredDimensions
 
 
 def response_json_schema():
@@ -91,7 +168,7 @@ def response_json_schema():
     # Keep create + local validation so refusals/invalid output never discard usage.
     from openai.lib._pydantic import to_strict_json_schema
 
-    return to_strict_json_schema(EvaluationResult)
+    return to_strict_json_schema(ProviderEvaluationResult)
 
 
 CHECK_LABELS = {

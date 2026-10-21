@@ -1,12 +1,13 @@
 import json
 import logging
+import time
 from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
-from django.db.models import F
+from django.db import connection, transaction
+from django.db.models import Case, DecimalField, F, Sum, When
 from django.utils import timezone
 from openai import APIConnectionError, APIStatusError, APITimeoutError, RateLimitError
 from pydantic import ValidationError as SchemaError
@@ -114,11 +115,13 @@ def evaluation_context(publication):
 @transaction.atomic
 def claim_evaluation(evaluation_id, *, manual=False):
     candidate = PublicationEvaluation.objects.get(pk=evaluation_id)
+    if candidate.origin != 'review' or candidate.publication_id is None:
+        return None
     # Same lock order as enqueue and moderation: publication, then evaluation.
     publication = Publication.objects.select_for_update().get(pk=candidate.publication_id)
     evaluation = PublicationEvaluation.objects.select_for_update().get(pk=evaluation_id)
     if (evaluation.status != 'pending' or evaluation.available_at > timezone.now()
-            or evaluation.is_manual != manual):
+            or evaluation.is_manual != manual or evaluation.origin != 'review'):
         return None
     fingerprint, _ = publication_snapshot(publication)
     if fingerprint != evaluation.fingerprint or publication.status != 'pending_review':
@@ -164,6 +167,25 @@ def reserve_attempt(evaluation, *, simulated, budget=None):
             raise BudgetExceeded('La reserva debe ser positiva.')
         if budget is not None and reservation > budget:
             raise BudgetExceeded('La reserva por solicitud supera el presupuesto autorizado.')
+        total_budget = settings.OPENAI_TOTAL_BUDGET_USD
+        if total_budget is not None:
+            if not total_budget.is_finite() or total_budget <= 0:
+                raise BudgetExceeded('El presupuesto acumulado debe ser positivo.')
+            if connection.vendor != 'postgresql':
+                raise BudgetExceeded('El límite acumulado requiere PostgreSQL para reservar con seguridad.')
+            # One transaction-scoped lock for all dates, shared by HTTP and workers.
+            # A daily row lock alone cannot serialize requests across midnight.
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT pg_advisory_xact_lock(%s, %s)', [1414677313, 1])
+            committed = EvaluationAttempt.objects.filter(is_simulated=False).aggregate(
+                total=Sum(Case(
+                    When(usage_known=True, then=F('estimated_cost_usd')),
+                    default=F('reserved_usd'),
+                    output_field=DecimalField(max_digits=20, decimal_places=8),
+                ), default=Decimal('0')),
+            )['total']
+            if committed + reservation > total_budget:
+                raise BudgetExceeded('Límite acumulado de presupuesto alcanzado.')
         day, _ = OpenAIUsageDay.objects.get_or_create(date=timezone.now().date())
         day = OpenAIUsageDay.objects.select_for_update().get(pk=day.pk)
         if (day.requests >= settings.OPENAI_DAILY_REQUEST_LIMIT
@@ -210,6 +232,13 @@ def validate_result(payload, evaluation):
     currently_allowed_ids = set(public_category_ids())
     if not set(result.alternative_category_ids).issubset(allowed_ids & currently_allowed_ids):
         raise ResponseFailure('invalid_response', stage='business', rule='category_not_allowed')
+    for suggestion in result.suggestions:
+        if suggestion.field == 'category' and (
+            suggestion.category_id not in allowed_ids & currently_allowed_ids
+            or any(category['parent_id'] == suggestion.category_id
+                   for category in evaluation.snapshot['categories'])
+        ):
+            raise ResponseFailure('invalid_response', stage='business', rule='category_not_allowed')
     selection = evaluation.snapshot.get('classification')
     if selection:
         root = selection['category']
@@ -282,6 +311,8 @@ def error_code(error):
         return 'live_disabled'
     if isinstance(error, BudgetExceeded):
         return 'budget_exceeded'
+    if isinstance(error, TimeoutError):
+        return 'timeout_unknown_usage'
     if isinstance(error, APITimeoutError):
         return 'timeout_unknown_usage'
     if isinstance(error, APIConnectionError):
@@ -299,18 +330,16 @@ def error_code(error):
     return 'provider_error'
 
 
-def process_evaluation(evaluation_id, *, provider=None, manual=False, budget=None,
-                       max_side=None, max_output_tokens=None):
-    evaluation = claim_evaluation(evaluation_id, manual=manual)
-    if evaluation is None:
-        return False
+def evaluate_once(evaluation, photos, *, provider=None, budget=None, max_side=None,
+                  max_output_tokens=None, timeout_seconds=None):
+    """Shared analysis, validation and usage ledger for both submission stages."""
     attempt = None
     result = None
     code = ''
     details = {}
+    started = time.monotonic()
     try:
         provider = provider or get_provider()
-        photos = evaluation_photos(evaluation.publication, manual=manual)
         if not photos:
             raise ValueError('No hay fotografías para analizar.')
         if not provider.is_simulated:
@@ -321,8 +350,12 @@ def process_evaluation(evaluation_id, *, provider=None, manual=False, budget=Non
         PublicationEvaluation.objects.filter(pk=evaluation.pk).update(
             is_simulated=provider.is_simulated,
         )
-        response = provider.evaluate(evaluation, photos, max_side=max_side,
-                                     max_output_tokens=max_output_tokens)
+        options = {'max_side': max_side, 'max_output_tokens': max_output_tokens}
+        if timeout_seconds is not None:
+            options['timeout_seconds'] = timeout_seconds - (time.monotonic() - started)
+            if options['timeout_seconds'] <= 0:
+                raise TimeoutError
+        response = provider.evaluate(evaluation, photos, **options)
         record_usage(attempt, response)
         check_response(response)
         result = validate_result(response.payload, evaluation)
@@ -335,6 +368,26 @@ def process_evaluation(evaluation_id, *, provider=None, manual=False, budget=Non
             attempt.error_code = code
             attempt.error_details = details
             attempt.save(update_fields=['error_code', 'error_details'])
+    return result, code, details
+
+
+def process_evaluation(evaluation_id, *, provider=None, manual=False, budget=None,
+                       max_side=None, max_output_tokens=None):
+    candidate = PublicationEvaluation.objects.get(pk=evaluation_id)
+    if candidate.origin != 'review' or candidate.publication_id is None:
+        return False
+    evaluation = claim_evaluation(evaluation_id, manual=manual)
+    if evaluation is None:
+        return False
+    try:
+        photos = evaluation_photos(evaluation.publication, manual=manual)
+    except Exception as error:
+        result, code, details = None, error_code(error), safe_error_details(error)
+    else:
+        result, code, details = evaluate_once(
+            evaluation, photos, provider=provider, budget=budget, max_side=max_side,
+            max_output_tokens=max_output_tokens,
+        )
     with transaction.atomic():
         publication = Publication.objects.select_for_update().get(pk=evaluation.publication_id)
         latest = PublicationEvaluation.objects.select_for_update().get(pk=evaluation.pk)
@@ -375,6 +428,6 @@ def process_evaluation(evaluation_id, *, provider=None, manual=False, budget=Non
 def expire_interrupted_jobs():
     # Never retry a crashed/in-flight request: the provider may already have billed it.
     threshold = timezone.now() - timedelta(seconds=settings.OPENAI_TIMEOUT_SECONDS * 3 + 60)
-    return PublicationEvaluation.objects.filter(status='processing', started_at__lt=threshold).update(
+    return PublicationEvaluation.objects.filter(origin='review', status='processing', started_at__lt=threshold).update(
         status='error', error_code='worker_interrupted_unknown_usage', finished_at=timezone.now(),
     )

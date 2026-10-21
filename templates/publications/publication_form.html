@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %} · TRUEC@{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}?v=20260926-wizard-3">{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}?v=20261021-preanalysis">{% endblock %}
 {% block account_breadcrumb_label %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %}{% endblock %}
 {% block account_title %}{% if publication %}Editar publicación{% else %}Publicar un objeto{% endif %}{% endblock %}
 {% block account_subtitle %}<p>Añade fotos y describe tu objeto para revisarlo.</p>{% endblock %}
@@ -17,8 +17,9 @@
       <li data-step-indicator="4"><button type="button" data-go-step="4" disabled><span>4</span><strong>Revisar</strong></button></li>
     </ol>
 
-    <form class="publication-form publication-wizard" method="post" enctype="multipart/form-data" novalidate data-publication-form>
+    <form class="publication-form publication-wizard" method="post" enctype="multipart/form-data" novalidate data-publication-form data-ai-request data-ai-timeout="{{ preanalysis_timeout }}">
       {% csrf_token %}
+      <input type="hidden" name="preparation_request_key" value="{{ preparation_request_key }}">
       {{ form.primary_photo }}
       {% if form.non_field_errors %}
         <ul class="publication-form__errors" role="alert">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
@@ -132,7 +133,7 @@
           </section>
           <div class="publication-process-note">
             <span aria-hidden="true">i</span>
-            <p>Al enviarla, revisaremos la propuesta. El objeto llegará al catálogo después de su aprobación y validación física.</p>
+            <p>Primero analizaremos tu propuesta con ayuda de la IA. Podrás elegir qué sugerencias aceptar antes de enviarla a revisión.</p>
           </div>
         </div>
       </section>
@@ -145,7 +146,7 @@
           <button class="publication-wizard__back" type="button" data-step-back hidden>Volver</button>
           <button class="publication-wizard__draft" type="submit" name="action" value="save_draft">Guardar borrador</button>
           <button class="button button--primary publication-wizard__continue" type="button" data-step-next>Continuar {% include "components/backoffice_icon.html" with name="arrow-right" %}</button>
-          <button class="button button--primary publication-wizard__submit" type="submit" name="action" value="submit" data-submit-publication hidden>Enviar a revisión</button>
+          <button class="button button--primary publication-wizard__submit" type="submit" name="action" value="submit" data-submit-publication hidden>Analizar propuesta</button>
         </div>
       </footer>
     </form>
@@ -165,6 +166,7 @@
     </section>
   </div>
   {{ publication_categories|json_script:"publication-category-data" }}
+  {% include "publications/_processing_dialog.html" %}
 {% endblock %}
 
-{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20260926-wizard-3" defer></script>{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20261021-preanalysis" defer></script><script src="{% static 'js/preanalysis.js' %}?v=20261021" defer></script>{% endblock %}

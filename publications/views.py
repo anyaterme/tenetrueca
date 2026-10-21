@@ -1,14 +1,16 @@
 from pathlib import Path
+from uuid import UUID, uuid4
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Max, Prefetch
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from audit.models import AuditEvent
@@ -23,7 +25,7 @@ from publications.forms import (
 from publications.images import ALLOWED_IMAGE_FORMATS
 from publications.models import Publication, PublicationPhoto
 from publications.services import user_can_submit_today
-from assistant.services import schedule_evaluation
+from assistant.preparations import start_preparation, run_preanalysis, timeout_seconds
 
 
 EDITABLE_STATUSES = {
@@ -135,7 +137,26 @@ def _publication_form_context(form, publication):
         'publication_categories': categories,
         'photo_max_count': settings.PUBLICATION_PHOTO_MAX_COUNT,
         'photo_max_mb': settings.PUBLICATION_PHOTO_MAX_BYTES // (1024 * 1024),
+        'preanalysis_timeout': timeout_seconds(),
+        'preparation_request_key': uuid4(),
     }
+
+
+def _begin_submission(request, form, *, target=None):
+    try:
+        request_key = UUID(request.POST.get('preparation_request_key', str(uuid4())))
+    except (ValueError, TypeError, AttributeError):
+        form.add_error(None, 'La solicitud no es válida. Recarga el formulario.')
+        return None
+    try:
+        preparation = start_preparation(request.user, form, request_key, target=target)
+        if preparation.status == 'open':
+            run_preanalysis(preparation.pk)
+    except ValidationError as error:
+        form.add_error(None, error)
+        return None
+    url = reverse('publications:preparation', kwargs={'token': preparation.pk})
+    return JsonResponse({'url': url}) if request.headers.get('X-Requested-With') == 'XMLHttpRequest' else redirect(url)
 
 
 def _attach_citizen_feedback(publications):
@@ -255,38 +276,29 @@ def publication_create(request):
                         f'Has alcanzado el límite de {daily_limit} publicaciones enviadas hoy.',
                     )
             if not form.errors:
-                with transaction.atomic():
-                    publication = form.save(commit=False)
-                    publication.submitter = request.user
-                    publication.status_changed_at = timezone.now()
-                    if action == 'submit':
-                        publication.status = Publication.Status.PENDING_REVIEW
-                        publication.submitted_at = timezone.now()
-                    else:
-                        publication.status = Publication.Status.DRAFT
-                    publication.save()
-                    _apply_photo_changes(publication, form)
-                    if action == 'submit':
-                        schedule_evaluation(publication.pk)
-                    _audit_publication(
-                        request,
-                        publication,
-                        'publication.submitted' if action == 'submit' else 'publication.draft_created',
-                    )
                 if action == 'submit':
-                    messages.success(
-                        request,
-                        'Tu objeto se ha enviado a revisión. Te avisaremos si necesitamos algún cambio.',
-                    )
+                    response = _begin_submission(request, form)
+                    if response is not None:
+                        return response
                 else:
-                    messages.success(request, 'El borrador se ha guardado.')
-                return redirect('publications:detail', pk=publication.pk)
+                    return _save_citizen_draft(request, form)
 
-    return render(
-        request,
-        'publications/publication_form.html',
-        _publication_form_context(form, None),
-    )
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+    return render(request, 'publications/publication_form.html', _publication_form_context(form, None))
+
+
+def _save_citizen_draft(request, form):
+    with transaction.atomic():
+        publication = form.save(commit=False)
+        publication.submitter = request.user
+        publication.status_changed_at = timezone.now()
+        publication.status = Publication.Status.DRAFT
+        publication.save()
+        _apply_photo_changes(publication, form)
+        _audit_publication(request, publication, 'publication.draft_created')
+    messages.success(request, 'El borrador se ha guardado.')
+    return redirect('publications:detail', pk=publication.pk)
 
 
 @login_required
@@ -315,31 +327,33 @@ def publication_edit(request, pk):
                         f'Has alcanzado el límite de {daily_limit} publicaciones enviadas hoy.',
                     )
             if not form.errors:
+                if action == 'submit':
+                    target = Publication.objects.get(pk=publication.pk, submitter=request.user)
+                    response = _begin_submission(request, form, target=target)
+                    if response is not None:
+                        return response
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+                    return render(request, 'publications/publication_form.html', _publication_form_context(form, publication))
                 with transaction.atomic():
                     publication = form.save(commit=False)
                     publication.status_changed_at = timezone.now()
-                    if action == 'submit':
-                        publication.status = Publication.Status.PENDING_REVIEW
-                        publication.submitted_at = timezone.now()
-                        publication.reviewed_at = None
                     publication.save()
                     _apply_photo_changes(publication, form)
-                    if action == 'submit':
-                        schedule_evaluation(publication.pk)
                     _audit_publication(
                         request,
                         publication,
-                        'publication.submitted' if action == 'submit' else 'publication.updated',
+                        'publication.updated',
                         before=before,
                     )
                 messages.success(
                     request,
-                    'La publicación se ha enviado de nuevo a revisión.'
-                    if action == 'submit'
-                    else 'Los cambios se han guardado.',
+                    'Los cambios se han guardado.',
                 )
                 return redirect('publications:detail', pk=publication.pk)
 
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
     return render(
         request,
         'publications/publication_form.html',

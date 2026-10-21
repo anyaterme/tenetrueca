@@ -11,6 +11,7 @@ OPENAI_EVALUATION_BACKEND = 'mock'
 # These limits never enable network access: tests and the SDK remain blocked.
 OPENAI_DAILY_REQUEST_LIMIT = 20
 OPENAI_DAILY_BUDGET_USD = Decimal('1')
+OPENAI_TOTAL_BUDGET_USD = None
 ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 # Existing applications intentionally do not track migrations. Sync their models for tests.
 MIGRATION_MODULES = {

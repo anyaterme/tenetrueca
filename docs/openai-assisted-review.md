@@ -2,32 +2,42 @@
 
 Implementación preparada en la rama `openai`. Solo existe el modo ASSISTED: el servicio de
 evaluación no importa ni ejecuta el motor de decisiones administrativas. Se conservan los
-estados de publicaciones, los cuatro pasos del formulario y las reglas de puntos, reservas,
+estados de publicaciones, los cuatro pasos de captura del formulario y las reglas de puntos, reservas,
 recepción y retirada. Las decisiones siguen pasando por `moderation.services` y sus permisos.
 
 ## Arquitectura y flujo
 
-1. Al enviar o reenviar una publicación, `transaction.on_commit` programa su evaluación.
-   Un error de programación no revierte el envío ni impide la revisión manual.
-2. `PublicationEvaluation` contiene un trabajo persistente en la misma base de datos y una
+1. Al solicitar el envío o reenvío, se crea una `PublicationPreparation` privada con copias de
+   las fotografías, sin crear una publicación ni modificar el borrador existente. El preanálisis
+   se ejecuta **síncronamente** dentro de esa petición. Un diálogo informa del procesamiento con
+   ayuda de IA; no se delega al worker ni se reintenta automáticamente.
+2. El ciudadano revisa un formulario con sugerencias por campo: puede aceptar todas, seleccionar
+   algunas, ignorarlas o cancelar. Las propuestas de texto/clasificación son editables; la
+   información o fotografías pendientes deben aportarse realmente. Puede consultar una vista previa.
+   Solo al confirmar se registra `pending_review`. Si datos, fotografías ordenadas, catálogo,
+   reglas, prompt, modelo y configuración coinciden, se reutiliza el preanálisis. Si cambian,
+   `transaction.on_commit` programa una evaluación nueva de la versión definitiva para el gestor.
+   Un fallo al programarla no revierte el envío ni impide la revisión manual.
+3. `PublicationEvaluation` contiene una evaluación persistente en la misma base de datos y una
    instantánea sin datos de cuenta. La huella SHA-256 incluye título, descripción, categoría,
    catálogo real, fotografías y fecha de envío. Una nueva entrega genera otra versión incluso
-   cuando el contenido no cambia.
-3. `evaluation_worker` reclama el trabajo con bloqueo de la publicación y de la evaluación.
+   cuando el contenido no cambia; el preanálisis usa además una huella de contenido independiente
+   de fechas, IDs y rutas de archivos para poder vincularlo sin otra llamada a la entrega final.
+4. `evaluation_worker` reclama solo trabajos posteriores al envío, con bloqueo de publicación y evaluación.
    Una restricción parcial impide dos trabajos activos para la misma publicación. El proceso
-   HTTP nunca espera la respuesta de OpenAI. No había infraestructura asíncrona: para este
-   único flujo se utiliza PostgreSQL y un worker dedicado, sin incorporar Celery ni Redis.
-4. El proveedor real usa el SDK oficial, Responses API, imágenes JPEG privadas en base64,
+   HTTP de confirmación nunca espera otro análisis. El HTTP del preanálisis sí espera su respuesta.
+   Se utiliza PostgreSQL y un worker dedicado, sin incorporar Celery ni Redis.
+5. El proveedor real usa el SDK oficial, Responses API, imágenes JPEG privadas en base64,
    Structured Outputs y validación local con Pydantic. La clave permanece en el servidor;
    se fuerza `store=False` y no se habilitan herramientas ni operaciones administrativas.
    Referencias: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
    [imágenes en Responses API](https://developers.openai.com/api/docs/guides/images-vision).
-5. Se registran resultado, reglas/prompt/modelo, fechas, errores saneados y consumo por intento.
+6. Se registran resultado, reglas/prompt/modelo, fechas, errores saneados y consumo por intento.
    La respuesta se valida después de registrar el consumo, incluso si está incompleta, rechazada
    o no cumple el esquema. Nunca se almacenan excepciones del SDK con cuerpos o credenciales.
-6. Se comprueba la huella antes y después del análisis. Un resultado tardío no sustituye el de
+7. Se comprueba la huella antes y después del análisis. Un resultado tardío no sustituye el de
    otra versión. Las evaluaciones históricas se conservan y se identifican como históricas.
-7. El panel actual de moderación muestra «Evaluación automática», diez comprobaciones,
+8. El panel actual de moderación muestra «Evaluación automática», diez comprobaciones,
    categorías alternativas, dimensiones, incidencias y recomendaciones. El gestor puede decidir
    aunque la evaluación falle, y puede repetir el análisis mediante POST con CSRF y los permisos
    actuales por rol y punto limpio. La decisión guarda la evaluación vigente disponible entonces
@@ -35,6 +45,92 @@ recepción y retirada. Las decisiones siguen pasando por `moderation.services` y
 
 Los estados técnicos son `pending`, `processing`, `completed`, `error` y `obsolete`. Son
 independientes de los estados administrativos; no se añaden estados administrativos nuevos.
+
+## Preanálisis ciudadano: configuración y puesta en servicio
+
+- `AI_PREANALYSIS_TIMEOUT_SECONDS=60`: tiempo máximo del análisis síncrono, entero positivo.
+  Es independiente de `OPENAI_TIMEOUT_SECONDS`, que sigue rigiendo las evaluaciones del worker.
+  El adaptador del preanálisis espera una petición SDK asíncrona con deadline cancelable dentro
+  del HTTP síncrono; no crea un hilo ni deja un trabajo de IA en segundo plano tras el timeout.
+  El navegador concede 15 segundos adicionales para transporte/carga/respuesta. Un timeout
+  conserva los datos y permite un reintento explícito; no presupone consumo cero del proveedor.
+- `AI_PREPARATION_TTL_HOURS=24`: caducidad de la preparación privada. El acceso queda bloqueado
+  al caducar. `python manage.py expire_preparations` limpia fotos y datos temporales de las
+  preparaciones caducadas, conservando intentos/evaluaciones y las fotos ya vinculadas a un envío.
+  Incorporar ese comando a las tareas de mantenimiento existentes del entorno.
+- Aplicar `assistant/0003_publicationevaluation_content_fingerprint_and_more` antes de servir
+  el nuevo formulario. Las evaluaciones anteriores conservan sus resultados y consumos;
+  su origen predeterminado es `review`. No se aplican migraciones a producción durante las pruebas.
+- En producción, fijar el timeout de Gunicorn por encima del máximo de preanálisis y el margen
+  de transporte (por ejemplo, 90 segundos para el valor predeterminado de 60). Revisar también
+  el timeout del proxy y dimensionar los procesos para las peticiones síncronas. No se han
+  modificado los Compose ni reiniciado los servicios habituales.
+- Las fotos temporales requieren usuario propietario, token de preparación vigente y sesión;
+  no son archivos públicos. Cancelar conserva el borrador previo. La confirmación bloquea usuario,
+  preparación y publicación, comprueba la versión del formulario y revalida el límite diario.
+- En modo `mock`, las sugerencias están marcadas como simuladas. Las pruebas bloquean el SDK
+  síncrono y asíncrono incluso con clave y activación ficticias. No habilitar `live` para probar
+  esta interfaz ni ejecutar el comando de integración real.
+
+Pruebas del diálogo y HTTP del navegador, además de las pruebas Python:
+
+```bash
+node --test assistant/tests/js/test_preanalysis.cjs moderation/tests/js/test_decision_drafts.cjs
+```
+
+Para verificar además la actualización del esquema en SQLite, con los artefactos de migraciones
+base presentes localmente:
+
+```bash
+CI=1 DJANGO_SETTINGS_MODULE=tenetrueca.test_migration_settings python -m pytest
+```
+
+Validación completa sobre **PostgreSQL 17 temporal e independiente**: **482 pruebas Python
+correctas, 179 subcasos y ninguna omisión**, además de **13 pruebas JavaScript correctas**.
+Quedan comprobadas las siete pruebas antes pendientes: duplicados de preparaciones,
+confirmaciones y evaluaciones, exclusión de workers simultáneos, límites de envíos,
+reservas de presupuesto y cargos de puntos concurrentes. También pasan las migraciones
+que conservan publicaciones, decisiones, evaluaciones y consumos anteriores.
+
+Para reproducir la batería PostgreSQL, con un servidor dedicado de pruebas escuchando en
+`127.0.0.1:55439`, las credenciales de `test_postgres_settings` y las dependencias de desarrollo:
+
+```bash
+CI=1 OPENAI_EVALUATION_BACKEND=mock OPENAI_LIVE_ENABLED=False OPENAI_API_KEY= \
+  DJANGO_SETTINGS_MODULE=tenetrueca.test_postgres_settings python -m pytest
+```
+
+La prueba de acceso privado a fotografías ahora consume el iterador de streaming del cliente
+de pruebas, que cierra el archivo sin cerrar la conexión de PostgreSQL dentro de `TestCase`.
+La batería completa incluía además el fallo previo de permisos del script local de despliegue:
+se ha corregido la máscara al actualizar código y se normalizan solo los estáticos públicos,
+sin seguir enlaces simbólicos ni cambiar permisos de fotos privadas, `.env` o backups.
+El script y su prueba quedan incluidos en las excepciones de Git; los demás materiales
+locales de `deploy/` siguen ignorados. El script solo se ejecutó con Docker y Git simulados.
+
+Se verificaron también formulario, selección, vista previa y confirmación en navegador contra
+una base temporal con proveedor simulado, sin tocar la base habitual. La verificación PostgreSQL
+no desplegó ni reinició la aplicación o el worker; ambos conservan `mock`, llamadas reales
+deshabilitadas y clave vacía. El contenedor PostgreSQL temporal se elimina al terminar las pruebas.
+Consumo de esta implementación: **0 solicitudes reales, 0 tokens reales, 0 USD**.
+
+### Entorno local actualizado para probar el preanálisis
+
+Se reconstruyeron y recrearon `app` y `evaluation_worker` con los tres archivos Compose
+(`docker-compose.yml`, `app/compose.openai.yml`, `app/compose.mock.yml`). Antes de actualizar
+se detuvieron ambos servicios y se guardó un dump PostgreSQL privado y validado en
+`../backups/local-preanalysis-20261021T113908/database.dump` (directorio `0700`, archivo `0600`).
+La migración `assistant/0003_publicationevaluation_content_fingerprint_and_more` ya estaba
+aplicada: `migrate` no encontró operaciones pendientes. Pasaron `check`,
+`makemigrations --check --dry-run` y `migrate --check`; se actualizaron 189 estáticos.
+
+La aplicación está saludable en `http://localhost:8000/` y el worker está arrancado.
+Se verificaron el formulario «Analizar propuesta», el diálogo con 60 segundos y los archivos
+CSS/JS mediante HTTP 200, sin crear ni modificar publicaciones para la comprobación.
+Gunicorn mantiene un timeout de 120 segundos. Ambos servicios conservan `mock`, clave vacía,
+llamadas reales deshabilitadas y límites reales a cero. El histórico sigue en seis intentos
+reales (9596 tokens de entrada y 4085 de salida); esta actualización añade **0 llamadas,
+0 tokens reales y 0 USD**. Se conservan las 153 publicaciones locales previas.
 
 ## Configuración y ejecución sin coste
 
@@ -689,3 +785,227 @@ La regresión `python3 deploy/tests/test_update.py -v` simula los ocho escenario
 comprueba el orden de arranque, repara estáticos antiguos `0600/0700` y confirma que los archivos
 privados y las copias siguen con permisos privados. Las pruebas y la sintaxis Bash pasan.
 No se han aplicado cambios remotos ni realizado solicitudes de IA para este diagnóstico.
+
+### Comprobación del flujo en navegador local (21/10/2026)
+
+Se completaron las cuatro acciones desde el formulario ciudadano y se revisaron los envíos
+desde una cuenta temporal de moderación, con PostgreSQL y los contenedores locales actualizados.
+El proveedor permaneció en `mock`, sin clave y con llamadas reales deshabilitadas.
+Como el simulador habitual devuelve una sola sugerencia, los preanálisis de los dos primeros
+casos recibieron una segunda sugerencia de información mediante una fixture validada y auditada,
+limitada a esos datos de prueba. No se modificó el proveedor ni el código funcional.
+
+| Acción | Publicación de prueba | Resultado verificado por el operador |
+| --- | --- | --- |
+| Aceptar todas | 166 | Las dos respuestas incorporadas; evaluación nueva 12 sobre el contenido final. |
+| Aceptar algunas | 167 | Solo la respuesta seleccionada; evaluación nueva 14 sobre el contenido final. |
+| No aceptar ninguna | 168 | Texto original; preanálisis 15 reutilizado, con aviso visible en moderación. |
+| Cancelar | 169 | Borrador conservado, preparación cancelada y sin envío; la ruta de moderación devuelve 404. |
+
+Se contrastaron en PostgreSQL las instantáneas, huellas de contenido, selección de sugerencias,
+categoría y fotografía conservadas, eventos de envío y ausencia de decisiones de moderación.
+Las tres evaluaciones vigentes coinciden con el contenido finalmente enviado. El caso cancelado
+no tiene evaluación asociada a la publicación ni evento de envío; su preanálisis permanece
+asociado a la preparación cancelada. También se observó el diálogo de procesamiento y el máximo
+configurado de 60 segundos. Resultado: seis tentativas simuladas y **cero llamadas reales nuevas**;
+el historial real previo permaneció sin cambios. No se detectaron fallos en estos recorridos.
+
+Las publicaciones quedan identificadas con `[QA 20261021T114723]` para su consulta local.
+Las sesiones temporales se cerraron al terminar. Tras la autorización explícita del usuario,
+se desactivaron las cuentas de prueba 30 y 31 y se retiraron sus roles, permisos directos y
+contraseñas utilizables. Se verificó que las publicaciones y la auditoría permanecen intactas.
+No se modificaron cuentas ni publicaciones ajenas a esta prueba.
+
+### Prueba de integración real de las cuatro opciones (21/10/2026)
+
+Con autorización explícita y presupuesto máximo conjunto de **1 USD**, se ejecutaron los
+formularios y servicios del flujo contra PostgreSQL con respuestas reales de `gpt-6-luna`.
+Se verificaron las instantáneas, huellas, auditoría y HTML de la vista del operador autorizado,
+también bajo los ajustes habituales de la aplicación. Esta comprobación real de integración
+complementa los recorridos de navegador con proveedor simulado del apartado anterior.
+
+Las llamadas se limitaron a un contenedor efímero: imágenes derivadas de hasta 512 px, detalle
+alto, máximo dos imágenes y 4096 tokens de salida por solicitud, preanálisis con límite de
+60 segundos y sin reintentos de transporte. Se conservaron el proveedor, prompt, esquema y
+validaciones de la aplicación. Los cuatro preanálisis completaron en 13,82; 13,75; 18,47 y
+15,94 segundos, respectivamente. No se alteraron las respuestas de la IA ni se añadieron
+sugerencias simuladas a estos casos.
+
+| Acción | Publicación | Evaluación recibida por moderación |
+| --- | --- | --- |
+| Todas | 170 | Nueva evaluación real 22; incorpora la respuesta y la imagen adicional aceptadas del preanálisis 18. |
+| Algunas | 171 | Nueva evaluación real 23; incorpora solo la respuesta seleccionada del preanálisis 19, conservando una fotografía. |
+| Ninguna | 172 | Texto, clasificación e imagen originales; reutiliza la evaluación real 20 y muestra el aviso correspondiente. |
+| Cancelar | 173 | Conserva el borrador; preparación cancelada, sin envío ni evaluación de publicación y fuera de moderación (404). |
+
+Se empleó una ilustración sintética identificada expresamente como tal. Para aceptar la petición
+de fotografía en el caso total se cargó otra copia de esa ilustración: verifica la carga y
+propagación de imágenes, sin acreditar una nueva vista real ni satisfacer semánticamente esa
+recomendación. La IA mantuvo las limitaciones sobre la existencia, estado y dimensiones del
+objeto; no se inventaron esos datos. No se aprobaron publicaciones ni se registraron decisiones.
+
+El límite funcional de cinco envíos diarios se activó al acumular las pruebas. Tras autorización
+expresa, solo los borradores sintéticos 172 y 173 y sus preparaciones pasaron a la identidad
+de prueba 32, creada inactiva, sin contraseña utilizable ni roles. El límite permaneció en cinco.
+Las cuentas de prueba 30 y 31 también permanecieron inactivas, sin roles ni contraseña utilizable.
+
+Consumo de esta ejecución: **seis respuestas reales**, 15021 tokens de entrada y 11569 de salida;
+coste estimado **0,00728660 USD**, con tarifas estándar de 0,10 USD de entrada y 0,50 USD de salida
+por millón de tokens, comprobadas en las
+[tarifas oficiales](https://developers.openai.com/api/docs/pricing).
+El primer intento del lanzador (evaluación 17) abortó antes de delegar en el transporte porque
+su comprobación contabilizaba la propia reserva en curso como consumo desconocido. Se corrigió
+únicamente el lanzador temporal, se auditó el aborto y se conservó por prudencia su reserva de
+**0,05 USD**, sin repetir una llamada de red fallida. Total contabilizado conservador:
+**0,05728660 USD**, inferior al máximo autorizado. Las seis llamadas reales terminaron sin errores
+de proveedor, esquema o validación y sin reintentos. No hubo cambios de código funcional.
+
+El informe se conserva fuera del repositorio de la aplicación, en
+`../backups/local-liveqa-20261021T180627Z/results.json`, con permisos privados. Se retiraron los
+lanzadores y el contenedor efímero. Aplicación y worker habituales quedan arrancados en `mock`,
+sin clave, llamadas reales deshabilitadas y límites reales a cero. No se modificó el `.env`.
+
+### Proveedor real local para pruebas personales (21/10/2026)
+
+Por petición explícita se activaron aplicación y worker locales con `gpt-6-luna`, usando la
+clave existente del `.env` del servidor local. No se modificó ni se mostró esa clave. La
+configuración específica está en `compose.local-live.yml`, excluido de Git, y reemplaza el
+override `compose.mock.yml`. No se cambió producción ni se ejecutaron nuevas llamadas de IA
+durante esta activación. La cola estaba vacía y los trece registros reales previos permanecieron
+sin cambios.
+
+El límite diario existente se complementa con `OPENAI_TOTAL_BUDGET_USD=1`: un máximo acumulado
+para todo el historial de la base local, que no se reinicia al cambiar el día. Cuenta el coste
+estimado conocido y la reserva completa de los intentos cuyo consumo no se conoce; excluye las
+simulaciones. Antes de cada reserva se adquiere el mismo bloqueo transaccional asesor de
+PostgreSQL para aplicación y workers, incluso si las solicitudes corresponden a fechas UTC
+distintas. Si el total más la nueva reserva supera el máximo, no se llama al proveedor.
+La opción es independiente del límite diario, está desactivada cuando queda vacía y, si se
+configura, requiere PostgreSQL; con otro motor o un límite no positivo/no finito bloquea la
+reserva real. No requiere migraciones nuevas.
+
+Configuración local activa:
+
+- Backend `live`, modelo `gpt-6-luna`, tarifas estándar 0,10/0,50 USD por millón de tokens.
+- Tope acumulado y diario: **1 USD**. Máximo diario adicional: 20 reservas.
+- Reserva por solicitud: **0,05 USD**; una tentativa, sin reintentos automáticos.
+- Salida máxima: 4096 tokens; preanálisis síncrono de 60 segundos y timeout del proveedor de
+  60 segundos. Gunicorn conserva 120 segundos.
+- Historial contabilizado conservador al activar: **0,07028870 USD**; saldo antes de nuevas
+  reservas: **0,92971130 USD**. Se bloquea una solicitud si el saldo no cubre su reserva.
+
+Desde la carpeta que contiene `docker-compose.yml`, para conservar esta configuración:
+
+```bash
+docker compose -f docker-compose.yml -f app/compose.openai.yml -f app/compose.local-live.yml up -d --no-deps --force-recreate app evaluation_worker
+```
+
+Para volver al proveedor simulado:
+
+```bash
+docker compose -f docker-compose.yml -f app/compose.openai.yml -f app/compose.mock.yml up -d --no-deps --force-recreate app evaluation_worker
+```
+
+Validación: **493 pruebas Python correctas y 183 subcasos sobre PostgreSQL temporal**, con el
+SDK bloqueado por CI y sin clave. Las once pruebas nuevas cubren configuración inválida,
+rechazo de motores sin bloqueo, simulación independiente del presupuesto, costes históricos,
+reservas de consumo desconocido, exclusión de simulaciones, sustitución de reserva por coste,
+umbral exacto, cambio de día y solicitudes concurrentes de fechas iguales y diferentes.
+Aplicación saludable, worker activo y `manage.py check` sin incidencias. Se retiró PostgreSQL
+temporal tras las pruebas. Las solicitudes personales posteriores sí podrán generar consumo
+dentro de estos límites locales.
+
+### Corrección del preanálisis de la lámpara (21/10/2026)
+
+Los intentos reales 25 y 26 recibieron respuesta con consumo conocido, pero la validación local
+falló en `dimensions` (`invalid_response`, etapa `schema`). No fue un error de autenticación,
+conexión ni presupuesto. El diagnóstico saneado conserva el campo y tipo del error, sin guardar
+el cuerpo rechazado; por tanto, no permite atribuir esos dos fallos a una de las tres reglas
+semánticas concretas del bloque dimensional.
+
+El contrato anterior describía el método y los ejes de forma independiente; sus validadores
+locales entre campos no formaban parte del JSON Schema enviado a OpenAI. Se añadió un contrato
+específico del proveedor con `anyOf` anidado por método: `unverifiable` exige los seis extremos
+nulos; los demás métodos admiten pares numéricos o pares nulos. La fuente debe ser nula y no
+se ofrece `documented`, porque no existe consulta técnica verificada integrada. El prompt
+explicita intervalos visuales estrictamente crecientes y distingue medidas declaradas. Se
+mantienen los validadores locales, incluyendo el rechazo de intervalos visuales exactos,
+invertidos y fuentes inventadas. Referencia:
+[Structured Outputs: esquemas admitidos](https://developers.openai.com/api/docs/guides/structured-outputs).
+La versión pasa a `assisted-4-dimensions-contract`; el historial anterior se conserva.
+
+Se configuró `OPENAI_REASONING_EFFORT=none` para los análisis ordinarios con `gpt-6-luna`, además
+de la excepción manual que ya lo utilizaba, y se fija el procesamiento estándar. Esta opción
+es configurable y forma parte de la huella de configuración del preanálisis. El límite síncrono
+continúa en 60 segundos, sin reintentos automáticos y sin ampliar el presupuesto acumulado.
+
+La pantalla explica ahora que la respuesta no superó las comprobaciones de coherencia. Solo
+un análisis completado sin sugerencias muestra «La IA no propone cambios concretos»; un fallo
+muestra que las sugerencias todavía no están disponibles y mantiene reintento/cancelación.
+
+Validación: **501 pruebas y 194 subcasos correctos en PostgreSQL temporal**, con el SDK bloqueado
+en CI. Se comprobaron los contratos de método/ejes, intervalos, fuentes, compatibilidad de
+medidas declaradas, mensajes de fallo y parámetros de razonamiento del adaptador. La primera
+comprobación real aislada, con imagen sintética y el esquema nuevo pero razonamiento previo,
+agotó los 60 segundos (evaluación 27): consumo desconocido y **reserva de 0,05 USD conservada**.
+Tras ajustar el razonamiento, una comprobación independiente completó en **7,54 segundos**
+(evaluación 28), con una respuesta real válida y sugerencias. Coste conocido nuevo de esta
+segunda comprobación: **0,00074270 USD**. No hubo reintentos automáticos de transporte.
+Ambas preparaciones sintéticas se cancelaron sin crear publicaciones. Total contabilizado
+conservador después del diagnóstico: **0,12417820 USD**, bajo el tope de 1 USD.
+
+Se recrearon app y worker locales y se verificaron salud y configuración. La propuesta de
+«Lampara de sobremesa», descripción «En buen estado», categoría Hogar / Muebles y fotografía
+permanecen intactas, sin nuevo análisis ni envío: conserva únicamente los intentos 25 y 26.
+Se verificó el mensaje corregido en su pestaña de Chrome, actualizando solo después de comprobar
+que no había cambios locales sin guardar. Queda disponible el botón «Reintentar análisis» para
+que la persona usuaria continúe personalmente. No se modificó producción.
+
+### Rediseño del formulario ciudadano (21/10/2026)
+
+La revisión usa tarjetas numeradas para los datos del objeto, sugerencias, fotografías y resumen.
+Reutiliza `layouts/account.html`, los campos compartidos y el sprite de iconos; mantiene cabecera,
+navegación y pie. Los estilos se limitan a `.ai-review` y sus contenedores de cuenta. No hay nuevas
+dependencias, modelos ni migraciones por este rediseño.
+
+Archivos principales:
+
+- `templates/publications/preparation_review.html` y parciales `_preparation_suggestion.html`,
+  `_preparation_photos.html`, `_preparation_summary.html`.
+- `static/css/preparation_review.css`, `static/js/preparation_review.js` y el diálogo compartido
+  de `static/js/preanalysis.js`.
+- `assistant/forms.py`, `assistant/citizen_views.py`, `assistant/preparations.py`.
+- `assistant/tests/test_preanalysis.py` y `assistant/tests/js/test_preparation_review.cjs`.
+
+Cada propuesta presenta el valor actual, el propuesto, su explicación y su estado. Editar no
+implica aceptar. Aceptar y descartar son excluyentes y se conservan al guardar una vista previa;
+el descarte queda también en la auditoría. «Aceptar todas las aplicables» selecciona únicamente
+sustituciones de descripción/clasificación: el nombre requiere una decisión individual y las
+peticiones de información o fotos requieren datos aportados por la persona. Cambiar manualmente
+un campo desmarca su sustitución aceptada para conservar la intención de la edición.
+
+Las fotografías privadas muestran miniaturas reales, principal, eliminación/restauración antes
+de guardar y selección acumulativa de archivos. Una foto recién añadida puede ser principal.
+La interfaz refleja los límites configurados (actualmente JPEG/PNG/WebP, ocho fotos, 8 MiB cada
+una), valida también en servidor y ofrece captura mediante el selector nativo cuando el navegador
+lo admite. Los controles mantienen alternativas sin JavaScript; no se transforman ni duplican
+imágenes como consecuencia de mostrar la galería. La captura física con cámara requiere un
+dispositivo compatible y no se comprobó desde el navegador automatizado de escritorio.
+
+Las acciones finales son «Enviar a revisión», «Vista previa» y «Cancelar envío». Si falla el
+preanálisis se permite el mismo envío a revisión humana, con validaciones, límite diario y
+auditoría habituales: el análisis fallido permanece asociado a la preparación y se programa una
+evaluación nueva del contenido final para el operador. Un trabajo pendiente o en curso sigue
+impidiendo confirmar mientras termina. No hay aprobación/publicación automática. El reintento
+conserva las ediciones, muestra el diálogo síncrono y reutiliza un análisis completado si coincide
+su contenido y configuración; no hace llamadas adicionales para presentar la interfaz.
+
+Validación automatizada: **509 pruebas y 194 subcasos correctos en PostgreSQL temporal** y
+**17 pruebas JavaScript correctas**; `git diff --check` sin incidencias. Verificación en navegador
+aislado con siete casos sintéticos: sugerencias parciales/editadas/descartadas, aceptación
+conjunta, sin sugerencias, fallo con envío humano, información confirmada, reintento y cancelación.
+Se verificaron carga de miniaturas, añadir/eliminar/restaurar, principal nueva, vista previa,
+conservación manual, resumen desplegable, foco en campos inválidos plegados y ausencia de
+desbordamiento horizontal a 1280 y 390 píxeles. Cinco envíos quedaron pendientes de revisión
+humana; sus evaluaciones simuladas completaron con el título y descripción finales correctos,
+reutilizando únicamente el caso sin cambios. **Cero llamadas reales a IA durante estas pruebas.**

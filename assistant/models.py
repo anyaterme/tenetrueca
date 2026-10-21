@@ -1,6 +1,59 @@
+from uuid import uuid4
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+
+from publications.models import publication_photo_upload_to
+from publications.storage import private_publication_photo_storage
+
+
+class PublicationPreparation(models.Model):
+    """Private staging area. It is never a citizen submission or a moderation job."""
+    class Status(models.TextChoices):
+        OPEN = 'open', 'En preparación'
+        CONFIRMED = 'confirmed', 'Enviada'
+        CANCELLED = 'cancelled', 'Cancelada'
+        EXPIRED = 'expired', 'Caducada'
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    request_key = models.UUIDField()
+    input_digest = models.CharField(max_length=64)
+    target_publication = models.ForeignKey('publications.Publication', null=True, blank=True,
+                                          on_delete=models.SET_NULL, related_name='+')
+    submitted_publication = models.ForeignKey('publications.Publication', null=True, blank=True,
+                                             on_delete=models.SET_NULL, related_name='+')
+    base_revision = models.JSONField(default=dict)
+    original_data = models.JSONField(default=dict)
+    working_data = models.JSONField(default=dict)
+    confirmed_data = models.JSONField(default=dict)
+    selected_suggestions = models.JSONField(default=list)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.OPEN)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['owner', 'request_key'],
+                                               name='ai_preparation_request_once')]
+
+
+class PreparationPhoto(models.Model):
+    preparation = models.ForeignKey(PublicationPreparation, on_delete=models.CASCADE,
+                                    related_name='photos')
+    image = models.ImageField(upload_to=publication_photo_upload_to,
+                              storage=private_publication_photo_storage)
+    content_hash = models.CharField(max_length=64)
+    image_format = models.CharField(max_length=8)
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+    file_size = models.PositiveIntegerField()
+    sort_order = models.PositiveIntegerField(default=0)
+    is_primary = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-is_primary', 'sort_order', 'pk']
 
 
 class PublicationEvaluation(models.Model):
@@ -13,7 +66,13 @@ class PublicationEvaluation(models.Model):
 
     publication = models.ForeignKey(
         'publications.Publication', on_delete=models.CASCADE, related_name='ai_evaluations',
+        null=True, blank=True,
     )
+    preparation = models.ForeignKey(PublicationPreparation, null=True, blank=True,
+                                    on_delete=models.PROTECT, related_name='evaluations')
+    origin = models.CharField(max_length=16, default='review',
+                              choices=[('review', 'Revisión'), ('preanalysis', 'Preanálisis')])
+    content_fingerprint = models.CharField(max_length=64, blank=True)
     requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                      on_delete=models.SET_NULL)
     created_at = models.DateTimeField(default=timezone.now)
@@ -42,6 +101,12 @@ class PublicationEvaluation(models.Model):
         constraints = [models.UniqueConstraint(
             fields=['publication'], condition=models.Q(status__in=['pending', 'processing']),
             name='ai_one_active_per_publication',
+        ), models.UniqueConstraint(
+            fields=['preparation'], condition=models.Q(status__in=['pending', 'processing']),
+            name='ai_one_active_per_preparation',
+        ), models.CheckConstraint(
+            condition=models.Q(publication__isnull=False) | models.Q(preparation__isnull=False),
+            name='ai_evaluation_has_subject',
         )]
 
 

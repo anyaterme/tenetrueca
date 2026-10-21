@@ -447,6 +447,13 @@
     event.preventDefault();
     event.returnValue = '';
   });
+  form.addEventListener('preanalysis:error', function () {
+    submitting = false;
+    dirty = true;
+    submitButton.removeAttribute('aria-disabled');
+    draftButton.removeAttribute('aria-disabled');
+    saveStatus.textContent = 'Tus datos se conservan. Puedes corregirlos o reintentar.';
+  });
 
   var firstErrorPanel = panels.find(function (panel) {
     return panel.querySelector('.form-field--error, .form-field__errors, .has-error');

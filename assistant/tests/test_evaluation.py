@@ -23,7 +23,8 @@ from PIL import Image
 
 from accounts.models import UserCenterAccess
 from assistant.fixtures import simulated_response
-from assistant.models import EvaluationAttempt, OpenAIUsageDay, PublicationEvaluation
+from assistant.models import EvaluationAttempt, OpenAIUsageDay, PublicationEvaluation, PublicationPreparation
+from assistant.preparations import digest
 from assistant.providers import MockProvider, OpenAIProvider, ProviderResponse, image_content, request_content
 from assistant.rules import ADMISSION_RULES, SYSTEM_INSTRUCTIONS
 from assistant.safety import LiveCallsDisabled, require_live_access
@@ -439,7 +440,7 @@ class EvaluationTests(TestCase):
         self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
         self.assertNotContains(response, '<script>alert(1)</script>')
 
-    def test_citizen_submit_schedules_after_commit_and_draft_does_not(self):
+    def test_citizen_preanalysis_reused_on_confirmation_and_draft_does_not_analyze(self):
         self.client.force_login(self.citizen)
         data = {'title': 'Pelota nueva', 'description': 'Pelota deportiva en buen estado.',
                 'category': self.category.pk, 'parent_category': self.parent.pk, 'action': 'submit',
@@ -447,9 +448,17 @@ class EvaluationTests(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(reverse('publications:create'), data)
         self.assertEqual(response.status_code, 302)
+        self.assertFalse(Publication.objects.filter(title='Pelota nueva').exists())
+        preparation = PublicationPreparation.objects.get(owner=self.citizen)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(response.url, {
+                'action': 'confirm_none', 'version': digest(preparation.working_data),
+                'title': 'Pelota nueva', 'description': data['description'],
+                'category': self.category.pk,
+            })
         new = Publication.objects.get(title='Pelota nueva')
         self.assertEqual(new.ai_evaluations.count(), 1)
-        self.assertEqual(new.ai_evaluations.get().status, 'pending')
+        self.assertEqual(new.ai_evaluations.get().status, 'completed')
         data.update(title='Borrador nuevo', action='save_draft')
         data.pop('photos')
         data['primary_photo'] = ''
@@ -597,6 +606,23 @@ class EvaluationTests(TestCase):
             self.assertEqual(arguments['service_tier'], 'default')
             self.assertEqual(arguments['max_output_tokens'], 1200)
             self.assertFalse(arguments['store'])
+            self.assertEqual(client_type.call_args.kwargs['max_retries'], 0)
+
+    @override_settings(OPENAI_REASONING_EFFORT='none')
+    def test_regular_luna_checks_use_bounded_reasoning_and_standard_pricing(self):
+        evaluation = self.enqueue()
+        evaluation.model = 'gpt-6-luna'
+        fake_response = Mock(status='completed', output_text=json.dumps(simulated_response()),
+                             id='resp_regular_fixture', usage=Mock(input_tokens=100, output_tokens=200),
+                             output=[], incomplete_details=None)
+        with patch('assistant.providers.require_live_access'), patch('openai.OpenAI') as client_type:
+            client = client_type.return_value.__enter__.return_value
+            client.responses.create.return_value = fake_response
+            OpenAIProvider().evaluate(evaluation, [self.photo])
+            args = client.responses.create.call_args.kwargs
+            self.assertEqual(args['reasoning'], {'effort': 'none'})
+            self.assertEqual(args['service_tier'], 'default')
+            self.assertEqual(args['input'][0]['content'][1]['detail'], 'high')
             self.assertEqual(client_type.call_args.kwargs['max_retries'], 0)
 
     def test_summary_contradictions_are_resolved_without_discarding_checks(self):

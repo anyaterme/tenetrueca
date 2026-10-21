@@ -24,7 +24,7 @@ class Command(BaseCommand):
                     close_old_connections()
                 expire_interrupted_jobs()
                 candidate = PublicationEvaluation.objects.filter(
-                    status='pending', is_manual=False, available_at__lte=timezone.now(),
+                    status='pending', origin='review', is_manual=False, available_at__lte=timezone.now(),
                 ).order_by('created_at', 'pk').values_list('pk', flat=True).first()
                 if candidate:
                     process_evaluation(candidate)
