@@ -20,6 +20,11 @@
       <a href="{% url 'home' %}#como-funciona">¿Cómo funciona TRUEC@?</a>
       <a href="{% url 'home' %}#puntos-limpios">Localizaciones</a>
       <a href="{% url 'faq:public_list' %}"{% if request.resolver_match.namespace == 'faq' and request.resolver_match.url_name == 'public_list' %} aria-current="page"{% endif %}>Preguntas frecuentes</a>
+      {% if publication_flow %}
+        <a class="publication-flow-legal" href="{% url 'legal_notice' %}">Aviso legal</a>
+        <a class="publication-flow-legal" href="{% url 'privacy_policy' %}">Privacidad</a>
+        <a class="publication-flow-legal" href="{% url 'cookie_policy' %}">Cookies</a>
+      {% endif %}
       {% if user.is_authenticated %}
         {% if can_moderate_publications %}<a href="{% url 'moderation:queue' %}">Moderación</a>{% endif %}
         {% if can_receive_objects %}<a href="{% url 'inventory:reception_queue' %}">Recepción</a>{% endif %}

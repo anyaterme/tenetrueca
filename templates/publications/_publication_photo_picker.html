@@ -1,9 +1,10 @@
         <div class="publication-photo-picker{% if form.photos.errors %} has-error{% endif %}" data-photo-picker>
           <div class="publication-photo-picker__dropzone">
             <span class="publication-photo-picker__icon">{% include "components/backoffice_icon.html" with name="camera" %}</span>
+            {% if mobile_photo_flow %}<div class="publication-mobile-only publication-photo-intro"><strong>Añade fotos de tu objeto</strong><p>Toma una foto o selecciónala de tu galería.</p></div>{% endif %}
             <label class="button button--primary publication-photo-picker__camera" for="publication-camera">{% include "components/backoffice_icon.html" with name="camera" %}<span>Tomar foto</span></label>
             <input class="visually-hidden" id="publication-camera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" data-photo-camera>
-            <label class="button button--secondary" for="{{ form.photos.id_for_label }}">{% include "components/backoffice_icon.html" with name="image" %}<span>Elegir de galería</span></label>
+            <label class="button button--secondary" for="{{ form.photos.id_for_label }}">{% include "components/backoffice_icon.html" with name="image" %}{% if mobile_photo_flow %}<span class="publication-desktop-copy">Elegir de galería</span><span class="publication-mobile-only publication-mobile-only--inline">Elegir de la galería</span>{% else %}<span>Elegir de galería</span>{% endif %}</label>
             <span class="publication-photo-picker__native">{{ form.photos }}</span>
           </div>
 
@@ -28,7 +29,7 @@
             <span data-photo-count>{% if publication %}{{ publication.photos.count }}{% else %}0{% endif %} de {{ photo_max_count }}</span>
             <span>JPEG, PNG o WebP · Máx. {{ photo_max_mb }} MB por foto</span>
           </div>
-          <p class="publication-photo-picker__message" role="status" aria-live="polite" data-photo-message></p>
+          <p id="publication-photo-message" class="publication-photo-picker__message" role="status" aria-live="polite" data-photo-message></p>
           {% if form.photos.errors %}<ul class="form-field__errors" role="alert">{% for error in form.photos.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
           {% if form.remove_photos.errors %}<ul class="form-field__errors" role="alert">{% for error in form.remove_photos.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
           {% if form.primary_photo.errors %}<ul class="form-field__errors" role="alert">{% for error in form.primary_photo.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}

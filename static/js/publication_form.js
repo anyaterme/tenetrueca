@@ -6,6 +6,8 @@
 
   var form = editor.querySelector('[data-publication-form]');
   var photoFirst = editor.hasAttribute('data-photo-first');
+  var mobilePhotoQuery = photoFirst && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(max-width: 768px)') : null;
   var panels = Array.prototype.slice.call(editor.querySelectorAll('[data-step-panel]'));
   var indicators = Array.prototype.slice.call(editor.querySelectorAll('[data-step-indicator]'));
   var nextButton = editor.querySelector('[data-step-next]');
@@ -60,6 +62,7 @@
     var count = existingPhotoCount() + selectedFiles.length;
     photoCount.textContent = count + ' de ' + maxPhotos;
     addPhotoButton.hidden = count >= maxPhotos;
+    if (mobilePhotoQuery) submitButton.disabled = submitting || (mobilePhotoQuery.matches && count === 0);
     return count;
   }
 
@@ -373,14 +376,19 @@
     form.addEventListener('preanalysis:start', function () { submitButton.disabled = true; });
     form.addEventListener('preanalysis:error', function () {
       submitting = false; dirty = true; submitButton.disabled = false;
+      updatePhotoCount();
       saveStatus.textContent = 'Tus fotografías se conservan. Puedes volver a continuar.';
     });
     window.addEventListener('beforeunload', function (event) {
       if (dirty && !submitting) { event.preventDefault(); event.returnValue = ''; }
     });
     window.addEventListener('pageshow', function (event) {
-      if (event.persisted) { submitting = false; submitButton.disabled = false; }
+      if (event.persisted) { submitting = false; submitButton.disabled = false; updatePhotoCount(); }
     });
+    if (mobilePhotoQuery) {
+      if (mobilePhotoQuery.addEventListener) mobilePhotoQuery.addEventListener('change', updatePhotoCount);
+      else mobilePhotoQuery.addListener(updatePhotoCount);
+    }
     updatePhotoCount(); syncPrimary();
     return;
   }

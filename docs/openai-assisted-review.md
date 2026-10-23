@@ -1233,3 +1233,108 @@ verifica también las nuevas instrucciones y el metadato del esquema; salud HTTP
 No se hicieron llamadas de comprobación al proveedor: se conservan **26 intentos reales**,
 **0,13201640 USD** contabilizados conservadoramente y **0,86798360 USD** disponibles en esa
 lectura, con cola vacía. No se modificaron el historial, `.env` ni producción.
+
+### Optimización móvil del formulario de fotografías (23/10/2026)
+
+La entrada de fotografías incorpora un indicador móvil de las dos etapas reales, «Fotos» y
+«Revisar y enviar», también visible en la preparación fotográfica. No se añade una etapa de
+detalles ni se modifica la secuencia funcional. El bloque de carga muestra título, ayuda breve,
+cámara, galería, contador y límites actuales (ocho fotos, 8 MiB, JPEG/PNG/WebP en este entorno).
+Las miniaturas permiten eliminar y elegir principal; el control redundante de añadir solo
+aparece al haber fotos seleccionadas o guardadas.
+
+`static/css/publication_mobile.css` oculta los elementos nuevos en escritorio y limita todos
+los ajustes de presentación al breakpoint existente `max-width: 768px`, con clases específicas
+del formulario. La barra del formulario deja de ser fija y pasa al flujo normal, con botón
+«Continuar» de ancho completo, ayuda legible y cancelación separada. Se mantiene la navegación
+ciudadana original, reservando espacio de desplazamiento y `safe-area-inset-bottom`. Controles
+táctiles de 44–52 px, campos de 16 px, foco visible y selector nativo sin desbordamiento a 320 px.
+No hay estilos globales nuevos sobre elementos existentes ni cambios a otras páginas.
+
+La única adaptación de interacción habilita/deshabilita el botón móvil según la condición ya
+existente de al menos una fotografía y la petición en curso. Responde a cambios de orientación,
+errores y restauración de página; en escritorio mantiene el comportamiento previo. Sin JS,
+la validación del servidor sigue impidiendo avanzar sin fotos válidas. Se reutilizan subida,
+almacenamiento, reducción, límites, permisos, borradores y análisis explícito al continuar.
+No hay cambios de modelos, migraciones, proveedor, presupuesto ni protocolo con IA.
+
+Validación: **534 pruebas Python en PostgreSQL 17 temporal y 22 JavaScript correctas**. Chrome y
+Brave instalados, con perfiles aislados y emulación móvil, pasan 320/360/375/390/430 px: vacío,
+una y varias fotos, cámara mediante archivo sintético, eliminar/principal, límites y errores,
+botón habilitado/deshabilitado, controles de tamaño suficiente, desplazamiento y navegación
+inferior. Se verificaron orientación a 768×390, viewport reducido a 390×430, breakpoint 768/769,
+foco/teclado, movimiento reducido, validación sin JS a 320/390 y recuperación de error de red
+sin perder fotos. El envío y la cancelación se probaron con mock; el operador evaluó el texto
+final enviado desde móvil. Cinco intentos simulados en la base de navegador y cero reales.
+
+La regresión visual conserva geometría y dimensiones en **24 capturas de escritorio a
+1024/1280/1440 px** (vacío, una/varias fotos, borrador, revisión nueva/histórica, perfil y lista),
+y tres capturas móviles ajenas al rediseño. Se registran pequeñas variaciones del rasterizado;
+no se afirma identidad absoluta de píxeles. La comparación acepta diferencia RGB 24 y como
+máximo 0,001 % de píxeles sobre esa tolerancia; la lista se compara con sus datos congelados
+anteriores al envío funcional de prueba. Evidencias, logs, lanzadores y capturas privados en
+`../backups/mobile-publication-ux-20261023/`, sin credenciales de sesión.
+
+No se probaron dispositivos físicos Android, captura real de cámara, teclado virtual físico,
+iOS Safari ni insets de un iPhone real. El viewport reducido comprueba disposición y foco,
+sin equivaler a un teclado virtual real; tampoco se verificó zoom nativo del navegador.
+
+Se actualizaron los estáticos y se recreó solo app local; worker y configuración habitual
+con proveedor real y tope acumulado de 1 USD se conservan. Las pruebas usaron exclusivamente
+servidor y PostgreSQL aislados con mock, clave vacía y SDK bloqueado por CI. El contador real
+habitual permanece en 28 intentos durante la intervención; salud y estáticos locales HTTP 200.
+No se modificó producción ni `.env`. Los servicios y datos temporales se retiran tras guardar
+el informe; la publicación sintética permanece pendiente de revisión humana hasta retirarlos.
+
+### Segundo refinamiento móvil de publicación (2026-10-23)
+
+Se compactan el selector de fotografías, el progreso y los espacios entre información y
+acciones exclusivamente hasta 768 px. El selector pasa de 323 a 242 px en 360/375/390/430
+(reducción del 25,1 %) y a 263 px en 320 (18,6 %); en este último se conserva una línea
+adicional para mantener la legibilidad. No hay alturas fijas del contenedor y los controles
+de cámara/galería conservan al menos 48 px. Se mantienen límites reales, miniaturas,
+principal, eliminación, borradores, contador, validaciones y análisis explícito al continuar.
+
+Los textos móviles son los del refinamiento aprobado. El aviso inicial redundante se
+oculta solo en móvil; los mensajes dinámicos de procesamiento y recuperación siguen
+visibles. Solo aparece una ayuda contextual con cero fotos, sustituida por los errores
+cuando corresponde. Continuar y Cancelar permanecen en el flujo normal del documento,
+con espacio para la navegación inferior y su área segura; no se añade otro panel flotante.
+
+La clase `body--publication-flow` identifica entrada y revisión (también la revisión
+histórica). La media query oculta su footer institucional directo, sin modificar el
+componente global. Un parámetro opcional del header añade Aviso legal, Privacidad y Cookies
+al menú móvil de esas pantallas; esos enlaces permanecen ocultos en escritorio y no se
+añaden a otras páginas. El footer sigue visible al navegar a la página legal. Se conserva
+el indicador de dos etapas; la revisión histórica no incorpora un progreso nuevo.
+
+Archivos de esta iteración: `static/css/publication_mobile.css`,
+`templates/publications/publication_photos.html`,
+`templates/publications/_publication_photo_picker.html`,
+`templates/publications/preparation_review.html`, `templates/components/header.html`,
+`assistant/tests/test_photo_first.py` y este documento. No se modifica JavaScript en esta
+segunda iteración, ni modelos, migraciones, endpoints, prompts, proveedor o presupuesto.
+
+Validación: **534 pruebas Python correctas en PostgreSQL 17 temporal y 26 pruebas JS
+correctas** (incluidas cuatro del mapa). Chrome y Brave instalados, con emulación móvil,
+pasan 320/360/375/390/430 px: vacío, una/varias fotos, cámara mediante archivo sintético,
+principal/eliminación, contador/límites, errores, controles táctiles, ausencia de scroll
+horizontal, acceso al menú legal y navegación inferior. Se verifican envío y cancelación,
+doble envío bloqueado, orientación, viewport reducido, foco/teclado, movimiento reducido,
+validación de servidor sin JS y recuperación de error de red conservando fotografías y
+mostrando el estado. La ampliación de fuente raíz al 200 % no desborda a 320 px; no equivale
+a verificar el zoom nativo. La pantalla de moderación devuelve el texto final editado y
+la evaluación simulada correcta. Cinco intentos simulados y cero reales en esta base.
+
+Regresión visual: 24 comparaciones de escritorio a 1024/1280/1440 px y dos móviles de
+perfil/lista conservan geometría y dimensiones. Solo hay variación mínima de rasterizado
+(máximo 0,000054 % de píxeles con diferencia RGB superior a 24; tolerancia 0,001 %).
+Las capturas se compararon con los mismos datos antes de los envíos funcionales.
+Evidencias y lanzadores privados en `../backups/mobile-publication-refine-20261023/`,
+sin cookies de sesión. Se conserva la limitación de no disponer de Android/iOS físicos,
+cámara real, Safari iOS, teclado virtual físico o insets reales para validar esos casos.
+
+Se actualizan estáticos y aplicación exclusivamente locales. Salud HTTP 200 y CSS servido
+idéntico al archivo fuente. La configuración habitual sigue `live`, con tope acumulado
+1 USD y 28 intentos reales, sin incremento por estas pruebas. Worker, producción y `.env`
+no se modifican. El servidor y PostgreSQL temporales se retiran tras guardar las evidencias.

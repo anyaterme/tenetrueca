@@ -112,6 +112,28 @@ class PhotoFirstTests(TestCase):
         self.confirm(p, url)
         self.assertEqual(current_evaluation(Publication.objects.get()).origin, 'review')
 
+    def test_mobile_publication_context_and_two_stage_progress_are_scoped_to_the_flow(self):
+        page = self.client.get(reverse('publications:create'))
+        self.assertContains(page, 'body--publication-photos')
+        self.assertContains(page, 'body--publication-flow')
+        self.assertContains(page, 'publication-flow-legal', count=3)
+        self.assertContains(page, 'Añade al menos una fotografía para continuar.')
+        self.assertContains(page, 'publication_mobile.css')
+        self.assertContains(page, '<li aria-current="step"><span aria-hidden="true">1</span><strong>Fotos</strong></li>', html=True)
+        _, url = self.start()
+        page = self.client.get(url)
+        self.assertContains(page, 'body--publication-flow')
+        self.assertContains(page, 'publication-flow-legal', count=3)
+        self.assertContains(page, '<li aria-current="step"><span aria-hidden="true">2</span><strong>Revisar y enviar</strong></li>', html=True)
+        _, old_url = legacy.PreanalysisTests.start(self, provider=legacy.PreanalysisTests.provider(self))
+        page = self.client.get(old_url)
+        self.assertContains(page, 'publication_mobile.css')
+        self.assertContains(page, 'body--publication-flow')
+        self.assertNotContains(page, 'aria-label="Progreso de publicación"')
+        page = self.client.get(reverse('profile'))
+        self.assertNotContains(page, 'body--publication-flow')
+        self.assertNotContains(page, 'publication-flow-legal')
+
     def test_timeout_allows_manual_submission_with_photos_preserved(self):
         provider = self.provider()
         provider.evaluate.side_effect = TimeoutError

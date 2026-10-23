@@ -1,23 +1,27 @@
 {% extends "layouts/account.html" %}
 {% load static %}
 {% block title %}Publicar un objeto · TRUEC@{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}?v=20261023-photos">{% endblock %}
+{% block body_class %}{{ block.super }} body--publication-flow body--publication-photos{% endblock %}
+{% block site_header %}{% include 'components/header.html' with account_area=True publication_flow=True %}{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}?v=20261023-photos"><link rel="stylesheet" href="{% static 'css/publication_mobile.css' %}?v=20261023-mobile-refine">{% endblock %}
+{% block account_header %}{% include 'publications/_mobile_publication_progress.html' with current='photos' %}{{ block.super }}{% endblock %}
 {% block account_breadcrumb_label %}Publicar objeto{% endblock %}
 {% block account_title %}Empieza por las fotografías{% endblock %}
-{% block account_subtitle %}<p>La IA analizará tus fotos para preparar una propuesta que podrás revisar y editar antes de enviarla.</p>{% endblock %}
+{% block account_subtitle %}<p><span class="publication-desktop-copy">La IA analizará tus fotos para preparar una propuesta que podrás revisar y editar antes de enviarla.</span><span class="publication-mobile-only publication-mobile-only--inline">Añade fotos de tu objeto para preparar una propuesta con IA.</span></p>{% endblock %}
 {% block account_content %}
 <div class="publication-editor" data-publication-editor data-photo-first data-photo-max="{{ photo_max_count }}" data-photo-max-bytes="{% widthratio photo_max_mb 1 1048576 %}">
   <form class="publication-form" method="post" enctype="multipart/form-data" data-publication-form data-ai-request data-ai-timeout="{{ preanalysis_timeout }}">
     {% csrf_token %}{{ form.primary_photo }}
     <input type="hidden" name="preparation_request_key" value="{{ preparation_request_key }}">
     {% if form.non_field_errors %}<div role="alert">{{ form.non_field_errors }}</div>{% endif %}
-    {% include "publications/_publication_photo_picker.html" %}
-    <p>Añade todas las fotografías y elige la principal. Cuando pulses «Continuar con estas fotografías», la IA las analizará para preparar los datos del objeto.</p>
+    {% include "publications/_publication_photo_picker.html" with mobile_photo_flow=True %}
+    <p class="publication-desktop-copy">Añade todas las fotografías y elige la principal. Cuando pulses «Continuar con estas fotografías», la IA las analizará para preparar los datos del objeto.</p>
     {% if publication %}<p>Los datos de tu borrador se conservarán. Podrás modificarlos después del análisis.</p>{% endif %}
+    <p id="publication-photo-empty" class="publication-mobile-only publication-photo-empty"><span aria-hidden="true">ⓘ</span> Añade al menos una fotografía para continuar.</p>
     <footer class="publication-wizard__actions">
-      <div data-save-status role="status" aria-live="polite"><span></span><span>Selecciona las fotografías de un único objeto.</span></div>
+      <div id="publication-photo-help" data-save-status role="status" aria-live="polite"><span></span><span><span class="publication-desktop-copy">Selecciona las fotografías de un único objeto.</span></span></div>
       <div class="publication-wizard__buttons">
-        <button class="button button--primary" type="submit" name="action" value="analyze_photos" data-submit-publication>Continuar con estas fotografías</button>
+        <button class="button button--primary" type="submit" name="action" value="analyze_photos" data-submit-publication aria-describedby="publication-photo-help publication-photo-message"><span class="publication-desktop-copy">Continuar con estas fotografías</span><span class="publication-mobile-only publication-mobile-only--inline">Continuar</span><span class="publication-mobile-only">{% include 'components/backoffice_icon.html' with name='arrow-right' %}</span></button>
         <a class="publication-editor__cancel" href="{% if publication %}{% url 'publications:detail' publication.pk %}{% else %}{% url 'publications:list' %}{% endif %}">Cancelar</a>
       </div>
     </footer>
@@ -25,4 +29,4 @@
 </div>
 {% include "publications/_processing_dialog.html" %}
 {% endblock %}
-{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20261023-explicit-photos" defer></script><script src="{% static 'js/preanalysis.js' %}?v=20261023-photos" defer></script>{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20261023-mobile-ux" defer></script><script src="{% static 'js/preanalysis.js' %}?v=20261023-photos" defer></script>{% endblock %}

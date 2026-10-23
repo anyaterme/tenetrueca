@@ -1,10 +1,13 @@
 {% extends "layouts/account.html" %}
 {% load static %}
 {% block title %}Revisa tu publicación · TRUEC@{% endblock %}
+{% block body_class %}{{ block.super }} body--publication-flow{% endblock %}
+{% block site_header %}{% include 'components/header.html' with account_area=True publication_flow=True %}{% endblock %}
 {% block account_breadcrumb_label %}Publicar objeto{% endblock %}
 {% block account_title %}{% if photo_first %}Revisa tu publicación{% elif evaluation.status == 'completed' %}Revisa las sugerencias de la IA{% else %}Revisa tu publicación{% endif %}{% endblock %}
 {% block account_subtitle %}<p>{% if photo_first %}Revisa y completa los datos propuestos a partir de tus fotos. Puedes editar todos los campos antes de enviar.{% elif evaluation.status == 'completed' %}Tu objeto aún no se ha enviado a revisión. Decide qué cambios quieres incorporar.{% else %}Comprueba los datos antes de enviarlos. El análisis con IA es opcional.{% endif %}</p>{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/preparation_review.css' %}?v=20261021-redesign">{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/preparation_review.css' %}?v=20261021-redesign"><link rel="stylesheet" href="{% static 'css/publication_mobile.css' %}?v=20261023-mobile-refine">{% endblock %}
+{% block account_header %}{% if photo_first %}{% include 'publications/_mobile_publication_progress.html' with current='review' %}{% endif %}{{ block.super }}{% endblock %}
 {% block account_content %}
 <div class="ai-review" data-ai-review {% if photo_first %}data-photo-first{% endif %}>
   {% if evaluation.is_simulated %}<p class="ai-review__simulation"><strong>Simulación de desarrollo.</strong> No se ha consultado la IA real ni analizado realmente las fotografías.</p>{% endif %}
