@@ -1,0 +1,28 @@
+{% extends "layouts/account.html" %}
+{% load static %}
+{% block title %}Publicar un objeto · TRUEC@{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/publications.css' %}?v=20261023-photos">{% endblock %}
+{% block account_breadcrumb_label %}Publicar objeto{% endblock %}
+{% block account_title %}Empieza por las fotografías{% endblock %}
+{% block account_subtitle %}<p>La IA analizará tus fotos para preparar una propuesta que podrás revisar y editar antes de enviarla.</p>{% endblock %}
+{% block account_content %}
+<div class="publication-editor" data-publication-editor data-photo-first data-photo-max="{{ photo_max_count }}" data-photo-max-bytes="{% widthratio photo_max_mb 1 1048576 %}">
+  <form class="publication-form" method="post" enctype="multipart/form-data" data-publication-form data-ai-request data-ai-timeout="{{ preanalysis_timeout }}">
+    {% csrf_token %}{{ form.primary_photo }}
+    <input type="hidden" name="preparation_request_key" value="{{ preparation_request_key }}">
+    {% if form.non_field_errors %}<div role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% include "publications/_publication_photo_picker.html" %}
+    <p>Añade todas las fotografías y elige la principal. Cuando pulses «Continuar con estas fotografías», la IA las analizará para preparar los datos del objeto.</p>
+    {% if publication %}<p>Los datos de tu borrador se conservarán. Podrás modificarlos después del análisis.</p>{% endif %}
+    <footer class="publication-wizard__actions">
+      <div data-save-status role="status" aria-live="polite"><span></span><span>Selecciona las fotografías de un único objeto.</span></div>
+      <div class="publication-wizard__buttons">
+        <button class="button button--primary" type="submit" name="action" value="analyze_photos" data-submit-publication>Continuar con estas fotografías</button>
+        <a class="publication-editor__cancel" href="{% if publication %}{% url 'publications:detail' publication.pk %}{% else %}{% url 'publications:list' %}{% endif %}">Cancelar</a>
+      </div>
+    </footer>
+  </form>
+</div>
+{% include "publications/_processing_dialog.html" %}
+{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20261023-explicit-photos" defer></script><script src="{% static 'js/preanalysis.js' %}?v=20261023-photos" defer></script>{% endblock %}

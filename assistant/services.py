@@ -16,9 +16,9 @@ from assistant.errors import ERROR_MESSAGES, ResponseFailure, check_response, sa
 from assistant.images import evaluation_photos
 from assistant.models import EvaluationAttempt, OpenAIUsageDay, PublicationEvaluation
 from assistant.providers import get_provider
-from assistant.rules import ADMISSION_RULES, PROMPT_VERSION, RULES_VERSION, SYSTEM_INSTRUCTIONS
+from assistant.rules import ADMISSION_RULES, PROMPT_VERSION, RULES_VERSION, SYSTEM_INSTRUCTIONS, PHOTO_PREFILL_INSTRUCTIONS
 from assistant.safety import LiveCallsDisabled
-from assistant.schema import CHECK_LABELS, OVERALL_LABELS, CheckStatus, EvaluationResult, response_json_schema
+from assistant.schema import CHECK_LABELS, OVERALL_LABELS, CheckStatus, EvaluationResult, PhotoPrefillResult, response_json_schema
 from assistant.snapshots import publication_snapshot
 from audit.models import AuditEvent
 from catalog.models import public_category_ids
@@ -143,9 +143,11 @@ class BudgetExceeded(RuntimeError):
 def check_request_reservation(evaluation, photo_count, output_tokens):
     # UTF-8 byte count intentionally overestimates text tokens; image allowance must be
     # reviewed for the explicitly selected model before activating real calls.
+    photo_first = evaluation.snapshot.get('analysis_mode') == 'photo_first'
     input_allowance = (len(json.dumps(evaluation.snapshot, ensure_ascii=False).encode())
                        + len(SYSTEM_INSTRUCTIONS.encode())
-                       + len(json.dumps(response_json_schema()).encode())
+                       + (len(PHOTO_PREFILL_INSTRUCTIONS.encode()) if photo_first else 0)
+                       + len(json.dumps(response_json_schema(photo_first=photo_first)).encode())
                        + 2048 + photo_count * max(8192, settings.OPENAI_IMAGE_TOKEN_RESERVE))
     estimate = (Decimal(input_allowance) * settings.OPENAI_INPUT_USD_PER_MILLION
                 + Decimal(output_tokens) * settings.OPENAI_OUTPUT_USD_PER_MILLION) / Decimal(1_000_000)
@@ -225,13 +227,20 @@ def record_usage(attempt, response):
 
 
 def validate_result(payload, evaluation):
-    result = EvaluationResult.model_validate_json(
+    photo_first = evaluation.snapshot.get('analysis_mode') == 'photo_first'
+    result = (PhotoPrefillResult if photo_first else EvaluationResult).model_validate_json(
         payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False)
     )
     allowed_ids = {category['id'] for category in evaluation.snapshot['categories']}
     currently_allowed_ids = set(public_category_ids())
     if not set(result.alternative_category_ids).issubset(allowed_ids & currently_allowed_ids):
         raise ResponseFailure('invalid_response', stage='business', rule='category_not_allowed')
+    if photo_first and result.prefill.category_id is not None and (
+            result.prefill.category_id not in allowed_ids & currently_allowed_ids
+            or any(item['parent_id'] == result.prefill.category_id for item in evaluation.snapshot['categories'])):
+        raise ResponseFailure('invalid_response', stage='business', rule='category_not_allowed')
+    if photo_first and any(item.kind == 'replace' for item in result.suggestions):
+        raise ResponseFailure('invalid_response', stage='business', rule='unexpected_replacement')
     for suggestion in result.suggestions:
         if suggestion.field == 'category' and (
             suggestion.category_id not in allowed_ids & currently_allowed_ids
@@ -240,7 +249,7 @@ def validate_result(payload, evaluation):
         ):
             raise ResponseFailure('invalid_response', stage='business', rule='category_not_allowed')
     selection = evaluation.snapshot.get('classification')
-    if selection:
+    if selection and not photo_first:
         root = selection['category']
         subcategory = selection['subcategory']
         if not root or root['id'] not in currently_allowed_ids:

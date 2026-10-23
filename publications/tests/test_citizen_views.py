@@ -141,7 +141,7 @@ class CitizenPublicationViewsTests(TestCase):
         self.assertEqual(photo_response.status_code, 200)
         self.assertEqual(photo_response['Cache-Control'], 'private, no-store')
 
-    def test_publication_wizard_exposes_camera_gallery_and_four_steps(self):
+    def test_publication_starts_with_photos_before_requesting_object_data(self):
         self.client.force_login(self.user)
 
         response = self.client.get(reverse('publications:create'))
@@ -151,8 +151,10 @@ class CitizenPublicationViewsTests(TestCase):
         self.assertContains(response, 'multiple')
         self.assertContains(response, 'Tomar foto')
         self.assertContains(response, 'Elegir de galería')
-        for step in ('Fotos', 'Información', 'Categoría', 'Revisar'):
-            self.assertContains(response, step)
+        self.assertContains(response, 'Empieza por las fotografías')
+        self.assertContains(response, 'data-photo-first')
+        for name in ('title', 'description', 'parent_category', 'category'):
+            self.assertNotContains(response, f'name="{name}"')
 
     def test_category_tree_is_generated_from_active_database_categories(self):
         inactive = Category.objects.create(name='Oculta', slug='oculta', is_active=False)

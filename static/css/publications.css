@@ -1335,6 +1335,7 @@
   border-radius: 1rem;
   color: inherit;
 }
+.ai-processing-dialog [hidden] { display: none !important; }
 .ai-processing-dialog::backdrop { background: rgb(0 0 0 / 45%); }
 .ai-processing-dialog progress { width: 100%; margin: 1rem 0; }
 .ai-suggestion { margin: 1rem 0; padding: 1rem; border: 1px solid #d5ddd8; border-radius: .75rem; }

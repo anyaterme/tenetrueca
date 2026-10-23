@@ -163,12 +163,33 @@ class ProviderEvaluationResult(EvaluationResult):
     dimensions: UnverifiableDimensions | VisualDimensions | DeclaredDimensions
 
 
-def response_json_schema():
+class PhotoPrefill(StrictModel):
+    title: Annotated[str, Field(min_length=1, max_length=180)] | None
+    description: Annotated[str, Field(min_length=1, max_length=4000)] | None = Field(
+        description='Texto breve y listo para publicar que leerán otros usuarios: describe solo '
+                    'el objeto y los rasgos o daños visibles. Sin comentarios de IA/análisis, '
+                    'incertidumbres ni instrucciones al ciudadano. Las dudas van en unverifiable '
+                    'y checks; las acciones, en recommendations o suggestions. No inventes estado, '
+                    'funcionamiento ni pertenencia a un conjunto. Usa null si no puedes redactar '
+                    'una descripción defendible y explica el motivo en unverifiable.',
+    )
+    category_id: int | None
+
+
+class PhotoPrefillResult(EvaluationResult):
+    prefill: PhotoPrefill
+
+
+class ProviderPhotoPrefillResult(ProviderEvaluationResult):
+    prefill: PhotoPrefill
+
+
+def response_json_schema(*, photo_first=False):
     # The SDK's strict conversion resolves $ref siblings introduced by Field descriptions.
     # Keep create + local validation so refusals/invalid output never discard usage.
     from openai.lib._pydantic import to_strict_json_schema
 
-    return to_strict_json_schema(ProviderEvaluationResult)
+    return to_strict_json_schema(ProviderPhotoPrefillResult if photo_first else ProviderEvaluationResult)
 
 
 CHECK_LABELS = {

@@ -21,10 +21,15 @@ class PreparationReviewForm(forms.Form):
                                                    widget=forms.CheckboxSelectMultiple,
                                                    label='Eliminar fotografías')
     primary_photo = forms.ChoiceField(required=False, label='Fotografía principal')
+    manual_fields = forms.MultipleChoiceField(required=False, choices=[(key, key) for key in
+                                            ('title', 'description', 'category_id')])
 
     def __init__(self, *args, preparation, evaluation, action=None, **kwargs):
         self.preparation, self.evaluation, self.action = preparation, evaluation, action
+        self.photo_first = preparation.working_data.get('flow') == 'photo_first'
         self.suggestions = evaluation.result.get('suggestions', []) if evaluation and evaluation.status == 'completed' else []
+        if self.photo_first:
+            self.suggestions = []
         initial = dict(preparation.working_data)
         initial.update({'category': initial['category_id'], 'version': digest(preparation.working_data),
                         'accepted_suggestions': preparation.selected_suggestions,
@@ -47,6 +52,9 @@ class PreparationReviewForm(forms.Form):
                 bound['accepted_suggestions'] = selected
             args = (bound, *args[1:])
         super().__init__(*args, **kwargs)
+        if self.photo_first and action == 'analyze_photos':
+            for key in ('title', 'description', 'category'):
+                self.fields[key].required = False
         categories = Category.objects.filter(pk__in=public_category_ids()).select_related('parent')
         self.fields['category'].queryset = categories
         self.fields['accepted_suggestions'].choices = [(item['id'], item['reason']) for item in self.suggestions]
@@ -112,7 +120,7 @@ class PreparationReviewForm(forms.Form):
                 final['description'] += '\n\n' + value
             else:
                 final[item['field']] = value
-        if final['category_id']:
+        if final['category_id'] and not (self.photo_first and self.action == 'analyze_photos'):
             category = Category.objects.get(pk=final['category_id'])
             if category.children.filter(is_active=True).exists():
                 self.add_error('category', 'Selecciona también una subcategoría.')
@@ -127,8 +135,9 @@ class PreparationReviewForm(forms.Form):
         data = self.cleaned_data
         removed = {photo.pk for photo in data['remove_photos']}
         added = self.preparation.working_data.get('added_photos', [])
-        return {
-            'title': data['title'], 'description': data['description'], 'category_id': data['category'].pk,
+        result = {
+            'title': data['title'], 'description': data['description'],
+            'category_id': data['category'].pk if data.get('category') else None,
             'responses': {item['id']: (data[f'suggestion_{item["id"]}'].pk
                                      if item['field'] == 'category' and data.get(f'suggestion_{item["id"]}')
                                      else data.get(f'suggestion_{item["id"]}', ''))
@@ -136,6 +145,12 @@ class PreparationReviewForm(forms.Form):
             'added_photos': [pk for pk in added if pk not in removed],
             'discarded_suggestions': data.get('discarded_suggestions', []),
         }
+        if self.photo_first:
+            previous = self.preparation.working_data
+            manual = set(previous.get('manual_fields', [])) | set(data.get('manual_fields', []))
+            manual.update(key for key in ('title', 'description', 'category_id') if result[key] != previous.get(key))
+            result.update(flow='photo_first', ai_prefill=previous.get('ai_prefill'), manual_fields=sorted(manual))
+        return result
 
     def suggestion_rows(self):
         selected = set(self['accepted_suggestions'].value() or [])

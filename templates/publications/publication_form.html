@@ -31,41 +31,7 @@
           <p>Añade fotos del objeto para que podamos revisarlo mejor.</p>
         </header>
 
-        <div class="publication-photo-picker{% if form.photos.errors %} has-error{% endif %}" data-photo-picker>
-          <div class="publication-photo-picker__dropzone">
-            <span class="publication-photo-picker__icon">{% include "components/backoffice_icon.html" with name="camera" %}</span>
-            <label class="button button--primary publication-photo-picker__camera" for="publication-camera">{% include "components/backoffice_icon.html" with name="camera" %}<span>Tomar foto</span></label>
-            <input class="visually-hidden" id="publication-camera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" data-photo-camera>
-            <label class="button button--secondary" for="{{ form.photos.id_for_label }}">{% include "components/backoffice_icon.html" with name="image" %}<span>Elegir de galería</span></label>
-            <span class="publication-photo-picker__native">{{ form.photos }}</span>
-          </div>
-
-          <div class="publication-photo-list" data-photo-list>
-            {% if publication %}
-              {% for photo in publication.photos.all %}
-                <article class="publication-photo-card{% if photo.is_primary %} is-primary{% endif %}" data-photo-card data-existing-photo="{{ photo.pk }}" data-photo-key="existing:{{ photo.pk }}">
-                  <img src="{% url 'publication_photo' photo_id=photo.pk %}" alt="{{ photo.alt_text|default:publication.title }}" width="240" height="180">
-                  <button class="publication-photo-card__remove" type="button" aria-label="Eliminar fotografía {{ forloop.counter }}" data-remove-photo>{% include "components/backoffice_icon.html" with name="x" %}</button>
-                  <input class="visually-hidden" id="remove-photo-{{ photo.pk }}" type="checkbox" name="remove_photos" value="{{ photo.pk }}" data-remove-existing>
-                  <button class="publication-photo-card__primary" type="button" data-make-primary><span data-primary-label>{% if photo.is_primary %}Principal{% else %}Hacer principal{% endif %}</span></button>
-                  <span class="publication-photo-card__status" data-photo-status>Guardada</span>
-                </article>
-              {% endfor %}
-            {% endif %}
-            <button class="publication-photo-add" type="button" data-add-photo aria-label="Añadir más fotografías">
-              <span aria-hidden="true">+</span><strong>Añadir</strong>
-            </button>
-          </div>
-
-          <div class="publication-photo-picker__meta">
-            <span data-photo-count>{% if publication %}{{ publication.photos.count }}{% else %}0{% endif %} de {{ photo_max_count }}</span>
-            <span>JPEG, PNG o WebP · Máx. {{ photo_max_mb }} MB por foto</span>
-          </div>
-          <p class="publication-photo-picker__message" role="status" aria-live="polite" data-photo-message></p>
-          {% if form.photos.errors %}<ul class="form-field__errors" role="alert">{% for error in form.photos.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-          {% if form.remove_photos.errors %}<ul class="form-field__errors" role="alert">{% for error in form.remove_photos.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-          {% if form.primary_photo.errors %}<ul class="form-field__errors" role="alert">{% for error in form.primary_photo.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-        </div>
+        {% include "publications/_publication_photo_picker.html" %}
       </section>
 
       <section class="publication-wizard__panel" data-step-panel="2" aria-labelledby="publication-information-title" hidden>
@@ -169,4 +135,4 @@
   {% include "publications/_processing_dialog.html" %}
 {% endblock %}
 
-{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20261021-preanalysis" defer></script><script src="{% static 'js/preanalysis.js' %}?v=20261021" defer></script>{% endblock %}
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/publication_form.js' %}?v=20261023-explicit-photos" defer></script><script src="{% static 'js/preanalysis.js' %}?v=20261021" defer></script>{% endblock %}

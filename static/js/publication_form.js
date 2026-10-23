@@ -5,6 +5,7 @@
   document.documentElement.classList.add('js-publication-wizard');
 
   var form = editor.querySelector('[data-publication-form]');
+  var photoFirst = editor.hasAttribute('data-photo-first');
   var panels = Array.prototype.slice.call(editor.querySelectorAll('[data-step-panel]'));
   var indicators = Array.prototype.slice.call(editor.querySelectorAll('[data-step-indicator]'));
   var nextButton = editor.querySelector('[data-step-next]');
@@ -362,6 +363,27 @@
       syncPrimary();
     }
   });
+
+  if (photoFirst) {
+    form.addEventListener('submit', function (event) {
+      if (submitting || !validatePhotos()) { event.preventDefault(); return; }
+      submitting = true; dirty = false;
+      saveStatus.textContent = 'Subiendo y analizando tus fotografías...';
+    });
+    form.addEventListener('preanalysis:start', function () { submitButton.disabled = true; });
+    form.addEventListener('preanalysis:error', function () {
+      submitting = false; dirty = true; submitButton.disabled = false;
+      saveStatus.textContent = 'Tus fotografías se conservan. Puedes volver a continuar.';
+    });
+    window.addEventListener('beforeunload', function (event) {
+      if (dirty && !submitting) { event.preventDefault(); event.returnValue = ''; }
+    });
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) { submitting = false; submitButton.disabled = false; }
+    });
+    updatePhotoCount(); syncPrimary();
+    return;
+  }
 
   nextButton.addEventListener('click', function () {
     if (validateStep(currentStep)) showStep(currentStep + 1, true);

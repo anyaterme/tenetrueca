@@ -244,6 +244,14 @@ class CitizenPublicationForm(forms.ModelForm):
         return cleaned_data
 
 
+class PhotoPreparationForm(CitizenPublicationForm):
+    """Reuse photo ownership/format/count validation before any object data is required."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, require_photo=True, **kwargs)
+        for name in ('title', 'description', 'parent_category', 'category'):
+            self.fields[name].required = False
+
+
 class PublicationStatusFilterForm(forms.Form):
     status = forms.ChoiceField(
         required=False,

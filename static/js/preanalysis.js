@@ -6,6 +6,7 @@
   if (dialog) {
     dialog.addEventListener('cancel', function (event) { if (running) event.preventDefault(); });
     dialog.querySelector('[data-ai-close]').addEventListener('click', function () {
+      if (running) return;
       dialog.close();
       if (previousFocus) previousFocus.focus();
     });
@@ -14,7 +15,7 @@
     form.addEventListener('submit', async function (event) {
       if (event.defaultPrevented) return;
       var action = event.submitter && event.submitter.value;
-      if (action !== 'submit' && action !== 'retry') return;
+      if (action !== 'submit' && action !== 'retry' && action !== 'analyze_photos') return;
       if (!dialog || typeof dialog.showModal !== 'function' || typeof fetch !== 'function') return;
       event.preventDefault();
       if (running) return;

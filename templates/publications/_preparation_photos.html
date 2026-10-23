@@ -13,5 +13,12 @@
     <p class="ai-review-photo-message" role="status" aria-live="polite" data-review-photo-message></p>
     <div class="ai-review-camera ai-review-enhancement"><button class="ai-review-link" type="button" data-review-camera-button data-review-mutation>{% include 'components/backoffice_icon.html' with name='camera' %} Usar cámara</button><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" data-review-camera hidden></div>
     <div class="ai-review-native-primary">{% include 'components/form_field.html' with field=form.primary_photo %}</div>
+    {% if photo_first %}
+    <p role="status" aria-live="polite" data-photo-analysis-status hidden></p>
+    <div data-photo-analysis-actions>
+      <p>Si cambias las fotografías, termina de seleccionarlas y pulsa «Continuar con estas fotografías» para actualizar el análisis. Tus ediciones de los datos se conservarán.</p>
+      <button class="button button--secondary" type="submit" name="action" value="analyze_photos" formnovalidate data-photo-analysis data-review-mutation>Continuar con estas fotografías</button>
+    </div>
+    {% endif %}
   </div>
 </details>

@@ -8,7 +8,7 @@ from itertools import islice
 from django.conf import settings
 
 from assistant.images import image_options, optimize_image
-from assistant.rules import ADMISSION_RULES, SYSTEM_INSTRUCTIONS
+from assistant.rules import ADMISSION_RULES, SYSTEM_INSTRUCTIONS, PHOTO_PREFILL_INSTRUCTIONS
 from assistant.safety import LiveCallsDisabled, require_live_access
 from assistant.schema import response_json_schema
 
@@ -39,6 +39,8 @@ def request_content(evaluation, photos, *, max_side=None, detail=None):
         'title', 'description', 'category_id', 'classification', 'categories',
     )}
     data['admission_rules'] = ADMISSION_RULES
+    if snapshot.get('analysis_mode') == 'photo_first':
+        data['analysis_mode'] = 'photo_first'
     text = json.dumps(data, ensure_ascii=False)
     if len(text.encode()) > settings.OPENAI_MAX_INPUT_BYTES:
         raise ValueError('La entrada excede el límite configurado.')
@@ -63,6 +65,7 @@ class OpenAIProvider:
         content = request_content(evaluation, photos, max_side=max_side,
                                   detail='low' if evaluation.is_manual else None)
         model_options = {}
+        photo_first = evaluation.snapshot.get('analysis_mode') == 'photo_first'
         if evaluation.model == 'gpt-6-luna':
             effort = 'none' if evaluation.is_manual else settings.OPENAI_REASONING_EFFORT
             if effort not in ('none', 'low', 'medium', 'high', 'xhigh', 'max'):
@@ -70,10 +73,10 @@ class OpenAIProvider:
             # Bound latency/output for synchronous checks; keep billing on standard pricing.
             model_options = {'reasoning': {'effort': effort}, 'service_tier': 'default'}
         arguments = dict(
-                model=evaluation.model, instructions=SYSTEM_INSTRUCTIONS,
+                model=evaluation.model, instructions=SYSTEM_INSTRUCTIONS + (PHOTO_PREFILL_INSTRUCTIONS if photo_first else ''),
                 input=[{'role': 'user', 'content': content}],
                 text={'format': {'type': 'json_schema', 'name': 'publication_evaluation',
-                                 'schema': response_json_schema(), 'strict': True}},
+                                 'schema': response_json_schema(photo_first=photo_first), 'strict': True}},
                 max_output_tokens=output_limit,
                 store=False,
                 **model_options,
@@ -127,6 +130,16 @@ class MockProvider:
         from assistant.fixtures import simulated_response
 
         payload = simulated_response()
+        if evaluation.snapshot.get('analysis_mode') == 'photo_first':
+            categories = evaluation.snapshot['categories']
+            parents = {item['parent_id'] for item in categories}
+            leaf = next((item for item in categories if item['id'] not in parents), None)
+            payload['prefill'] = {'title': 'Objeto de prueba (simulación)',
+                                 'description': 'Jarrón azul de cuerpo redondeado y boca estrecha.',
+                                 'category_id': leaf['id'] if leaf else None}
+            payload['recommendations'].append(
+                'Simulación: completa el estado y los detalles reales del objeto.'
+            )
         selection = evaluation.snapshot.get('classification', {})
         for field in ('category', 'subcategory'):
             selected = selection.get(field)

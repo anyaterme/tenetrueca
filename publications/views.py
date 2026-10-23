@@ -19,6 +19,7 @@ from core.permissions import scope_publications, user_can_moderate, user_can_rec
 from moderation.models import ModerationDecision
 from publications.forms import (
     CitizenPublicationForm,
+    PhotoPreparationForm,
     PublicationStatusFilterForm,
     PublicationWithdrawalForm,
 )
@@ -142,14 +143,14 @@ def _publication_form_context(form, publication):
     }
 
 
-def _begin_submission(request, form, *, target=None):
+def _begin_submission(request, form, *, target=None, photo_first=False):
     try:
         request_key = UUID(request.POST.get('preparation_request_key', str(uuid4())))
     except (ValueError, TypeError, AttributeError):
         form.add_error(None, 'La solicitud no es válida. Recarga el formulario.')
         return None
     try:
-        preparation = start_preparation(request.user, form, request_key, target=target)
+        preparation = start_preparation(request.user, form, request_key, target=target, photo_first=photo_first)
         if preparation.status == 'open':
             run_preanalysis(preparation.pk)
     except ValidationError as error:
@@ -258,6 +259,8 @@ def publication_detail(request, pk):
 @login_required
 def publication_create(request):
     action = request.POST.get('action') if request.method == 'POST' else None
+    if request.method == 'GET' or action == 'analyze_photos':
+        return _photo_first_entry(request)
     form = CitizenPublicationForm(
         request.POST or None,
         request.FILES or None,
@@ -288,6 +291,20 @@ def publication_create(request):
     return render(request, 'publications/publication_form.html', _publication_form_context(form, None))
 
 
+def _photo_first_entry(request, publication=None):
+    form = PhotoPreparationForm(request.POST if request.method == 'POST' else None,
+                                request.FILES or None, instance=publication)
+    if request.method == 'POST' and form.is_valid():
+        # ModelForm validation may mutate its instance: reload the untouched draft.
+        target = Publication.objects.get(pk=publication.pk, submitter=request.user) if publication else None
+        response = _begin_submission(request, form, target=target, photo_first=True)
+        if response is not None:
+            return response
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
+    return render(request, 'publications/publication_photos.html', _publication_form_context(form, publication))
+
+
 def _save_citizen_draft(request, form):
     with transaction.atomic():
         publication = form.save(commit=False)
@@ -308,6 +325,8 @@ def publication_edit(request, pk):
         raise PermissionDenied
     before = _publication_snapshot(publication)
     action = request.POST.get('action') if request.method == 'POST' else None
+    if request.method == 'GET' or action == 'analyze_photos':
+        return _photo_first_entry(request, publication)
     form = CitizenPublicationForm(
         request.POST or None,
         request.FILES or None,

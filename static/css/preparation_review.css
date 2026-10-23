@@ -106,6 +106,9 @@
 .ai-review-native-primary { margin-top: 12px; }
 .ai-review-camera { margin-top: 8px; }
 .ai-review-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ai-review-assessment { grid-column: 1 / -1; padding: 12px; border-radius: 7px; background: #f3f8ff; font-size: .85rem; line-height: 1.55; }
+.ai-review-assessment summary { cursor: pointer; min-height: 44px; padding: 10px 0; }
+.ai-review-assessment li { margin: 8px 0; }
 .ai-review-summary__item { min-width: 0; border: 1px solid #dce7f2; border-radius: 7px; background: #fbfdff; }
 .ai-review-summary__item > summary { display: flex; align-items: center; gap: 7px; min-height: 52px; padding: 10px; list-style: none; cursor: pointer; font-size: .77rem; line-height: 1.4; font-weight: 700; }
 .ai-review-summary__item > summary > .staff-icon { margin-left: auto; width: 16px; height: 16px; flex-basis: 16px; }

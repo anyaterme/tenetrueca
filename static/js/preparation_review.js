@@ -21,6 +21,11 @@
   var root = document.querySelector('[data-ai-review]');
   if (!root) return;
   var form = root.querySelector('#ai-review-form');
+  var photoFirst = root.hasAttribute('data-photo-first');
+  var photoChangePending = false;
+  var originalPhotoSelection;
+  var confirmButton = root.querySelector('[data-review-confirm]');
+  var canConfirm = !confirmButton.disabled;
   var rows = Array.from(root.querySelectorAll('[data-review-suggestion]'));
   var announcement = root.querySelector('[data-review-announcement]');
   var actionInput = root.querySelector('[data-review-action]');
@@ -30,6 +35,7 @@
   var lockedButtons = [];
   function announce(text) { announcement.textContent = text; }
   function setBusy(value) {
+    if (busy === value) return;
     busy = value;
     form.setAttribute('aria-busy', String(value));
     if (value) {
@@ -38,6 +44,7 @@
     } else {
       lockedButtons.forEach(function (button) { button.disabled = false; });
       lockedButtons = [];
+      syncPhotoAnalysis();
     }
   }
   function rowInput(row) { return row.querySelector('[name="suggestion_' + row.dataset.reviewSuggestion + '"]'); }
@@ -88,6 +95,13 @@
     var input = form.querySelector('[name="' + field + '"]');
     function changed() {
       dirty = true;
+      if (photoFirst) {
+        var key = field === 'category' ? 'category_id' : field;
+        if (!form.querySelector('[data-manual-field="' + key + '"]')) {
+          var marker = document.createElement('input'); marker.type = 'hidden'; marker.name = 'manual_fields';
+          marker.value = key; marker.dataset.manualField = key; form.appendChild(marker);
+        }
+      }
       if (field === 'description') root.querySelector('[data-description-count]').textContent = input.value.length + ' caracteres';
       rows.filter(function (row) { return row.dataset.field === field; }).forEach(function (row) {
         var current = row.querySelector('[data-suggestion-current]');
@@ -112,6 +126,20 @@
   var canTransfer = typeof DataTransfer !== 'undefined';
   function cards() { return Array.from(gallery.querySelectorAll('[data-review-photo]')); }
   function activeCards() { return cards().filter(function (card) { return card.dataset.removed !== 'true'; }); }
+  function photoSelection() {
+    return JSON.stringify([activeCards().map(function (card) { return card.dataset.reviewPhoto; }), primary.value]);
+  }
+  function syncPhotoAnalysis() {
+    if (!photoFirst || originalPhotoSelection === undefined) return;
+    photoChangePending = photoSelection() !== originalPhotoSelection;
+    var status = root.querySelector('[data-photo-analysis-status]');
+    status.hidden = !photoChangePending;
+    status.textContent = photoChangePending
+      ? 'Has cambiado las fotografías. El análisis mostrado corresponde a la selección anterior. Pulsa «Continuar con estas fotografías» para actualizarlo antes de enviar.' : '';
+    root.querySelector('[data-photo-analysis-actions]').hidden = !photoChangePending;
+    root.querySelector('[data-photo-analysis]').disabled = busy || !canConfirm || !activeCards().length;
+    confirmButton.disabled = busy || !canConfirm || photoChangePending;
+  }
   function existingCount() { return activeCards().filter(function (card) { return !card.dataset.reviewPhoto.startsWith('new:'); }).length; }
   function syncGallery() {
     var active = activeCards();
@@ -135,6 +163,7 @@
     });
     root.querySelector('[data-review-photo-count]').textContent = active.length + ' de ' + maxCount;
     photoInput.setCustomValidity('');
+    syncPhotoAnalysis();
   }
   function bindCard(card) {
     card.querySelector('[data-review-primary]').addEventListener('click', function () {
@@ -204,11 +233,14 @@
   var camera = root.querySelector('[data-review-camera]');
   root.querySelector('[data-review-camera-button]').addEventListener('click', function () { camera.click(); });
   camera.addEventListener('change', function () { addFiles(camera.files); camera.value = ''; });
+  primary.addEventListener('change', function () { dirty = true; syncGallery(); });
   if (!canTransfer) {
     picker.classList.add('ai-review-photo-picker--native');
     root.querySelector('.ai-review-camera').hidden = true;
   }
   syncGallery();
+  originalPhotoSelection = photoSelection();
+  syncPhotoAnalysis();
   // Native validation must be able to focus fields inside collapsed sections.
   form.addEventListener('invalid', function (event) {
     var container = event.target.parentElement;
@@ -237,6 +269,13 @@
     var action = event.submitter ? event.submitter.value : 'confirm_selected';
     if (event.defaultPrevented) return;
     if (busy) { event.preventDefault(); return; }
+    if (photoFirst && action === 'confirm_selected' && photoChangePending) {
+      event.preventDefault();
+      announce('Continúa con las fotografías seleccionadas para actualizar el análisis antes de enviar.');
+      root.querySelector('[data-review-photos]').closest('details').open = true;
+      root.querySelector('[data-photo-analysis]').focus();
+      return;
+    }
     if (action === 'accept_applicable') {
       event.preventDefault();
       var count = 0;
@@ -261,7 +300,9 @@
     }
     navigating = true; setBusy(true);
   });
-  root.querySelector('[data-keep-editing]').addEventListener('click', function () { cancelDialog.close(); root.querySelector('[data-review-cancel]').focus(); });
+  root.querySelector('[data-keep-editing]').addEventListener('click', function () {
+    cancelDialog.close(); root.querySelector('[data-review-cancel]').focus();
+  });
   window.addEventListener('beforeunload', function (event) { if (dirty && !navigating) { event.preventDefault(); event.returnValue = ''; } });
   window.addEventListener('pageshow', function (event) { if (event.persisted) { navigating = false; setBusy(false); } });
   form.addEventListener('input', function () { dirty = true; });

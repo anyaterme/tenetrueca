@@ -66,6 +66,8 @@ test('pending request opens the modal, traps Escape and deduplicates submissions
   assert.equal(ui.dialog.open, true);
   assert.equal(ui.parts['[data-ai-progress]'].hidden, false);
   assert.equal(ui.dialog.fire('cancel').event.defaultPrevented, true);
+  ui.parts['[data-ai-close]'].fire('click');
+  assert.equal(ui.dialog.open, true);
   await ui.form.fire('submit', {submitter: ui.submitter}).completion;
   assert.equal(ui.requests.length, 1);
   assert.equal(ui.requests[0].url, 'http://localhost/publicaciones/nueva/');
@@ -128,4 +130,17 @@ test('unexpected HTML response gives a recoverable error without losing data', a
   await ui.form.fire('submit', {submitter: ui.submitter}).completion;
   assert.match(ui.parts['[data-ai-errors]'].textContent, /Tus datos siguen en el formulario/);
   assert.equal(ui.parts['[data-ai-close]'].hidden, false);
+});
+
+test('photo-only analysis uses the same synchronous dialog and deduplicates its batch', async () => {
+  const ui = setup();
+  ui.submitter.value = 'analyze_photos';
+  const first = ui.form.fire('submit', {submitter: ui.submitter});
+  assert.equal(ui.dialog.open, true);
+  await ui.form.fire('submit', {submitter: ui.submitter}).completion;
+  assert.equal(ui.requests.length, 1);
+  assert.equal(ui.requests[0].options.body.values.action, 'analyze_photos');
+  ui.resolveResponse({ok: true, headers: {get: () => 'application/json'}, json: async () => ({url: '/photos-result/'})});
+  await first.completion;
+  assert.deepEqual(ui.navigations, ['/photos-result/']);
 });

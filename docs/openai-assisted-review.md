@@ -2,27 +2,37 @@
 
 Implementación preparada en la rama `openai`. Solo existe el modo ASSISTED: el servicio de
 evaluación no importa ni ejecuta el motor de decisiones administrativas. Se conservan los
-estados de publicaciones, los cuatro pasos de captura del formulario y las reglas de puntos, reservas,
+estados de publicaciones y las reglas de puntos, reservas,
 recepción y retirada. Las decisiones siguen pasando por `moderation.services` y sus permisos.
 
 ## Arquitectura y flujo
 
-1. Al solicitar el envío o reenvío, se crea una `PublicationPreparation` privada con copias de
-   las fotografías, sin crear una publicación ni modificar el borrador existente. El preanálisis
+1. El flujo vigente comienza seleccionando fotografías, que se pueden acumular desde galería
+   y cámara, eliminar y marcar como principal sin consultar a la IA. Solo al pulsar
+   «Continuar con estas fotografías» se crea una
+   `PublicationPreparation` privada con copias de las imágenes, sin exigir nombre, descripción
+   ni categoría y sin crear una publicación ni modificar el borrador existente. El preanálisis
    se ejecuta **síncronamente** dentro de esa petición. Un diálogo informa del procesamiento con
    ayuda de IA; no se delega al worker ni se reintenta automáticamente.
-2. El ciudadano revisa un formulario con sugerencias por campo: puede aceptar todas, seleccionar
-   algunas, ignorarlas o cancelar. Las propuestas de texto/clasificación son editables; la
-   información o fotografías pendientes deben aportarse realmente. Puede consultar una vista previa.
-   Solo al confirmar se registra `pending_review`. Si datos, fotografías ordenadas, catálogo,
-   reglas, prompt, modelo y configuración coinciden, se reutiliza el preanálisis. Si cambian,
-   `transaction.on_commit` programa una evaluación nueva de la versión definitiva para el gestor.
-   Un fallo al programarla no revierte el envío ni impide la revisión manual.
+2. La IA devuelve `prefill` con nombre, descripción y categoría final disponible, o valores
+   nulos si no puede determinarlos. El ciudadano revisa campos prerrellenados editables y
+   valoraciones informativas. Las acciones finales son «Enviar a revisión» y «Cancelar».
+   La descripción propuesta es texto listo para publicar, con rasgos y daños visibles; las
+   incertidumbres y peticiones de comprobación se presentan en la información adicional.
+   Cambiar fotos deja el análisis pendiente hasta pulsar de nuevo «Continuar con estas
+   fotografías». Antes de continuar no se consulta a la IA ni se permite confirmar el envío.
+   El análisis explícito conserva los campos editados manualmente, incluso
+   si se han vaciado. Solo al confirmar se registra `pending_review`; `transaction.on_commit`
+   programa la evaluación del contenido definitivo para el gestor. El análisis de fotos no
+   sustituye esa evaluación del texto final. Un fallo al programarla no revierte el envío.
+   Las preparaciones históricas anteriores conservan su interfaz de sugerencias y su regla
+   de reutilización estricta cuando coinciden contenido y configuración.
 3. `PublicationEvaluation` contiene una evaluación persistente en la misma base de datos y una
    instantánea sin datos de cuenta. La huella SHA-256 incluye título, descripción, categoría,
    catálogo real, fotografías y fecha de envío. Una nueva entrega genera otra versión incluso
    cuando el contenido no cambia; el preanálisis usa además una huella de contenido independiente
-   de fechas, IDs y rutas de archivos para poder vincularlo sin otra llamada a la entrega final.
+   de fechas, IDs y rutas de archivos. En la modalidad de fotos la huella excluye los campos
+   del formulario y distingue modalidad, contrato de prerrellenado y configuración.
 4. `evaluation_worker` reclama solo trabajos posteriores al envío, con bloqueo de publicación y evaluación.
    Una restricción parcial impide dos trabajos activos para la misma publicación. El proceso
    HTTP de confirmación nunca espera otro análisis. El HTTP del preanálisis sí espera su respuesta.
@@ -53,7 +63,8 @@ independientes de los estados administrativos; no se añaden estados administrat
   El adaptador del preanálisis espera una petición SDK asíncrona con deadline cancelable dentro
   del HTTP síncrono; no crea un hilo ni deja un trabajo de IA en segundo plano tras el timeout.
   El navegador concede 15 segundos adicionales para transporte/carga/respuesta. Un timeout
-  conserva los datos y permite un reintento explícito; no presupone consumo cero del proveedor.
+  conserva los datos y permite continuar manualmente. Las preparaciones históricas mantienen
+  el reintento explícito; no se presupone consumo cero del proveedor ante un timeout.
 - `AI_PREPARATION_TTL_HOURS=24`: caducidad de la preparación privada. El acceso queda bloqueado
   al caducar. `python manage.py expire_preparations` limpia fotos y datos temporales de las
   preparaciones caducadas, conservando intentos/evaluaciones y las fotos ya vinculadas a un envío.
@@ -1009,3 +1020,216 @@ conservación manual, resumen desplegable, foco en campos inválidos plegados y 
 desbordamiento horizontal a 1280 y 390 píxeles. Cinco envíos quedaron pendientes de revisión
 humana; sus evaluaciones simuladas completaron con el título y descripción finales correctos,
 reutilizando únicamente el caso sin cambios. **Cero llamadas reales a IA durante estas pruebas.**
+
+### Flujo de fotografías y prerrellenado (23/10/2026)
+
+La entrada nueva y los reenvíos usan `publication_photos.html`, con el selector extraído a
+`_publication_photo_picker.html`, compartido con la interfaz histórica. Una selección de
+archivos inicia automáticamente una solicitud de análisis para ese lote; el botón de continuar
+sirve también para fotos ya guardadas y como alternativa sin JavaScript. Se reutilizan las
+rutas, almacenamiento privado, galería, diálogo síncrono, límites y confirmación existentes.
+
+`PhotoPreparationForm` reutiliza las validaciones de fotografías del formulario ciudadano y
+permite datos del objeto vacíos durante esta fase. `flow=photo_first`, `ai_prefill` y
+`manual_fields` se guardan en los JSON existentes. La propuesta inicial y las modificaciones
+quedan trazadas junto con el contenido enviado. No hay modelos, migraciones, dependencias de
+producción ni cambios de configuración nuevos. Los borradores anteriores conservan sus valores.
+
+El contrato específico `PhotoPrefillResult` añade `prefill` con valores nulos admisibles y
+valida los IDs contra categorías finales actualmente disponibles. El contrato de revisión
+histórico no cambia. La modalidad y versión `photos-first-1` forman parte de la huella del
+análisis. La reserva de coste contempla también las instrucciones y esquema adicionales.
+El máximo de imágenes analizadas por solicitud sigue siendo `AI_IMAGE_MAX_COUNT`; no se
+amplían automáticamente los límites ni el consumo autorizado. El proveedor simulado etiqueta
+explícitamente los datos generados como simulación.
+
+La pantalla final usa los campos directamente, sin aceptación/descarte individual ni vista
+previa adicional. Presenta valoración general, comprobaciones, incidencias, limitaciones y
+recomendaciones como información consultiva. Solo el personal decide la admisión. Si falla el
+análisis, los datos y fotos se conservan y se permite completar manualmente y enviar o cancelar.
+Una recarga no repite el análisis. Las modificaciones de fotos se agrupan, protegen los cambios
+manuales e invalidan la evaluación anterior. Sin JavaScript, un envío que cambió las fotos
+regresa al formulario con el nuevo resultado antes de registrar la publicación.
+
+Validación: **528 pruebas y 204 subcasos correctos sobre PostgreSQL 17 temporal**, sin omisiones;
+**18 pruebas JavaScript correctas**, comprobación de Django y sintaxis JavaScript sin incidencias.
+Se verificaron en navegador aislado selección de fotos con análisis automático, diálogo de
+espera, prerrellenado, nueva imagen conservando las tres ediciones manuales, móvil de 390 px
+sin desbordamientos, caso no identificable, fallo, envío manual y cancelación confirmada.
+Tres publicaciones sintéticas quedaron pendientes de revisión humana y sus evaluaciones
+simuladas se comprobaron contra título, descripción y categoría finales. El caso cancelado
+no creó publicación y limpió las fotos temporales. La auditoría conserva propuesta y ediciones.
+Ocho intentos simulados y **cero llamadas reales a IA** en esa verificación de navegador.
+No se desplegó ni modificó producción. La captura física con cámara requiere un dispositivo
+compatible y no se probó desde el navegador automatizado de escritorio.
+
+Después de la validación se recogieron los estáticos y se recrearon **solo app y worker
+locales** con `compose.mock.yml`: ambos verifican `backend=mock`, activación real deshabilitada
+y clave vacía. Salud y JavaScript devuelven HTTP 200. Se retiraron el servidor, la base y las
+identidades/datos sintéticos de interfaz, además de PostgreSQL temporal. El `.env` y producción
+no se modificaron. Para volver a IA real será necesaria una activación explícita posterior.
+
+### Integración real del flujo de fotografías (23/10/2026)
+
+Con autorización explícita se hicieron cuatro llamadas reales a `gpt-6-luna`, usando únicamente
+ilustraciones sintéticas. La aplicación habitual permaneció en `mock`; se pausó temporalmente
+el worker local y se restauró con su configuración simulada al terminar. Las llamadas usaron
+contenedores efímeros, la contabilidad PostgreSQL local existente, tope acumulado de 1 USD,
+reserva de 0,05 USD, una tentativa sin reintentos, razonamiento `none`, procesamiento estándar,
+hasta dos imágenes de 512 px y máximo 4096 tokens de salida. No se cambió producción ni el `.env`.
+
+- Preanálisis 30: completó en 10,48 s. Prerrellenó nombre y descripción, reconoció que era una
+  ilustración y dejó la categoría nula por incertidumbre. Repetir la solicitud y reutilizar el
+  análisis válido no produjo otra llamada.
+- Preanálisis 31: completó en 11,43 s al añadir otra imagen. Conservó las tres ediciones manuales
+  y la nueva fotografía principal. Se comprobaron los hashes de los archivos almacenados.
+- Preanálisis 32: completó en 6,86 s con una imagen sin objeto identificable; devolvió los tres
+  campos nulos. Cancelar eliminó las fotografías temporales sin crear publicación.
+- Evaluación final 33: completó en 9,30 s sobre la publicación sintética 174, pendiente de revisión
+  humana. La instantánea contiene exactamente el título, descripción, categoría y fotos finales;
+  se verificaron auditoría, evaluación vigente y HTML de la sección del operador. No se registró
+  ninguna decisión de moderación ni se publicó el objeto.
+
+El lanzador de verificación omitió inicialmente `publication` en el contexto del fragmento HTML
+del operador. Se corrigió solo el lanzador temporal y se repitió únicamente el renderizado con
+el SDK bloqueado por CI; no fue un fallo de la aplicación ni generó llamadas adicionales.
+
+Consumo nuevo: **13017 tokens de entrada, 3528 de salida y 0,00306570 USD estimados** con las
+[tarifas oficiales](https://developers.openai.com/api/docs/models/gpt-6-luna). Las cuatro respuestas
+tuvieron consumo conocido; no se añadieron reservas desconocidas. El historial previo de
+**0,12521900 USD** se conserva, incluidas sus reservas desconocidas: acumulado conservador final
+**0,12828470 USD**, saldo **0,87171530 USD** hasta 1 USD. No se reinició ni redujo ningún contador.
+
+La identidad sintética 33 se creó inactiva, sin contraseña utilizable, roles ni permisos y
+permanece así. Los datos y auditoría de prueba se conservan localmente; el caso cancelado no
+creó publicación. El informe privado, HTML y lanzador quedan en
+`../backups/photo-first-liveqa-20261023T171811Z/`, con directorio 0700 y archivos 0600.
+La calidad de identificación de fotografías reales de ciudadanos sigue fuera de esta prueba,
+que usó imágenes sintéticas identificadas como tales. App y worker quedan en `mock`, sin clave
+ni activación real. No hubo cambios funcionales de código durante esta integración.
+
+### Reactivación local para pruebas personales (23/10/2026)
+
+Por autorización explícita se recrearon únicamente app y worker locales con
+`compose.openai.yml` y `compose.local-live.yml`, reemplazando el override simulado.
+Ambos verifican backend `live`, modelo `gpt-6-luna`, clave presente sin exponerla,
+tope acumulado y diario de 1 USD, reserva de 0,05 USD, una tentativa sin reintentos
+y preanálisis síncrono de 60 segundos. Salud HTTP 200 y worker operativo.
+El historial PostgreSQL y sus reservas se conservan; no se cambió producción ni el `.env`.
+No se lanzaron llamadas de comprobación al proveedor durante la activación.
+
+El saldo inicial contabilizado era 0,12828470 USD, con 22 intentos reales y cola vacía.
+Tras activar entró un preanálisis desde la plataforma (evaluación 34), completado sin error,
+con coste estimado de 0,00094440 USD. Las solicitudes continuaron durante la verificación:
+la última lectura registra 24 intentos reales, un acumulado conservador de **0,13025800 USD**
+y **0,86974200 USD** disponibles hasta el tope.
+Esta lectura es puntual: las solicitudes personales posteriores siguen consumiendo ese mismo
+saldo. El límite no se reinicia diariamente y es compartido por preanálisis y revisión final.
+
+### Análisis de fotografías solo al continuar (23/10/2026)
+
+La selección de galería y la cámara acumulan fotografías sin enviar peticiones de análisis.
+El usuario puede eliminar imágenes y elegir principal antes de pulsar «Continuar con estas
+fotografías». Se retiró el envío automático de `publication_form.js` y el temporizador de
+`preparation_review.js`; se conservan la acción `analyze_photos`, las rutas, el contrato del
+proveedor, el diálogo síncrono, los plazos, la contabilidad y el almacenamiento existentes.
+No hay cambios de modelos, migraciones ni dependencias.
+
+Si modifica fotos en el formulario prerrellenado, se informa de que el resultado corresponde
+a la selección anterior y se muestra el botón de continuar en la sección de fotografías.
+«Enviar a revisión» permanece bloqueado hasta continuar, o hasta restaurar exactamente las
+fotos y principal originales. Eliminar y restaurar una foto que era principal puede cambiar
+la principal: también debe restablecerse para recuperar la selección anterior. El análisis
+explícito preserva los campos manuales, incluso vacíos. Continuar no exige completar todavía
+los datos del objeto. Cancelar o elegir «Seguir editando» no inicia análisis.
+
+Se ordenaron los scripts de revisión para validar la selección y bloquear envíos pendientes
+antes del interceptor HTTP. El estado de espera conserva qué controles estaban deshabilitados
+y el error de red permite reintentar sin desbloquear prematuramente «Enviar a revisión».
+Se actualizó la versión de los scripts en las plantillas, incluida la entrada histórica.
+Sin JavaScript, el botón de continuar es visible y se mantiene la comprobación del servidor
+que analiza cambios de fotos antes de registrar un envío.
+
+Validación: **528 pruebas Python correctas en PostgreSQL 17 temporal**, **18 pruebas JavaScript
+correctas**, sintaxis de ambos scripts y `git diff --check` sin incidencias. Navegador Chrome
+aislado con proveedor simulado y SDK bloqueado por CI: selecciones acumulativas de galería y
+cámara, principal y eliminaciones previas, cero solicitudes antes de continuar, doble envío,
+cambios posteriores, restauración, conservación de tres campos manuales y campo vaciado,
+error de red con recuperación, cancelación antes y después del análisis y alternativa sin
+JavaScript. Capturas revisadas a 390 y 1280 px; no hay desbordamiento horizontal en la entrada
+móvil. Se probó el input de cámara con archivos sintéticos; no la captura física en móvil.
+
+Una publicación sintética quedó pendiente de revisión humana en la base temporal. Se completó
+su evaluación simulada y se verificaron la instantánea final (título, descripción, categoría y
+cuatro fotos), la evaluación vigente y el HTML del operador. La base final de navegador registró
+siete intentos simulados y cero reales; los datos temporales se retiraron. Los informes y
+capturas privados se conservan en `../backups/photo-batch-mockqa-20261023/`, sin la sesión.
+
+Se recogieron los estáticos y se recreó la aplicación local para cargar las nuevas plantillas;
+app y worker verifican `mock`, activación real deshabilitada y clave vacía. Salud HTTP 200 y
+scripts servidos idénticos a sus fuentes. Los 24 intentos reales históricos y el acumulado
+conservador de **0,13025800 USD** permanecen intactos: **cero llamadas reales nuevas**.
+La configuración local de activación real con límite de 1 USD se conserva para una autorización
+posterior; `.env` y producción no se modificaron.
+
+### Activación real del flujo con «Continuar» (23/10/2026)
+
+Tras las pruebas simuladas y por autorización explícita, app y worker locales se recrearon
+con `compose.local-live.yml`: ambos usan `live`, `gpt-6-luna`, clave de servidor sin exponerla
+y límite acumulado de **1 USD** compartido. Se conservan reserva de 0,05 USD, una tentativa
+sin reintentos y preanálisis de 60 segundos. Se verificaron salud HTTP 200, PostgreSQL y el
+script que espera a «Continuar»; no se hicieron llamadas de prueba. La cola está vacía y
+siguen registrados los mismos 24 intentos reales: **0,13025800 USD** conservadores y
+**0,86974200 USD** disponibles en esa lectura. El historial, `.env` y producción no se modificaron.
+
+### Descripción pública y observaciones del análisis separadas (23/10/2026)
+
+El preanálisis fotográfico usa ahora `photos-first-2-public-description`. Las instrucciones
+especifican que `prefill.description` es un texto breve para otros usuarios: objeto, color,
+forma, elementos y daños claramente visibles. No debe contener referencias al analizador,
+incertidumbres, instrucciones al ciudadano ni estados o funcionamiento deducidos sin pruebas.
+Las dudas sobre estado, material, estabilidad o pertenencia a un conjunto van en `unverifiable`
+y las comprobaciones pertinentes; las acciones aconsejadas, en `recommendations` o sugerencias
+informativas/fotográficas. Si no hay descripción defendible, se devuelve `null` y el motivo
+se explica fuera del campo público. Los desperfectos visibles sí permanecen en la descripción.
+
+Se reforzó el metadato del campo en el esquema estricto enviado al proveedor, sin añadir
+propiedades ni alterar la revisión general. OpenAI Docs recomienda descripciones claras para
+las claves relevantes de [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+La estructura valida tipos y límites; estas instrucciones orientan el contenido y no constituyen
+una garantía semántica de que toda respuesta real vaya a cumplir la separación.
+No se aplican filtros por frases ni se reescribe el texto manual del ciudadano.
+
+El proveedor simulado propone «Jarrón azul de cuerpo redondeado y boca estrecha.» y coloca
+la indicación de completar estado/detalles en recomendaciones. Mantiene la identificación
+explícita de simulación; no afirma haber reconocido fotografías reales. La nueva versión
+invalida la reutilización de un preanálisis anterior solo al solicitar explícitamente otro
+análisis. Abrir el formulario no hace llamadas ni modifica resultados históricos. Las ediciones
+manuales, incluso vacías, conservan prioridad. No hay cambios de pantallas, modelos, migraciones,
+dependencias ni llamadas adicionales por análisis.
+
+Validación: **533 pruebas Python correctas sobre PostgreSQL 17 temporal** y **18 pruebas
+JavaScript correctas**, comprobación Django y `git diff --check` sin incidencias. Las cinco
+regresiones nuevas verifican descripción frente a observaciones en el formulario renderizado,
+conjunto dudoso, estado/material desconocidos, daño visible, ausencia de información suficiente,
+respuesta del simulador, instrucciones y esquema en el límite del SDK completamente simulado,
+historial/versionado sin recálculo al abrir y descripción final/auditoría/evaluación del operador.
+La revisión del operador usa el texto definitivo del ciudadano y conserva aparte el preanálisis.
+Los resultados y logs están en `../backups/public-description-mockqa-20261023/`.
+
+App y worker locales se recrearon con `compose.mock.yml` y verifican la nueva versión,
+backend `mock`, activación real deshabilitada y clave vacía; salud HTTP 200. El historial
+real conserva **26 intentos y 0,13201640 USD** contabilizados conservadoramente, sin cambios
+durante estas pruebas: **cero llamadas reales nuevas**. Se retiró PostgreSQL temporal.
+No se modificaron producción, `.env` ni la configuración de activación real con tope de 1 USD.
+La calidad de la redacción generada por el proveedor real no se ha validado en esta intervención.
+
+### Activación local de las descripciones públicas con proveedor real (23/10/2026)
+
+Por autorización explícita posterior se recrearon app y worker locales con
+`compose.local-live.yml`. Ambos verifican `live`, `gpt-6-luna`, versión
+`photos-first-2-public-description` y límite acumulado compartido de **1 USD**. La aplicación
+verifica también las nuevas instrucciones y el metadato del esquema; salud HTTP 200.
+No se hicieron llamadas de comprobación al proveedor: se conservan **26 intentos reales**,
+**0,13201640 USD** contabilizados conservadoramente y **0,86798360 USD** disponibles en esa
+lectura, con cola vacía. No se modificaron el historial, `.env` ni producción.

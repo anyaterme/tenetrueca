@@ -9,9 +9,11 @@ from django.utils import timezone
 
 from assistant.forms import PreparationReviewForm
 from assistant.models import PreparationPhoto, PublicationPreparation
+from assistant.schema import CHECK_LABELS, OVERALL_LABELS
 from assistant.preparations import (
     confirm_preparation, digest, discard_preparation, expire_interrupted_preanalysis,
     run_preanalysis, timeout_seconds, update_preparation,
+    preparation_snapshot,
 )
 from catalog.models import Category
 from publications.images import ALLOWED_IMAGE_FORMATS
@@ -36,6 +38,7 @@ def preparation_review(request, token):
         return redirect('publications:detail', pk=preparation.target_publication_id) if preparation.target_publication_id else redirect('publications:list')
     expire_interrupted_preanalysis(preparation)
     evaluation = preparation.evaluations.first()
+    photo_first = preparation.working_data.get('flow') == 'photo_first'
     form = PreparationReviewForm(
         request.POST if request.method == 'POST' else None, request.FILES or None,
         preparation=preparation, evaluation=evaluation, action=action,
@@ -43,7 +46,9 @@ def preparation_review(request, token):
     preview = None
     saved = False
     if request.method == 'POST':
-        if action not in ('preview', 'retry', 'accept_applicable', 'confirm_all', 'confirm_selected', 'confirm_none'):
+        allowed_actions = ('analyze_photos', 'confirm_selected') if photo_first else (
+            'preview', 'retry', 'accept_applicable', 'confirm_all', 'confirm_selected', 'confirm_none')
+        if action not in allowed_actions:
             form.add_error(None, 'Selecciona una acción válida.')
         elif action.startswith('confirm') and (not evaluation or evaluation.status not in ('completed', 'error')):
             form.add_error(None, 'Espera a que termine el preanálisis antes de enviar a revisión.')
@@ -51,7 +56,9 @@ def preparation_review(request, token):
             try:
                 preparation = update_preparation(preparation.pk, form)
                 saved = True
-                if action == 'retry':
+                photos_changed = photo_first and (not evaluation or
+                    evaluation.content_fingerprint != preparation_snapshot(preparation)[0])
+                if action in ('retry', 'analyze_photos') or photos_changed:
                     run_preanalysis(preparation.pk, retry=True)
                     url = reverse('publications:preparation', kwargs={'token': preparation.pk})
                     return JsonResponse({'url': url}) if request.headers.get('X-Requested-With') == 'XMLHttpRequest' else redirect(url)
@@ -73,8 +80,8 @@ def preparation_review(request, token):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'errors': form.errors.get_json_data()}, status=400)
     rows = form.suggestion_rows()
-    has_summary = bool(evaluation and evaluation.status == 'completed' and any(
-        evaluation.result.get(key) for key in ('issues', 'unverifiable', 'recommendations')))
+    has_summary = bool(evaluation and evaluation.status == 'completed' and (photo_first or any(
+        evaluation.result.get(key) for key in ('issues', 'unverifiable', 'recommendations'))))
     return render(request, 'publications/preparation_review.html', {
         'preparation': preparation, 'evaluation': evaluation, 'form': form,
         'suggestion_rows': rows, 'photo_rows': form.photo_rows(), 'preview': preview,
@@ -85,6 +92,10 @@ def preparation_review(request, token):
         'photo_max_mb': settings.PUBLICATION_PHOTO_MAX_BYTES // (1024 * 1024),
         'preview_category': Category.objects.filter(pk=preview['category_id']).first() if preview else None,
         'preanalysis_timeout': timeout_seconds(),
+        'photo_first': photo_first,
+        'photo_overall': OVERALL_LABELS.get(evaluation.result.get('overall'), '') if evaluation else '',
+        'photo_checks': [{'label': label, **evaluation.result['checks'][key]} for key, label in CHECK_LABELS.items()]
+                        if photo_first and evaluation and evaluation.status == 'completed' else [],
     })
 
 

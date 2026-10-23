@@ -1,5 +1,36 @@
 RULES_VERSION = 'trueca-admission-1'
 PROMPT_VERSION = 'assisted-4-dimensions-contract'
+PHOTO_PREFILL_VERSION = 'photos-first-2-public-description'
+
+PHOTO_PREFILL_INSTRUCTIONS = '''
+MODALIDAD: PRERRELLENADO A PARTIR DE FOTOGRAFÍAS.
+El ciudadano todavía no ha escrito título, descripción ni clasificación. Su ausencia es
+intencionada: no la señales como incidencia. Analiza las fotos y completa prefill con un
+nombre breve y una descripción objetiva de lo visible. No inventes funcionamiento, estado
+interno, medidas exactas, material, autenticidad ni accesorios que no estén comprobados.
+prefill.description es el texto que otros usuarios leerán en la publicación: redacta una
+descripción breve, natural y lista para publicar, no un informe del análisis. Describe el
+objeto, color, forma, elementos y desperfectos claramente visibles. Un daño visible sí debe
+constar en la descripción; no deduzcas de la apariencia un estado general ni funcionamiento.
+No incluyas referencias a la IA, al análisis o a las fotografías, dudas, advertencias sobre
+lo que no puedes confirmar, ni instrucciones dirigidas al ciudadano en prefill.description.
+Pon las incertidumbres solo en unverifiable y en las explicaciones de checks pertinentes;
+pon las acciones aconsejadas en recommendations o suggestions de tipo information/photo.
+Ejemplo: prefill.description="Dos recipientes azules de distinto tamaño y borde redondeado."
+y unverifiable=["No se puede confirmar si ambos forman un conjunto."] No los llames conjunto
+ni afirmes que se entregan juntos sin pruebas. Si desconoces su estado, omite esa valoración
+en la descripción y explica la limitación en unverifiable; no escribas "estado desconocido".
+Si no hay información visual suficiente para una descripción defendible, usa null en
+prefill.description y explica el motivo en unverifiable. No sustituyas el texto publicable
+por una petición de información.
+Si no puedes identificar el objeto, usa null en los campos que no puedas determinar.
+En prefill.category_id elige exclusivamente un nodo final disponible del catálogo adjunto;
+si no hay una clasificación defendible, usa null. Los campos siempre los revisará el usuario.
+Valora la clasificación propuesta en prefill, sin fingir que la eligió el ciudadano.
+En suggestions incluye únicamente peticiones informativas o de fotos, sin sustituciones:
+el prerrellenado ya contiene la propuesta editable. Conserva las recomendaciones, incidencias,
+valoración general, limitaciones y comprobaciones pendientes. La IA nunca decide la admisión.
+'''
 
 ADMISSION_RULES = {
     'version': RULES_VERSION,

@@ -16,7 +16,7 @@ from django.utils import timezone
 from assistant.errors import safe_error_details
 from assistant.images import image_options
 from assistant.models import PreparationPhoto, PublicationEvaluation, PublicationPreparation
-from assistant.rules import PROMPT_VERSION, RULES_VERSION
+from assistant.rules import PROMPT_VERSION, RULES_VERSION, PHOTO_PREFILL_VERSION
 from assistant.services import error_code, evaluate_once, schedule_evaluation
 from assistant.snapshots import publication_snapshot, redact_personal_data, selected_classification
 from audit.models import AuditEvent
@@ -44,6 +44,10 @@ def revision(publication):
 
 def preparation_snapshot(preparation, data=None):
     data = data or preparation.working_data
+    photo_first = preparation.working_data.get('flow') == 'photo_first'
+    if photo_first:
+        # This analysis evaluates photos only. User text is assessed by the final review.
+        data = {'title': '', 'description': '', 'category_id': None}
     categories = list(Category.objects.filter(pk__in=public_category_ids()).order_by('pk').values(
         'id', 'name', 'parent_id',
     ))
@@ -65,6 +69,8 @@ def preparation_snapshot(preparation, data=None):
             'output_limit': settings.OPENAI_MAX_OUTPUT_TOKENS,
         },
     }
+    if photo_first:
+        raw.update(analysis_mode='photo_first', prefill_version=PHOTO_PREFILL_VERSION)
     fingerprint = digest(raw)
     raw['title'] = redact_personal_data(raw['title'])
     raw['description'] = redact_personal_data(raw['description'])
@@ -102,10 +108,14 @@ def _delete_photos(photos):
             transaction.on_commit(lambda storage=storage, name=name: storage.delete(name))
 
 
-def start_preparation(user, form, request_key, *, target=None):
+def start_preparation(user, form, request_key, *, target=None, photo_first=False):
     cleaned = form.cleaned_data
     data = {key: cleaned[key] for key in ('title', 'description')}
-    data['category_id'] = cleaned['category'].pk
+    data['category_id'] = cleaned['category'].pk if cleaned.get('category') else None
+    if photo_first:
+        data = {'title': target.title if target else '', 'description': target.description if target else '',
+                'category_id': target.category_id if target else None, 'flow': 'photo_first'}
+        data['manual_fields'] = [key for key in ('title', 'description', 'category_id') if data[key]]
     uploaded = []
     for upload in cleaned.get('photos') or []:
         upload.seek(0)
@@ -216,6 +226,15 @@ def run_preanalysis(preparation_id, *, retry=False, provider=None):
         else:
             evaluation.status = 'completed' if result is not None else 'error'
         evaluation.result = result or {}
+        if evaluation.status == 'completed' and preparation.working_data.get('flow') == 'photo_first':
+            prefill = result['prefill']
+            manual = set(preparation.working_data.get('manual_fields', []))
+            for field in ('title', 'description', 'category_id'):
+                if field not in manual:
+                    preparation.working_data[field] = prefill[field] or (None if field == 'category_id' else '')
+            preparation.working_data['ai_prefill'] = prefill
+            preparation.working_data['revision'] = str(uuid4())
+            preparation.save(update_fields=['working_data'])
         evaluation.error_code, evaluation.error_details = code, details
         evaluation.finished_at = timezone.now()
         evaluation.save(update_fields=['status', 'result', 'error_code', 'error_details', 'finished_at'])
@@ -239,6 +258,9 @@ def update_preparation(preparation_id, form):
     preparation = PublicationPreparation.objects.select_for_update().get(pk=preparation_id)
     ensure_open(preparation)
     data = form.cleaned_data
+    if preparation.working_data.get('flow') == 'photo_first' and preparation.evaluations.filter(
+            status__in=['pending', 'processing']).exists():
+        raise ValidationError('Espera a que termine el análisis de las fotografías antes de continuar.')
     # A versioned form prevents stale tabs from overwriting a newer preparation.
     if data['version'] != digest(preparation.working_data):
         raise ValidationError('La propuesta cambió en otra pestaña. Recarga antes de continuar.')
@@ -322,7 +344,8 @@ def confirm_preparation(preparation_id, user, final_data, *, expected_version):
         storage, name = photo.image.storage, photo.image.name
         transaction.on_commit(lambda storage=storage, name=name: storage.delete(name))
     fingerprint, _ = preparation_snapshot(preparation, final_data)
-    reusable = (evaluation.status == 'completed' and evaluation.content_fingerprint == fingerprint
+    photo_first = preparation.working_data.get('flow') == 'photo_first'
+    reusable = (not photo_first and evaluation.status == 'completed' and evaluation.content_fingerprint == fingerprint
                 and evaluation.model == (settings.OPENAI_MODEL or 'not-configured')
                 and evaluation.rules_version == RULES_VERSION and evaluation.prompt_version == PROMPT_VERSION
                 and evaluation.is_simulated == (settings.OPENAI_EVALUATION_BACKEND == 'mock'))
@@ -337,7 +360,7 @@ def confirm_preparation(preparation_id, user, final_data, *, expected_version):
     preparation.confirmed_data = final_data
     preparation.submitted_publication = publication
     preparation.save(update_fields=['status', 'confirmed_data', 'submitted_publication'])
-    AuditEvent.objects.create(
+    event = AuditEvent.objects.create(
         actor=user, action='publication.submitted', entity='Publication', entity_id=str(publication.pk),
         source='web', before=before, after={**final_data, 'status': publication.status},
         metadata={'preparation_id': str(preparation.pk), 'preanalysis_id': evaluation.pk,
@@ -346,6 +369,10 @@ def confirm_preparation(preparation_id, user, final_data, *, expected_version):
                   'preanalysis_status': evaluation.status, 'preanalysis_error_code': evaluation.error_code,
                   'original_data': preparation.original_data},
     )
+    if photo_first:
+        event.metadata.update(flow='photo_first', ai_prefill=preparation.working_data.get('ai_prefill'),
+                              manual_fields=preparation.working_data.get('manual_fields', []))
+        event.save(update_fields=['metadata'])
     if not reusable:
         schedule_evaluation(publication.pk)
     return publication
