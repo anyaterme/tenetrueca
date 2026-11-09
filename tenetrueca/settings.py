@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'auctions',
     'notifications',
     'assistant',
+    'chatbot.apps.ChatbotConfig',
     'analytics',
     'reports',
     'incidents',
@@ -160,6 +161,44 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Conversational assistant: explicitly opt into OpenAI independently of moderation.
+CHATBOT_ENABLED = os.getenv('CHATBOT_ENABLED', 'True').lower() in ('1', 'true', 'yes', 'on')
+CHATBOT_ANONYMOUS_LIMIT = int(os.getenv('CHATBOT_ANONYMOUS_LIMIT', '10'))
+CHATBOT_MAX_INPUT_CHARS = int(os.getenv('CHATBOT_MAX_INPUT_CHARS', '2000'))
+CHATBOT_HISTORY_MESSAGES = int(os.getenv('CHATBOT_HISTORY_MESSAGES', '10'))
+CHATBOT_CONTEXT_TURNS = int(os.getenv('CHATBOT_CONTEXT_TURNS', '4'))
+CHATBOT_PROVIDER = os.getenv('CHATBOT_PROVIDER', 'mock').strip().lower()
+# Conservative production default until a real-model fidelity evaluation is authorized.
+CHATBOT_GENERATION_MODE = os.getenv('CHATBOT_GENERATION_MODE', 'extractive').strip().lower()
+CHATBOT_OPENAI_MODEL = os.getenv('CHATBOT_OPENAI_MODEL', 'gpt-6-luna').strip()
+CHATBOT_MAX_OUTPUT_TOKENS = int(os.getenv('CHATBOT_MAX_OUTPUT_TOKENS', '400'))
+CHATBOT_REQUEST_TIMEOUT = float(os.getenv('CHATBOT_REQUEST_TIMEOUT', '30'))
+# GPT-6 Luna supports none. Leave blank to use another model's default reasoning.
+CHATBOT_REASONING_EFFORT = os.getenv('CHATBOT_REASONING_EFFORT', 'none').strip().lower()
+CHATBOT_RATE_LIMIT_REQUESTS = int(os.getenv('CHATBOT_RATE_LIMIT_REQUESTS', '6'))
+CHATBOT_RATE_LIMIT_WINDOW_SECONDS = int(os.getenv('CHATBOT_RATE_LIMIT_WINDOW_SECONDS', '60'))
+CHATBOT_RETENTION_DAYS = int(os.getenv('CHATBOT_RETENTION_DAYS', '30'))
+
+# Independent local knowledge retrieval; not connected to generation yet.
+CHATBOT_KNOWLEDGE_MAX_FRAGMENTS = int(os.getenv('CHATBOT_KNOWLEDGE_MAX_FRAGMENTS', '5'))
+CHATBOT_KNOWLEDGE_FRAGMENT_CHARS = int(os.getenv('CHATBOT_KNOWLEDGE_FRAGMENT_CHARS', '1200'))
+CHATBOT_KNOWLEDGE_CONTEXT_CHARS = int(os.getenv('CHATBOT_KNOWLEDGE_CONTEXT_CHARS', '6000'))
+
+# Independent evaluation authorization. No change to public quotas or moderation budgets.
+CHATBOT_EVAL_ALLOW_LIVE = os.getenv('CHATBOT_EVAL_ALLOW_LIVE', 'False').lower() in ('1', 'true', 'yes', 'on')
+CHATBOT_EVAL_ENVIRONMENT = os.getenv('CHATBOT_EVAL_ENVIRONMENT', 'disabled')
+CHATBOT_EVAL_AUTHORIZATION_ID = os.getenv('CHATBOT_EVAL_AUTHORIZATION_ID', '')
+CHATBOT_EVAL_CASE_IDS = (tuple(part.strip() for part in os.getenv('CHATBOT_EVAL_CASE_IDS', '').split(','))
+                        if os.getenv('CHATBOT_EVAL_CASE_IDS', '') else ())
+CHATBOT_EVAL_PROJECT_REF = os.getenv('CHATBOT_EVAL_PROJECT_REF', '')
+CHATBOT_EVAL_PRICING_FILE = os.getenv('CHATBOT_EVAL_PRICING_FILE', '')
+CHATBOT_EVAL_MAX_BUDGET_USD = Decimal(os.getenv('CHATBOT_EVAL_MAX_BUDGET_USD', '1.00'))
+CHATBOT_EVAL_MAX_REQUESTS = int(os.getenv('CHATBOT_EVAL_MAX_REQUESTS', '20'))
+CHATBOT_EVAL_MAX_INPUT_TOKENS = int(os.getenv('CHATBOT_EVAL_MAX_INPUT_TOKENS', '1050000'))
+CHATBOT_EVAL_MAX_OUTPUT_TOKENS = int(os.getenv('CHATBOT_EVAL_MAX_OUTPUT_TOKENS', '400'))
+CHATBOT_EVAL_PRICE_MAX_AGE_DAYS = int(os.getenv('CHATBOT_EVAL_PRICE_MAX_AGE_DAYS', '7'))
+CHATBOT_EVAL_TOKEN_BOUND_METHOD = os.getenv('CHATBOT_EVAL_TOKEN_BOUND_METHOD', 'conservative')
+
 # No network is needed for normal development or automated tests.
 TEST_RUNNER = 'assistant.testing.NoOpenAITestRunner'
 OPENAI_EVALUATION_BACKEND = os.getenv('OPENAI_EVALUATION_BACKEND', 'disabled')
@@ -194,7 +233,9 @@ OPENAI_OUTPUT_USD_PER_MILLION = Decimal(os.getenv('OPENAI_OUTPUT_USD_PER_MILLION
 OPENAI_REQUEST_RESERVE_USD = Decimal(os.getenv('OPENAI_REQUEST_RESERVE_USD', '0.10'))
 OPENAI_MAX_INPUT_BYTES = int(os.getenv('OPENAI_MAX_INPUT_BYTES', '30000'))
 
-try:
-    from .local_settings import *
-except ImportError:
-    pass
+# Staging must never import operational local settings or read their dotenv files.
+if os.getenv('DJANGO_SETTINGS_MODULE') != 'tenetrueca.staging_settings':
+    try:
+        from .local_settings import *
+    except ImportError:
+        pass

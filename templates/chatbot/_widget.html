@@ -1,0 +1,63 @@
+{% load static i18n %}
+<aside class="chatbot" data-chatbot aria-label="{% translate 'Ayuda de TRUEC@' %}" hidden>
+  <button class="chatbot__launcher" type="button" data-chatbot-launcher aria-label="{% translate 'Abrir el asistente TRUEC@' %}" aria-controls="chatbot-panel" aria-expanded="false" aria-haspopup="dialog">
+    <span class="chatbot__hint" data-chatbot-hint aria-hidden="true">{% translate '¿Necesitas ayuda?' %}</span>
+    <span class="chatbot__avatar chatbot__avatar--launcher" aria-hidden="true"><img src="{% static 'img/brand/trueca-icon.png' %}" width="40" height="40" alt=""></span>
+    <span class="chatbot__accent" aria-hidden="true"></span>
+  </button>
+  <dialog class="chatbot__panel" id="chatbot-panel" data-chatbot-panel aria-labelledby="chatbot-title" aria-describedby="chatbot-subtitle">
+    <header class="chatbot__header">
+      <span class="chatbot__avatar" aria-hidden="true"><img src="{% static 'img/brand/trueca-icon.png' %}" width="28" height="28" alt=""></span>
+      <div class="chatbot__heading">
+        <h2 id="chatbot-title">{% translate 'Asistente TRUEC@' %}</h2>
+        <p id="chatbot-subtitle">{% translate 'Una mano para dar una segunda vida' %}</p>
+      </div>
+      <button class="chatbot__icon-button" type="button" data-chatbot-close aria-label="{% translate 'Cerrar el asistente' %}" title="{% translate 'Cerrar el asistente' %}">
+        <svg aria-hidden="true"><use href="{% static 'img/icons/backoffice.svg' %}#icon-x"></use></svg>
+      </button>
+    </header>
+    <div class="chatbot__toolbar">
+      <span class="chatbot__simulation">{% if config.isSimulated %}{% translate 'Asistente de prueba' %}{% else %}{% translate 'Asistente virtual con IA' %}{% endif %}</span>
+      <button class="chatbot__new" type="button" data-chatbot-reset disabled>
+        <svg aria-hidden="true"><use href="{% static 'img/icons/backoffice.svg' %}#icon-reset"></use></svg>{% translate 'Nueva conversación' %}
+      </button>
+    </div>
+    <div class="chatbot__scroll" data-chatbot-scroll tabindex="0" role="region" aria-label="{% translate 'Historial de la conversación' %}">
+      <div class="chatbot__welcome" data-chatbot-welcome>
+        <p class="chatbot__greeting">{% translate '¡Hola! Qué bueno verte por aquí.' %} <span aria-hidden="true">👋</span></p>
+        <p>{% translate 'Soy el asistente de TRUEC@. Puedo ayudarte con tus dudas sobre la plataforma.' %}</p>
+        <p>{% translate '¿En qué puedo ayudarte?' %}</p>
+      </div>
+      <div class="chatbot__suggestions" data-chatbot-suggestions hidden aria-label="{% translate 'Preguntas sugeridas' %}">
+        <button type="button" data-chatbot-suggestion>{% translate '¿Cómo funciona TRUEC@?' %}<span aria-hidden="true">›</span></button>
+        <button type="button" data-chatbot-suggestion>{% translate '¿Cómo puedo conseguir puntos?' %}<span aria-hidden="true">›</span></button>
+        <button type="button" data-chatbot-suggestion>{% translate '¿Qué objetos puedo entregar?' %}<span aria-hidden="true">›</span></button>
+      </div>
+      <ol class="chatbot__messages" data-chatbot-messages role="log" aria-live="off" aria-relevant="additions text" aria-label="{% translate 'Mensajes' %}"></ol>
+    </div>
+    <div class="chatbot__feedback">
+      <p class="chatbot__status" data-chatbot-status role="status" aria-live="polite"></p>
+      <div class="chatbot__error" data-chatbot-error hidden>
+        <p data-chatbot-error-text role="alert"></p>
+        <button type="button" data-chatbot-retry>{% translate 'Reintentar' %}</button>
+      </div>
+      <div class="chatbot__limit" data-chatbot-limit hidden>
+        <p>{% translate 'Inicia sesión o crea una cuenta para seguir conversando.' %}</p>
+        <div><a href="{% url 'login' %}">{% translate 'Iniciar sesión' %}</a><a href="{% url 'register' %}">{% translate 'Crear una cuenta' %}</a></div>
+      </div>
+    </div>
+    <form class="chatbot__composer" data-chatbot-form>
+      {% csrf_token %}
+      <label class="chatbot__sr-only" for="chatbot-input">{% translate 'Tu pregunta para el asistente' %}</label>
+      <div class="chatbot__input-wrap">
+        <textarea id="chatbot-input" data-chatbot-input rows="1" maxlength="{{ config.maxInputChars }}" placeholder="{% translate 'Escribe tu pregunta…' %}" enterkeyhint="send" aria-describedby="chatbot-input-help" disabled></textarea>
+        <button class="chatbot__send" type="submit" data-chatbot-send aria-label="{% translate 'Enviar pregunta' %}" title="{% translate 'Enviar pregunta' %}" disabled>
+          <svg aria-hidden="true"><use href="{% static 'img/icons/backoffice.svg' %}#icon-send"></use></svg>
+        </button>
+      </div>
+      <span id="chatbot-input-help" class="chatbot__sr-only">{% translate 'Intro para enviar. Mayúsculas e Intro para añadir una línea.' %}</span>
+      <p class="chatbot__quota" data-chatbot-quota role="status" hidden></p>
+    </form>
+  </dialog>
+</aside>
+{{ config|json_script:"chatbot-config" }}

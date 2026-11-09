@@ -1,0 +1,762 @@
+{
+  "actual_run_budget": "not_read_or_reset",
+  "adjusted_bound_available": false,
+  "configuration": {
+    "approved_tariff": null,
+    "cases": [
+      "E01",
+      "E30",
+      "E31",
+      "E32",
+      "E33",
+      "E34",
+      "E35",
+      "E36",
+      "E02",
+      "E17"
+    ],
+    "code_hash": "a74bfb29ed80f70838afaf4c36887e4eb5cca87645456360fe430bb1f2822141",
+    "context_turns": 4,
+    "dataset": "pilot-v1",
+    "dataset_hash": "179b77ff68dd44081ffaaedea651c54271815a736d37f25d81647bb36baf09a8",
+    "history_messages": 10,
+    "knowledge_limits": [
+      5,
+      1200,
+      6000
+    ],
+    "max_budget_usd": "1.00",
+    "max_input_chars": 2000,
+    "max_input_tokens": 1050000,
+    "max_output_tokens": 400,
+    "max_requests": 20,
+    "model": "gpt-6-luna",
+    "modes": [
+      "extractive",
+      "grounded"
+    ],
+    "project": "",
+    "reasoning_effort": "none",
+    "runtime": [
+      "5.2.18",
+      "2.54.0",
+      "3.12.15"
+    ],
+    "tariff_hash": null,
+    "timeout": 30.0,
+    "token_bound_method": "conservative",
+    "token_bound_version": "responses-text-window-v1"
+  },
+  "dry_run": true,
+  "dry_run_committed_usd": "0",
+  "maximum_possible_provider_calls": 16,
+  "planned_question_modes": 20,
+  "planned_questions": 10,
+  "pricing_admission_blocker": "pricing_missing",
+  "real_openai_calls": 0,
+  "results": [
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E01",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 539,
+          "instructions": 1727,
+          "text": 389
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 2827,
+        "payload_hash": "3649404d60a0f20957dbd367f57a98a74a5a0aa2470805b1d17d1758d54716f0",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Según la información pública, en su idioma original:\nExplora el catálogo y presenta propuestas de objetos para revisión. Consulta la ayuda para conocer el proceso de intercambio.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "22b78dfbdc747ea954f82508cff9107b039a151ab8e9915a1a60754beee3ca37",
+          "evidence_hashes": [
+            "ceba3fb3f2cd0c2ed480b1430945f16cf8508e5970fdab36b1f844d49b1d024d"
+          ],
+          "public_url": "/faq/#faq-question-1",
+          "source_id": "faq:1",
+          "source_type": "faq",
+          "source_version": "knowledge-1:22b78dfbdc747ea954f82508cff9107b039a151ab8e9915a1a60754beee3ca37",
+          "supported_text": "Explora el catálogo y presenta propuestas de objetos para revisión. Consulta la ayuda para conocer el proceso de intercambio.",
+          "title": "¿Cómo funciona TRUEC@?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E01",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 539,
+          "instructions": 2350,
+          "text": 609
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 3670,
+        "payload_hash": "b111423cbedd1e33730bbaf3ec35b39b7678d0eed79677f87cb7b37fe99ec550",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Explora el catálogo y presenta propuestas de objetos para revisión.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "22b78dfbdc747ea954f82508cff9107b039a151ab8e9915a1a60754beee3ca37",
+          "evidence_hashes": [
+            "ceba3fb3f2cd0c2ed480b1430945f16cf8508e5970fdab36b1f844d49b1d024d"
+          ],
+          "public_url": "/faq/#faq-question-1",
+          "source_id": "faq:1",
+          "source_type": "faq",
+          "source_version": "knowledge-1:22b78dfbdc747ea954f82508cff9107b039a151ab8e9915a1a60754beee3ca37",
+          "supported_text": "Explora el catálogo y presenta propuestas de objetos para revisión. Consulta la ayuda para conocer el proceso de intercambio.",
+          "title": "¿Cómo funciona TRUEC@?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E30",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1742,
+          "instructions": 1727,
+          "text": 413
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4054,
+        "payload_hash": "f773b9948102d30fcb64b23de43edbd231fd193929a01b062431e1cbb4a10671",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Según la información pública, en su idioma original:\nInicia sesión y abre la opción de publicación. Completa los datos del objeto y añade fotografías. Envía la propuesta al equipo para su revisión.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "evidence_hashes": [
+            "036165fe9923303c70d04b876bca73cac6901f3841a51cbe88cabc5c7c4e3b84"
+          ],
+          "public_url": "/faq/#faq-question-2",
+          "source_id": "faq:2",
+          "source_type": "faq",
+          "source_version": "knowledge-1:ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "supported_text": "Inicia sesión y abre la opción de publicación. Completa los datos del objeto y añade fotografías. Envía la propuesta al equipo para su revisión.",
+          "title": "¿Cómo publicar un objeto y añadir fotografías?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E30",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1742,
+          "instructions": 1727,
+          "text": 413
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4054,
+        "payload_hash": "f773b9948102d30fcb64b23de43edbd231fd193929a01b062431e1cbb4a10671",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Según la información pública, en su idioma original:\nInicia sesión y abre la opción de publicación. Completa los datos del objeto y añade fotografías. Envía la propuesta al equipo para su revisión.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "evidence_hashes": [
+            "036165fe9923303c70d04b876bca73cac6901f3841a51cbe88cabc5c7c4e3b84"
+          ],
+          "public_url": "/faq/#faq-question-2",
+          "source_id": "faq:2",
+          "source_type": "faq",
+          "source_version": "knowledge-1:ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "supported_text": "Inicia sesión y abre la opción de publicación. Completa los datos del objeto y añade fotografías. Envía la propuesta al equipo para su revisión.",
+          "title": "¿Cómo publicar un objeto y añadir fotografías?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E31",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1373,
+          "instructions": 1727,
+          "text": 405
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 3677,
+        "payload_hash": "ecace60c6a0b21c5a15dedc18d47f733c5795e5f44878da45479559b932ab9d6",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Según la información pública, en su idioma original:\nPrepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "evidence_hashes": [
+            "c34e0f8375f83332a37b411d07607ffe8a221939cff48d3d042f2937676c6042"
+          ],
+          "public_url": "/faq/#faq-question-3",
+          "source_id": "faq:3",
+          "source_type": "faq",
+          "source_version": "knowledge-1:13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "supported_text": "Prepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+          "title": "¿Cómo preparar fotografías para publicar?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E31",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1373,
+          "instructions": 1727,
+          "text": 405
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 3677,
+        "payload_hash": "ecace60c6a0b21c5a15dedc18d47f733c5795e5f44878da45479559b932ab9d6",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Según la información pública, en su idioma original:\nPrepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "evidence_hashes": [
+            "c34e0f8375f83332a37b411d07607ffe8a221939cff48d3d042f2937676c6042"
+          ],
+          "public_url": "/faq/#faq-question-3",
+          "source_id": "faq:3",
+          "source_type": "faq",
+          "source_version": "knowledge-1:13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "supported_text": "Prepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+          "title": "¿Cómo preparar fotografías para publicar?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E32",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1726,
+          "instructions": 1727,
+          "text": 413
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4038,
+        "payload_hash": "b665b70e4df6914794171d6fd454e9502b6428ce418f34a58e8513e8f13ae6be",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Según la información pública, en su idioma original:\nPuedes consultar el estado de tu propuesta en tu cuenta. El equipo revisa las propuestas.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "5f722e66d3185a2d3bb8f9ab2a803c1505af51aa64ee0cd81e95e0095eab460f",
+          "evidence_hashes": [
+            "b7177d3e16a57a4087f1f214e21ffe97bbade8f77d431528c87d0e5d41a8cff3"
+          ],
+          "public_url": "/faq/#faq-question-4",
+          "source_id": "faq:4",
+          "source_type": "faq",
+          "source_version": "knowledge-1:5f722e66d3185a2d3bb8f9ab2a803c1505af51aa64ee0cd81e95e0095eab460f",
+          "supported_text": "Puedes consultar el estado de tu propuesta en tu cuenta. El equipo revisa las propuestas.",
+          "title": "¿Qué hago después de publicar una propuesta?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E32",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1726,
+          "instructions": 1727,
+          "text": 413
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4038,
+        "payload_hash": "b665b70e4df6914794171d6fd454e9502b6428ce418f34a58e8513e8f13ae6be",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Según la información pública, en su idioma original:\nPuedes consultar el estado de tu propuesta en tu cuenta. El equipo revisa las propuestas.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "5f722e66d3185a2d3bb8f9ab2a803c1505af51aa64ee0cd81e95e0095eab460f",
+          "evidence_hashes": [
+            "b7177d3e16a57a4087f1f214e21ffe97bbade8f77d431528c87d0e5d41a8cff3"
+          ],
+          "public_url": "/faq/#faq-question-4",
+          "source_id": "faq:4",
+          "source_type": "faq",
+          "source_version": "knowledge-1:5f722e66d3185a2d3bb8f9ab2a803c1505af51aa64ee0cd81e95e0095eab460f",
+          "supported_text": "Puedes consultar el estado de tu propuesta en tu cuenta. El equipo revisa las propuestas.",
+          "title": "¿Qué hago después de publicar una propuesta?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E33",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 2022,
+          "instructions": 1727,
+          "text": 422
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4343,
+        "payload_hash": "a4a69d1f1c474cdb6a768d487a133771fbeaf17ea44ebf632e0aff017f7ad97b",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Según la información pública, en su idioma original:\nConsulta las preguntas frecuentes para conocer el proceso de intercambio. También puedes consultar la información pública de los puntos limpios.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "8f66b5f729903801355f5c52b57c4b07b435ee7cc4c356942f87675a23b08d3d",
+          "evidence_hashes": [
+            "53fd569b5574cd3a555d38dc8908ba653a5cc78964a7f21a531ff29f6bcb2300"
+          ],
+          "public_url": "/faq/#faq-question-5",
+          "source_id": "faq:5",
+          "source_type": "faq",
+          "source_version": "knowledge-1:8f66b5f729903801355f5c52b57c4b07b435ee7cc4c356942f87675a23b08d3d",
+          "supported_text": "Consulta las preguntas frecuentes para conocer el proceso de intercambio. También puedes consultar la información pública de los puntos limpios.",
+          "title": "¿Dónde encuentro ayuda e información oficial?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E33",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 2022,
+          "instructions": 1727,
+          "text": 422
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4343,
+        "payload_hash": "a4a69d1f1c474cdb6a768d487a133771fbeaf17ea44ebf632e0aff017f7ad97b",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Según la información pública, en su idioma original:\nConsulta las preguntas frecuentes para conocer el proceso de intercambio. También puedes consultar la información pública de los puntos limpios.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "8f66b5f729903801355f5c52b57c4b07b435ee7cc4c356942f87675a23b08d3d",
+          "evidence_hashes": [
+            "53fd569b5574cd3a555d38dc8908ba653a5cc78964a7f21a531ff29f6bcb2300"
+          ],
+          "public_url": "/faq/#faq-question-5",
+          "source_id": "faq:5",
+          "source_type": "faq",
+          "source_version": "knowledge-1:8f66b5f729903801355f5c52b57c4b07b435ee7cc4c356942f87675a23b08d3d",
+          "supported_text": "Consulta las preguntas frecuentes para conocer el proceso de intercambio. También puedes consultar la información pública de los puntos limpios.",
+          "title": "¿Dónde encuentro ayuda e información oficial?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E34",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 562,
+          "instructions": 2488,
+          "text": 437
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 3659,
+        "payload_hash": "de7dfd157c99929c27e6779fc9039d733db535cfdf34c18c7fdae94fb0603a28",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "No dispongo de información pública suficiente para responder a esa pregunta.",
+      "route": "no_evidence",
+      "simulated": true,
+      "sources": [],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E34",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 562,
+          "instructions": 2753,
+          "text": 1007
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4494,
+        "payload_hash": "6634012d121c7538ab1ef0cd30272fdae7aedf624bd6a207e73acaee0bb50a32",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "No dispongo de información pública suficiente para responder a esa pregunta.",
+      "route": "no_evidence",
+      "simulated": true,
+      "sources": [],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E35",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1374,
+          "instructions": 1727,
+          "text": 405
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 3678,
+        "payload_hash": "24b040c3a735bd27c62bd683423dc40a0d5e8bf8d2d9f03f5a29e05f590f4d8e",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Según la información pública, en su idioma original:\nPrepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "evidence_hashes": [
+            "c34e0f8375f83332a37b411d07607ffe8a221939cff48d3d042f2937676c6042"
+          ],
+          "public_url": "/faq/#faq-question-3",
+          "source_id": "faq:3",
+          "source_type": "faq",
+          "source_version": "knowledge-1:13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "supported_text": "Prepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+          "title": "¿Cómo preparar fotografías para publicar?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E35",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1374,
+          "instructions": 1727,
+          "text": 405
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 3678,
+        "payload_hash": "24b040c3a735bd27c62bd683423dc40a0d5e8bf8d2d9f03f5a29e05f590f4d8e",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Según la información pública, en su idioma original:\nPrepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+      "route": "generation",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "evidence_hashes": [
+            "c34e0f8375f83332a37b411d07607ffe8a221939cff48d3d042f2937676c6042"
+          ],
+          "public_url": "/faq/#faq-question-3",
+          "source_id": "faq:3",
+          "source_type": "faq",
+          "source_version": "knowledge-1:13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65",
+          "supported_text": "Prepara fotografías claras del objeto para presentar la propuesta. Puedes consultar la ayuda de publicación.",
+          "title": "¿Cómo preparar fotografías para publicar?"
+        }
+      ],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E36",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1734,
+          "instructions": 2094,
+          "text": 461
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4461,
+        "payload_hash": "2166c1f93c69e5763ca7b680a37fc17f75bbff0ebf4ec9b79c7b1d45f18383a5",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "I do not have enough public information to answer that question.",
+      "route": "no_evidence",
+      "simulated": true,
+      "sources": [],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E36",
+      "input_bound": {
+        "adjusted_bound_available": false,
+        "component_bytes": {
+          "input": 1734,
+          "instructions": 2094,
+          "text": 461
+        },
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "input_tokens": 1050000,
+        "method": "documented_full_context_ceiling",
+        "output_tokens": 400,
+        "payload_bytes": 4461,
+        "payload_hash": "2166c1f93c69e5763ca7b680a37fc17f75bbff0ebf4ec9b79c7b1d45f18383a5",
+        "version": "responses-text-window-v1"
+      },
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "I do not have enough public information to answer that question.",
+      "route": "no_evidence",
+      "simulated": true,
+      "sources": [],
+      "would_generate": true
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E02",
+      "input_bound": null,
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Recibes 100 puntos cuando completas el registro público y activas tu cuenta.",
+      "route": "deterministic",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "5a2d97a699f97d9d5ebc95b5da20f06783b831a26c26e4fb19e914c2d2143ab7",
+          "evidence_hashes": [
+            "9ad44097a7a623f4b622fcdb79b84a71813bfac412c576f789813acaedcb51b5"
+          ],
+          "public_url": null,
+          "source_id": "business_rule:points.registration",
+          "source_type": "business_rule",
+          "source_version": "knowledge-1:5a2d97a699f97d9d5ebc95b5da20f06783b831a26c26e4fb19e914c2d2143ab7",
+          "supported_text": "Recibes 100 puntos cuando completas el registro público y activas tu cuenta.",
+          "title": "Puntos por registro público"
+        }
+      ],
+      "would_generate": false
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E02",
+      "input_bound": null,
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Recibes 100 puntos cuando completas el registro público y activas tu cuenta.",
+      "route": "deterministic",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "5a2d97a699f97d9d5ebc95b5da20f06783b831a26c26e4fb19e914c2d2143ab7",
+          "evidence_hashes": [
+            "9ad44097a7a623f4b622fcdb79b84a71813bfac412c576f789813acaedcb51b5"
+          ],
+          "public_url": null,
+          "source_id": "business_rule:points.registration",
+          "source_type": "business_rule",
+          "source_version": "knowledge-1:5a2d97a699f97d9d5ebc95b5da20f06783b831a26c26e4fb19e914c2d2143ab7",
+          "supported_text": "Recibes 100 puntos cuando completas el registro público y activas tu cuenta.",
+          "title": "Puntos por registro público"
+        }
+      ],
+      "would_generate": false
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E17",
+      "input_bound": null,
+      "maximum_reserve_usd": null,
+      "mode": "extractive",
+      "reply": "Punto Limpio de Adeje: Lunes 09:00–14:00",
+      "route": "deterministic",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "5e507581352a7a841fc4565d6acb99ee01a43437a0d9f51857cb016f4ba6438a",
+          "evidence_hashes": [
+            "6456b0ee40e7face8414fcc49d8cd4ac429f6bbe02144cd15208b03dc7029b16"
+          ],
+          "public_url": "/#puntos-limpios",
+          "source_id": "center:1",
+          "source_type": "center",
+          "source_version": "knowledge-1:5e507581352a7a841fc4565d6acb99ee01a43437a0d9f51857cb016f4ba6438a",
+          "supported_text": "Punto Limpio de Adeje: Lunes 09:00–14:00",
+          "title": "Punto Limpio de Adeje"
+        }
+      ],
+      "would_generate": false
+    },
+    {
+      "admissible_if_all_previous_usage_unknown": false,
+      "bound_blocker": "",
+      "case_id": "E17",
+      "input_bound": null,
+      "maximum_reserve_usd": null,
+      "mode": "grounded",
+      "reply": "Punto Limpio de Adeje: Lunes 09:00–14:00",
+      "route": "deterministic",
+      "simulated": true,
+      "sources": [
+        {
+          "content_hash": "5e507581352a7a841fc4565d6acb99ee01a43437a0d9f51857cb016f4ba6438a",
+          "evidence_hashes": [
+            "6456b0ee40e7face8414fcc49d8cd4ac429f6bbe02144cd15208b03dc7029b16"
+          ],
+          "public_url": "/#puntos-limpios",
+          "source_id": "center:1",
+          "source_type": "center",
+          "source_version": "knowledge-1:5e507581352a7a841fc4565d6acb99ee01a43437a0d9f51857cb016f4ba6438a",
+          "supported_text": "Punto Limpio de Adeje: Lunes 09:00–14:00",
+          "title": "Punto Limpio de Adeje"
+        }
+      ],
+      "would_generate": false
+    }
+  ],
+  "token_bound_method": "documented_full_context_ceiling",
+  "warnings": [
+    "No local verified bound for Responses framing and Structured Outputs overhead.",
+    "Byte sizes are diagnostics, not tokens. No remote counting endpoint was invoked.",
+    "Preview admissibility is hypothetical; live access requires separate authorization.",
+    "Unknown usage stops live execution; this preview is not permission to continue after it."
+  ],
+  "worst_case_preview_only": {
+    "admitted": 0,
+    "committed_usd": "0"
+  }
+}

@@ -1,0 +1,11 @@
+# Build once. Staging and future production use the resulting image by digest.
+name: trueca-candidate-build
+services:
+  candidate:
+    platform: linux/amd64
+    image: ${TRUECA_CANDIDATE_IMAGE:?Choose a candidate build tag, then freeze its digest}
+    build:
+      context: .
+      dockerfile: Dockerfile.candidate
+      args:
+        RUNTIME_IMAGE: ${TRUECA_CANDIDATE_RUNTIME_IMAGE:?Use the reviewed runtime (local alias with recorded ID, or a published digest)}

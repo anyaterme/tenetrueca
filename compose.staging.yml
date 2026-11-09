@@ -1,0 +1,86 @@
+# Standalone: never merge with the operational docker-compose.yml or its overrides.
+name: trueca-chatbot-staging
+x-app: &app
+  platform: linux/amd64
+  image: ${TRUECA_CANDIDATE_IMAGE:?Set the candidate image to validate and later promote unchanged}
+  environment: &environment
+    DJANGO_SETTINGS_MODULE: tenetrueca.staging_settings
+    TRUECA_STAGING_HTTP_PORT: ${TRUECA_STAGING_HTTP_PORT:-8083}
+    CHATBOT_PROVIDER: mock
+    CHATBOT_GENERATION_MODE: extractive
+    CHATBOT_EVAL_ALLOW_LIVE: "False"
+    CHATBOT_EVAL_AUTHORIZATION_ID: ""
+    CHATBOT_EVAL_PROJECT_REF: ""
+    CHATBOT_EVAL_PRICING_FILE: ""
+    OPENAI_API_KEY: ""
+    OPENAI_LIVE_ENABLED: "False"
+    OPENAI_EVALUATION_BACKEND: disabled
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:uid=10001,gid=10001,mode=1777"]
+  secrets: [django_secret_key, postgres_password]
+  networks: [staging_private]
+  volumes:
+    - staging_static:/app/staticfiles
+    - staging_media:/app/media
+    - staging_private_media:/app/private_media
+    - staging_reports:/app/evaluation_reports
+
+services:
+  staging_db:
+    image: ${TRUECA_STAGING_POSTGRES_IMAGE:?Use a PostgreSQL 17 immutable image digest}
+    environment:
+      POSTGRES_DB: trueca_chatbot_staging
+      POSTGRES_USER: trueca_staging
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    networks: [staging_private]
+    volumes: [staging_db:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U trueca_staging -d trueca_chatbot_staging"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  app:
+    <<: *app
+    depends_on:
+      staging_db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health/', timeout=5).close()"]
+      interval: 5s
+      timeout: 6s
+      retries: 12
+  proxy:
+    image: ${TRUECA_STAGING_PROXY_IMAGE:?Use a reviewed Nginx immutable image digest}
+    entrypoint: [nginx, -g, "daemon off;"]
+    user: "101:101"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:uid=101,gid=101,mode=1777"]
+    ports: ["127.0.0.1:${TRUECA_STAGING_HTTP_PORT:-8083}:8080"]
+    networks: [staging_private, staging_ingress]
+    volumes:
+      - ./deploy/staging/nginx.conf:/etc/nginx/nginx.conf:ro
+      - staging_static:/srv/static:ro
+    depends_on:
+      app: {condition: service_healthy}
+
+networks:
+  staging_private:
+    internal: true
+  staging_ingress:
+    internal: false
+volumes:
+  staging_db:
+  staging_static:
+  staging_media:
+  staging_private_media:
+  staging_reports:
+secrets:
+  django_secret_key:
+    file: ${TRUECA_STAGING_SECRET_KEY_FILE:?Provide a NEW independent secret file}
+  postgres_password:
+    file: ${TRUECA_STAGING_DB_PASSWORD_FILE:?Provide a NEW independent password file}

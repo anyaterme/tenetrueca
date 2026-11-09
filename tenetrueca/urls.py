@@ -41,6 +41,7 @@ urlpatterns = [
     path('fotografias/', include('publications.urls')),
     path('health/', health, name='health'),
     path('admin/', admin.site.urls),
+    path('chatbot/', include('chatbot.urls')),
     path('api/v1/', include('api.urls')),
 ]
 

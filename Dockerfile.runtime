@@ -1,0 +1,7 @@
+ARG PYTHON_IMAGE
+FROM ${PYTHON_IMAGE}
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends libpq5 && rm -rf /var/lib/apt/lists/*
+COPY deploy/staging/runtime-requirements.lock /tmp/runtime-requirements.lock
+RUN pip install --only-binary=:all: -r /tmp/runtime-requirements.lock

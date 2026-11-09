@@ -1,0 +1,14 @@
+ARG RUNTIME_IMAGE
+FROM ${RUNTIME_IMAGE}
+USER root
+WORKDIR /app
+# .dockerignore uses an application allowlist and excludes all operational settings/data.
+COPY . /app
+RUN chmod -R a+rX /app && \
+    mkdir -p /app/staticfiles /app/media /app/private_media /app/evaluation_reports && \
+    chown -R 10001:10001 /app/staticfiles /app/media /app/private_media /app/evaluation_reports && \
+    chmod 0750 /app/private_media /app/evaluation_reports
+USER 10001:10001
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+EXPOSE 8000
+CMD ["gunicorn", "tenetrueca.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-"]

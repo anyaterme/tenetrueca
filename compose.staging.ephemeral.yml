@@ -1,0 +1,10 @@
+# Validation only: PostgreSQL in RAM; separate scratch asset volumes removed afterwards.
+# Do not use this override for an authorized real pilot.
+services:
+  staging_db:
+    volumes: !reset []
+    tmpfs: [/var/lib/postgresql/data]
+  app:
+    environment:
+      TRUECA_STAGING_EPHEMERAL_VALIDATION: "1"
+      CI: "true"

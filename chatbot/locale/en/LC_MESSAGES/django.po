@@ -1,0 +1,155 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TRUEC@ chatbot 1\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"PO-Revision-Date: 2026-10-29 00:00+0000\n"
+"Last-Translator: TRUEC@\n"
+"Language-Team: TRUEC@\n"
+
+msgid "Asistente TRUEC@"
+msgstr "TRUEC@ Assistant"
+
+msgid "Tú"
+msgstr "You"
+
+msgid "Recuperando tu conversación…"
+msgstr "Loading your conversation…"
+
+msgid "El asistente está respondiendo…"
+msgstr "The assistant is replying…"
+
+msgid "Te quedan {remaining} de {limit} preguntas en esta sesión."
+msgstr "You have {remaining} of {limit} questions left in this session."
+
+msgid "Te queda 1 de {limit} preguntas en esta sesión."
+msgstr "You have 1 of {limit} questions left in this session."
+
+msgid "Has utilizado las {limit} preguntas de esta sesión."
+msgstr "You have used all {limit} questions for this session."
+
+msgid "No se pudo responder a esta pregunta. No ha consumido cuota."
+msgstr "This question could not be answered. It did not use your allowance."
+
+msgid "No hemos podido conectar. Puedes comprobar tu respuesta sin duplicar la pregunta."
+msgstr "We could not connect. You can check your answer without sending the question twice."
+
+msgid "No se pudo recuperar la conversación. Vuelve a intentarlo."
+msgstr "Your conversation could not be loaded. Please try again."
+
+msgid "Tu sesión o conversación ha cambiado. Vuelve a conectar antes de enviar tu pregunta."
+msgstr "Your session or conversation has changed. Reconnect before sending your question."
+
+msgid "El asistente no está disponible en este momento. Inténtalo de nuevo más tarde."
+msgstr "The assistant is unavailable right now. Please try again later."
+
+msgid "Escribe una pregunta de hasta {max} caracteres."
+msgstr "Write a question of up to {max} characters."
+
+msgid "Reintentar"
+msgstr "Try again"
+
+msgid "Comprobar respuesta"
+msgstr "Check answer"
+
+msgid "Volver a conectar"
+msgstr "Reconnect"
+
+msgid "Has iniciado una nueva conversación."
+msgstr "You have started a new conversation."
+
+msgid "Ayuda de TRUEC@"
+msgstr "TRUEC@ help"
+
+msgid "Abrir el asistente TRUEC@"
+msgstr "Open the TRUEC@ assistant"
+
+msgid "¿Necesitas ayuda?"
+msgstr "Need a hand?"
+
+msgid "Una mano para dar una segunda vida"
+msgstr "A helping hand for a second life"
+
+msgid "Cerrar el asistente"
+msgstr "Close the assistant"
+
+msgid "Asistente de prueba"
+msgstr "Demo assistant"
+
+msgid "Nueva conversación"
+msgstr "New conversation"
+
+msgid "Historial de la conversación"
+msgstr "Conversation history"
+
+msgid "¡Hola! Qué bueno verte por aquí."
+msgstr "Hello! It is lovely to see you here."
+
+msgid "Soy el asistente de TRUEC@. Puedo ayudarte con tus dudas sobre la plataforma."
+msgstr "I am the TRUEC@ assistant. I can help with your questions about the platform."
+
+msgid "¿En qué puedo ayudarte?"
+msgstr "How can I help you?"
+
+msgid "Preguntas sugeridas"
+msgstr "Suggested questions"
+
+msgid "¿Cómo funciona TRUEC@?"
+msgstr "How does TRUEC@ work?"
+
+msgid "¿Cómo puedo conseguir puntos?"
+msgstr "How can I earn points?"
+
+msgid "¿Qué objetos puedo entregar?"
+msgstr "What items can I give?"
+
+msgid "Mensajes"
+msgstr "Messages"
+
+msgid "Inicia sesión o crea una cuenta para seguir conversando."
+msgstr "Sign in or create an account to keep chatting."
+
+msgid "Iniciar sesión"
+msgstr "Sign in"
+
+msgid "Crear una cuenta"
+msgstr "Create an account"
+
+msgid "Tu pregunta para el asistente"
+msgstr "Your question for the assistant"
+
+msgid "Escribe tu pregunta…"
+msgstr "Write your question…"
+
+msgid "Enviar pregunta"
+msgstr "Send question"
+
+msgid "Intro para enviar. Mayúsculas e Intro para añadir una línea."
+msgstr "Enter to send. Shift and Enter to add a line."
+
+msgid "Asistente virtual con IA"
+msgstr "AI assistant"
+
+msgid "Has enviado varias preguntas seguidas. Espera un momento y vuelve a intentarlo. Tu pregunta sigue en el campo de texto."
+msgstr "You have sent several questions in a row. Wait a moment and try again. Your question is still in the text field."
+
+msgid "Has iniciado varias conversaciones seguidas. Espera un momento y vuelve a intentarlo."
+msgstr "You have started several conversations in a row. Wait a moment and try again."
+
+msgid "Fuentes"
+msgstr "Sources"
+
+msgid "Consultar información oficial"
+msgstr "View official information"
+
+msgid "Referencia no disponible"
+msgstr "Reference unavailable"
+
+msgid "Información no confirmada"
+msgstr "Unconfirmed information"
+
+msgid "Cómo llegar"
+msgstr "Get directions"

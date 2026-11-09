@@ -28,4 +28,15 @@
   search.hidden = false;
   input.addEventListener('input', filter);
   filter();
+  const revealQuestion = () => {
+    if (!/^#faq-question-\d+$/.test(window.location.hash)) return;
+    const summary = document.getElementById(window.location.hash.slice(1));
+    const details = summary?.closest('[data-faq-item]');
+    if (!details || !root.contains(details)) return;
+    input.value = ''; filter(); details.open = true;
+    summary.focus({preventScroll: true});
+    summary.scrollIntoView({block: 'center', behavior: 'instant'});
+  };
+  window.addEventListener('hashchange', revealQuestion);
+  revealQuestion();
 })();

@@ -1,0 +1,8 @@
+# EXAMPLE ONLY. Review the dry run and backups before installing this in host cron.
+# Times use the cron host timezone; review before enabling.
+# Adapt /usr/bin/docker and the container name to your deployment.
+# Preview: docker exec tenetrueca_app python manage.py cleanup_chatbot_history
+# History deletion is opt-in, never part of migrate/startup/deploy:
+15 3 * * * /usr/bin/docker exec tenetrueca_app python manage.py cleanup_chatbot_history --execute --batch-size 500
+# Reclaim interrupted requests independently of history deletion:
+*/5 * * * * /usr/bin/docker exec tenetrueca_app python manage.py expire_chatbot_reservations

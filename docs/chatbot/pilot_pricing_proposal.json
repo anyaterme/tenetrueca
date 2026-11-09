@@ -1,0 +1,23 @@
+{
+  "approved": false,
+  "coverage_approved": false,
+  "model": "gpt-6-luna",
+  "response_models": [
+    "gpt-6-luna"
+  ],
+  "currency": "USD",
+  "service_tier": "default",
+  "input_usd_per_million": "0.22",
+  "output_usd_per_million": "0.825",
+  "special_input_usd_per_million": "0.55",
+  "fixed_request_usd": "0",
+  "safety_margin": "1.10",
+  "verified_on": "2026-11-07",
+  "source": "https://developers.openai.com/api/docs/pricing",
+  "model_source": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+  "billing_coverage": "all_text_input_output_cache_writes_long_context_and_surcharges",
+  "bound_strategy": "documented_full_context_ceiling",
+  "rate_scope": "maximum_across_entire_context_window",
+  "context_tokens": 1050000,
+  "notes": "Proposed maximum long-context Standard rates plus a 10% uplift; additive worst-case 12h cache-write rate; 10% reservation safety margin. Requires explicit operator approval."
+}

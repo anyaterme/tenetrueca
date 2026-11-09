@@ -1,6 +1,8 @@
-{% load static %}
+{% load static i18n chatbot_tags %}
+{% get_current_language as LANGUAGE_CODE %}
+{% chatbot_widget_config as chatbot_config %}
 <!doctype html>
-<html lang="es">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +10,7 @@
   <link rel="icon" type="image/png" href="{% static 'img/brand/trueca-icon.png' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}?v=20261019-mobile-menu">
+  {% if chatbot_config.enabled %}<link rel="stylesheet" href="{% static 'css/chatbot.css' %}?v=20261106-p5">{% endif %}
   {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if user.is_authenticated and not is_operations_staff %} body--citizen-nav{% endif %}">
@@ -23,6 +26,10 @@
       {% include "components/mobile_nav.html" %}
     {% endif %}
   {% endblock %}
+  {% if chatbot_config.enabled %}
+    {% include "chatbot/_widget.html" with config=chatbot_config %}
+    <script src="{% static 'js/chatbot.js' %}?v=20261106-p4" defer></script>
+  {% endif %}
   <script src="{% static 'js/site_navigation.js' %}?v=20261019-mobile-menu" defer></script>
   {% block extra_js %}{% endblock %}
 </body>

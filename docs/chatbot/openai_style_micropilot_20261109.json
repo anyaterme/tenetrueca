@@ -1,0 +1,739 @@
+{
+  "acceptance_status": "not_satisfactory_both_corrections_not_demonstrated",
+  "accepted_generated_answers": 2,
+  "accounted_cost_ceiling_usd": "0.002758635",
+  "all_attempts_settled": true,
+  "attempts": [
+    {
+      "case_id": "E34",
+      "charged_usd": "0.000593890",
+      "diagnostic": "invalid_response_style",
+      "id": "4f8377d6-a7cf-488f-aca5-4bd761814310",
+      "input_ceiling": 1050000,
+      "mode": "extractive",
+      "output_ceiling": 400,
+      "reserved_usd": "0.889713000",
+      "state": "settled",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 74,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 766
+      }
+    },
+    {
+      "case_id": "E36",
+      "charged_usd": "0.000690030",
+      "diagnostic": "",
+      "id": "f0e6617a-6907-4f5a-9772-b80e3b805a8c",
+      "input_ceiling": 1050000,
+      "mode": "extractive",
+      "output_ceiling": 400,
+      "reserved_usd": "0.889713000",
+      "state": "settled",
+      "usage": {
+        "input_tokens": 804,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 86,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 890
+      }
+    },
+    {
+      "case_id": "E34",
+      "charged_usd": "0.000784685",
+      "diagnostic": "invalid_grounding",
+      "id": "29ce1760-2512-42a2-b1fa-3165aefd132d",
+      "input_ceiling": 1050000,
+      "mode": "grounded",
+      "output_ceiling": 400,
+      "reserved_usd": "0.889713000",
+      "state": "settled",
+      "usage": {
+        "input_tokens": 853,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 155,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1008
+      }
+    },
+    {
+      "case_id": "E36",
+      "charged_usd": "0.000690030",
+      "diagnostic": "",
+      "id": "f4092613-22c2-4da4-9fda-d8e1b1f82cbd",
+      "input_ceiling": 1050000,
+      "mode": "grounded",
+      "output_ceiling": 400,
+      "reserved_usd": "0.889713000",
+      "state": "settled",
+      "usage": {
+        "input_tokens": 804,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 86,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 890
+      }
+    }
+  ],
+  "attempts_without_result": [],
+  "automatic_retries": 0,
+  "billing_scope": "local_conservative_usage_ceiling_not_provider_invoice",
+  "budget_remaining_usd": "0.997241365",
+  "candidate": "trueca-candidate@sha256:8ca2925a0e9b7a5216891e811bd5d380ee6e83649d2a9e90fea7bb2246325477",
+  "case_ids": [
+    "E34",
+    "E36"
+  ],
+  "cleanup": {
+    "backup_retained": true,
+    "database_stopped": true,
+    "database_volume_retained": true,
+    "evaluation_egress_removed": true,
+    "image_rebuilt_during_execution": false,
+    "live_env_disabled": true,
+    "production_deployed": false,
+    "temporary_api_key_removed": true
+  },
+  "configuration": {
+    "approved_case_ids": [
+      "E34",
+      "E36"
+    ],
+    "approved_tariff": {
+      "currency": "USD",
+      "fixed_request_usd": "0",
+      "input_ceiling": 1050000,
+      "input_usd_per_million": "0.22",
+      "margin": "1.10",
+      "model_source": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "output_usd_per_million": "0.825",
+      "source": "https://developers.openai.com/api/docs/pricing",
+      "special_input_usd_per_million": "0.55",
+      "verified_on": "2026-11-09"
+    },
+    "cases": [
+      "E34",
+      "E36"
+    ],
+    "code_hash": "c1a3d2ae4cd23c91a0461a4b9baf50d15470cefd21109855503998023c04fe59",
+    "context_turns": 4,
+    "dataset": "pilot-v1",
+    "dataset_hash": "179b77ff68dd44081ffaaedea651c54271815a736d37f25d81647bb36baf09a8",
+    "execution_order": [
+      "E34:extractive",
+      "E36:extractive",
+      "E34:grounded",
+      "E36:grounded"
+    ],
+    "history_messages": 10,
+    "knowledge_limits": [
+      5,
+      1200,
+      6000
+    ],
+    "max_budget_usd": "1.00",
+    "max_input_chars": 2000,
+    "max_input_tokens": 1050000,
+    "max_output_tokens": 400,
+    "max_requests": 4,
+    "model": "gpt-6-luna",
+    "modes": [
+      "extractive",
+      "grounded"
+    ],
+    "reasoning_effort": "none",
+    "runtime": [
+      "5.2.18",
+      "2.54.0",
+      "3.12.15"
+    ],
+    "tariff_hash": "16bcce44822b05a4641123310745f72943d22ace84607af1ff5901a41ffc64ce",
+    "timeout": 30.0,
+    "token_bound_method": "conservative",
+    "token_bound_version": "responses-text-window-v1"
+  },
+  "dataset": "pilot-v1",
+  "dataset_hash": "179b77ff68dd44081ffaaedea651c54271815a736d37f25d81647bb36baf09a8",
+  "date": "2026-11-09",
+  "english_case_passes": 2,
+  "execution_order": [
+    "E34:extractive",
+    "E36:extractive",
+    "E34:grounded",
+    "E36:grounded"
+  ],
+  "input_tokens_total": 3153,
+  "ledger_reconciled": true,
+  "lifecycle_stop_reason": "completed",
+  "limitations": [
+    "Rejected raw model output is not retained; its exact sentence count and validation subcondition cannot be reconstructed.",
+    "E36 requested grounded used extractive effectively; this does not validate free grounded English reformulation.",
+    "Human fidelity review remains pending; assisted review is not independent human sign-off.",
+    "No further model calls or code changes were made to repair failures."
+  ],
+  "live_cli_invocations": 1,
+  "local_abstentions_after_rejection": 1,
+  "max_budget_usd": "1.00",
+  "max_output_tokens": 400,
+  "max_requests": 4,
+  "maximum_reserve_per_request_usd": "0.889713000",
+  "model": "gpt-6-luna",
+  "operator_approved_new_candidate": true,
+  "operator_execution_approved": true,
+  "output_tokens_total": 401,
+  "peak_committed_usd": "0.891781605",
+  "pending_pairs": [],
+  "platform": "linux/amd64",
+  "preflight": {
+    "dry_run": {
+      "actual_run_budget": "not_read_or_reset",
+      "adjusted_bound_available": false,
+      "configuration": {
+        "approved_case_ids": [
+          "E34",
+          "E36"
+        ],
+        "approved_tariff": {
+          "currency": "USD",
+          "fixed_request_usd": "0",
+          "input_ceiling": 1050000,
+          "input_usd_per_million": "0.22",
+          "margin": "1.10",
+          "model_source": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+          "output_usd_per_million": "0.825",
+          "source": "https://developers.openai.com/api/docs/pricing",
+          "special_input_usd_per_million": "0.55",
+          "verified_on": "2026-11-09"
+        },
+        "cases": [
+          "E34",
+          "E36"
+        ],
+        "code_hash": "c1a3d2ae4cd23c91a0461a4b9baf50d15470cefd21109855503998023c04fe59",
+        "context_turns": 4,
+        "dataset": "pilot-v1",
+        "dataset_hash": "179b77ff68dd44081ffaaedea651c54271815a736d37f25d81647bb36baf09a8",
+        "execution_order": [
+          "E34:extractive",
+          "E36:extractive",
+          "E34:grounded",
+          "E36:grounded"
+        ],
+        "history_messages": 10,
+        "knowledge_limits": [
+          5,
+          1200,
+          6000
+        ],
+        "max_budget_usd": "1.00",
+        "max_input_chars": 2000,
+        "max_input_tokens": 1050000,
+        "max_output_tokens": 400,
+        "max_requests": 4,
+        "model": "gpt-6-luna",
+        "modes": [
+          "extractive",
+          "grounded"
+        ],
+        "reasoning_effort": "none",
+        "runtime": [
+          "5.2.18",
+          "2.54.0",
+          "3.12.15"
+        ],
+        "tariff_hash": "16bcce44822b05a4641123310745f72943d22ace84607af1ff5901a41ffc64ce",
+        "timeout": 30.0,
+        "token_bound_method": "conservative",
+        "token_bound_version": "responses-text-window-v1"
+      },
+      "dry_run": true,
+      "dry_run_committed_usd": "0",
+      "maximum_possible_provider_calls": 4,
+      "planned_question_modes": 4,
+      "planned_questions": 2,
+      "pricing_admission_blocker": "",
+      "real_openai_calls": 0,
+      "results": [
+        {
+          "admissible_if_all_previous_usage_unknown": true,
+          "bound_blocker": "",
+          "case_id": "E34",
+          "effective_mode": "extractive",
+          "input_bound": {
+            "adjusted_bound_available": false,
+            "component_bytes": {
+              "input": 564,
+              "instructions": 2488,
+              "text": 438
+            },
+            "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+            "input_tokens": 1050000,
+            "method": "documented_full_context_ceiling",
+            "output_tokens": 400,
+            "payload_bytes": 3662,
+            "payload_hash": "7822e9a4fa857b2c2139450fc4af86d095a43c5c3e5d0ed436045f259a65d6b8",
+            "version": "responses-text-window-v1"
+          },
+          "input_sources": [
+            [
+              "faq:12",
+              "22b78dfbdc747ea954f82508cff9107b039a151ab8e9915a1a60754beee3ca37"
+            ]
+          ],
+          "maximum_reserve_usd": "0.889713000",
+          "mode": "extractive",
+          "reply": "No dispongo de información pública suficiente para responder a esa pregunta.",
+          "route": "no_evidence",
+          "simulated": true,
+          "sources": [],
+          "would_generate": true
+        },
+        {
+          "admissible_if_all_previous_usage_unknown": false,
+          "bound_blocker": "",
+          "case_id": "E36",
+          "effective_mode": "extractive",
+          "input_bound": {
+            "adjusted_bound_available": false,
+            "component_bytes": {
+              "input": 1345,
+              "instructions": 2094,
+              "text": 455
+            },
+            "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+            "input_tokens": 1050000,
+            "method": "documented_full_context_ceiling",
+            "output_tokens": 400,
+            "payload_bytes": 4066,
+            "payload_hash": "e609dca4b1d36bb40d79df71c521750b02de39f05d8ee8da03a76de6ea62f14d",
+            "version": "responses-text-window-v1"
+          },
+          "input_sources": [
+            [
+              "faq:10",
+              "ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74"
+            ],
+            [
+              "faq:8",
+              "13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65"
+            ],
+            [
+              "faq:11",
+              "953ba66b8033f3ede45b45c03941e9483e7a36d225064673c2cf5b398991e53a"
+            ]
+          ],
+          "maximum_reserve_usd": "0.889713000",
+          "mode": "extractive",
+          "reply": "I do not have enough public information to answer that question.",
+          "route": "no_evidence",
+          "simulated": true,
+          "sources": [],
+          "would_generate": true
+        },
+        {
+          "admissible_if_all_previous_usage_unknown": false,
+          "bound_blocker": "",
+          "case_id": "E34",
+          "effective_mode": "grounded",
+          "input_bound": {
+            "adjusted_bound_available": false,
+            "component_bytes": {
+              "input": 564,
+              "instructions": 2753,
+              "text": 1009
+            },
+            "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+            "input_tokens": 1050000,
+            "method": "documented_full_context_ceiling",
+            "output_tokens": 400,
+            "payload_bytes": 4498,
+            "payload_hash": "be3a77fbd908070224da1f9b12b2569936362c432b438e3857969cea38728f19",
+            "version": "responses-text-window-v1"
+          },
+          "input_sources": [
+            [
+              "faq:12",
+              "22b78dfbdc747ea954f82508cff9107b039a151ab8e9915a1a60754beee3ca37"
+            ]
+          ],
+          "maximum_reserve_usd": "0.889713000",
+          "mode": "grounded",
+          "reply": "No dispongo de información pública suficiente para responder a esa pregunta.",
+          "route": "no_evidence",
+          "simulated": true,
+          "sources": [],
+          "would_generate": true
+        },
+        {
+          "admissible_if_all_previous_usage_unknown": false,
+          "bound_blocker": "",
+          "case_id": "E36",
+          "effective_mode": "extractive",
+          "input_bound": {
+            "adjusted_bound_available": false,
+            "component_bytes": {
+              "input": 1345,
+              "instructions": 2094,
+              "text": 455
+            },
+            "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+            "input_tokens": 1050000,
+            "method": "documented_full_context_ceiling",
+            "output_tokens": 400,
+            "payload_bytes": 4066,
+            "payload_hash": "e609dca4b1d36bb40d79df71c521750b02de39f05d8ee8da03a76de6ea62f14d",
+            "version": "responses-text-window-v1"
+          },
+          "input_sources": [
+            [
+              "faq:10",
+              "ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74"
+            ],
+            [
+              "faq:8",
+              "13e22d984b5ae1f60b49d32b82563a1649a9fab041b2a9f3efbcd43b6f1fae65"
+            ],
+            [
+              "faq:11",
+              "953ba66b8033f3ede45b45c03941e9483e7a36d225064673c2cf5b398991e53a"
+            ]
+          ],
+          "maximum_reserve_usd": "0.889713000",
+          "mode": "grounded",
+          "reply": "I do not have enough public information to answer that question.",
+          "route": "no_evidence",
+          "simulated": true,
+          "sources": [],
+          "would_generate": true
+        }
+      ],
+      "token_bound_method": "documented_full_context_ceiling",
+      "warnings": [
+        "No local verified bound for Responses framing and Structured Outputs overhead.",
+        "Byte sizes are diagnostics, not tokens. No remote counting endpoint was invoked.",
+        "Preview admissibility is hypothetical; live access requires separate authorization.",
+        "Unknown usage stops live execution; this preview is not permission to continue after it."
+      ],
+      "worst_case_preview_only": {
+        "admitted": 1,
+        "committed_usd": "0.889713000"
+      }
+    },
+    "postgres_tests": {
+      "passed": 868,
+      "seconds": 58.864,
+      "skipped": 0,
+      "total": 868
+    },
+    "sources_match_between_modes": true,
+    "sqlite_tests": {
+      "passed": 824,
+      "seconds": 32.05,
+      "skipped": 44,
+      "total": 868
+    },
+    "staging_smoke_passed": 40
+  },
+  "preservation": {
+    "business_files_preserved": 228,
+    "durable_database_stopped_volume_retained": true,
+    "live_env_disabled": true,
+    "preexisting_container_configurations_preserved": 29,
+    "previous_pilot_files_preserved": 16,
+    "temporary_api_key_removed": true,
+    "trueca_and_prior_pilot_state_preserved": true
+  },
+  "private_project_approved": true,
+  "production_recommendation": "Do not approve both corrections for production based on this micropilot; E34 remains unresolved.",
+  "provider_completed_responses": 4,
+  "real_provider_requests": 4,
+  "results": [
+    {
+      "accounted_cost_ceiling_usd": "0.000593890",
+      "budget_remaining_after_usd": "0.999406110",
+      "case_id": "E34",
+      "comparison_sources_equal": null,
+      "configured_mode": "extractive",
+      "effective_mode": "extractive",
+      "elapsed_ms": 3701.718,
+      "error": "invalid_response_style",
+      "fidelity_review": "not_assessable_rejected_output",
+      "format_validation": "not_satisfied_style_rejection",
+      "human_fidelity_review": "pending_operator",
+      "input_source_hash": "11d6f9ca5bb1841fee15bc9888e8be508da98f6f268d2d0e6984d7c7d1fa4f24",
+      "input_tokens": 692,
+      "language": "es",
+      "language_validation": "not_assessable_rejected_output",
+      "ledger_state": "settled",
+      "maximum_reserve_usd": "0.889713000",
+      "official_translation_claim_observed": null,
+      "output_tokens": 74,
+      "provider_status": "completed",
+      "question": "Explícame cómo funciona TRUEC@ en tres frases",
+      "references": [],
+      "references_valid": false,
+      "rejected_model_sentence_count": null,
+      "reply": null,
+      "reply_origin": "no_displayable_response",
+      "status": "validation_rejected",
+      "usage": {
+        "input_tokens": 692,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 74,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 766
+      },
+      "validation_diagnostic": "invalid_response_style",
+      "visible_sentence_count": null
+    },
+    {
+      "accounted_cost_ceiling_usd": "0.000690030",
+      "budget_remaining_after_usd": "0.998716080",
+      "case_id": "E36",
+      "comparison_sources_equal": null,
+      "configured_mode": "extractive",
+      "effective_mode": "extractive",
+      "elapsed_ms": 4512.537,
+      "error": null,
+      "fidelity_review": "assisted_text_to_original_source_comparison_no_changes_observed",
+      "format_validation": "not_requested",
+      "human_fidelity_review": "pending_operator",
+      "input_source_hash": "a4fa4edc1b80cb4fafb2c8ed68f526b2ec87b49d888ef7c1e5f6948eccef5e4d",
+      "input_tokens": 804,
+      "language": "en",
+      "language_validation": "passed_backend_and_assisted_review",
+      "ledger_state": "settled",
+      "maximum_reserve_usd": "0.889713000",
+      "official_translation_claim_observed": false,
+      "output_tokens": 86,
+      "provider_status": "completed",
+      "question": "Explain how to publish an object",
+      "references": [
+        {
+          "content_hash": "ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "evidence_hashes": [
+            "036165fe9923303c70d04b876bca73cac6901f3841a51cbe88cabc5c7c4e3b84"
+          ],
+          "public_url": "/faq/#faq-question-10",
+          "source_id": "faq:10",
+          "source_type": "faq",
+          "source_version": "knowledge-1:ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "supported_text": "Inicia sesión y abre la opción de publicación. Completa los datos del objeto y añade fotografías. Envía la propuesta al equipo para su revisión.",
+          "title": "¿Cómo publicar un objeto y añadir fotografías?"
+        }
+      ],
+      "references_valid": true,
+      "rejected_model_sentence_count": null,
+      "reply": "Log in and open the publishing option. Fill in the object's details and add photographs. Submit the proposal to the team for review.",
+      "reply_origin": "validated_provider_generation",
+      "status": "accepted",
+      "usage": {
+        "input_tokens": 804,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 86,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 890
+      },
+      "validation_diagnostic": null,
+      "visible_sentence_count": 3
+    },
+    {
+      "accounted_cost_ceiling_usd": "0.000784685",
+      "budget_remaining_after_usd": "0.997931395",
+      "case_id": "E34",
+      "comparison_sources_equal": true,
+      "configured_mode": "grounded",
+      "effective_mode": "grounded",
+      "elapsed_ms": 2311.666,
+      "error": null,
+      "fidelity_review": "not_assessable_rejected_output",
+      "format_validation": "not_satisfied_local_abstention",
+      "human_fidelity_review": "pending_operator",
+      "input_source_hash": "11d6f9ca5bb1841fee15bc9888e8be508da98f6f268d2d0e6984d7c7d1fa4f24",
+      "input_tokens": 853,
+      "language": "es",
+      "language_validation": "not_assessable_rejected_output",
+      "ledger_state": "settled",
+      "maximum_reserve_usd": "0.889713000",
+      "official_translation_claim_observed": null,
+      "output_tokens": 155,
+      "provider_status": "completed",
+      "question": "Explícame cómo funciona TRUEC@ en tres frases",
+      "references": [],
+      "references_valid": false,
+      "rejected_model_sentence_count": null,
+      "reply": "No dispongo de información pública suficiente para responder a esa pregunta.",
+      "reply_origin": "local_abstention_after_rejection",
+      "status": "abstention_after_validation_rejection",
+      "usage": {
+        "input_tokens": 853,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 155,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1008
+      },
+      "validation_diagnostic": "invalid_grounding",
+      "visible_sentence_count": 1
+    },
+    {
+      "accounted_cost_ceiling_usd": "0.000690030",
+      "budget_remaining_after_usd": "0.997241365",
+      "case_id": "E36",
+      "comparison_sources_equal": true,
+      "configured_mode": "grounded",
+      "effective_mode": "extractive",
+      "elapsed_ms": 3898.683,
+      "error": null,
+      "fidelity_review": "assisted_text_to_original_source_comparison_no_changes_observed",
+      "format_validation": "not_requested",
+      "human_fidelity_review": "pending_operator",
+      "input_source_hash": "a4fa4edc1b80cb4fafb2c8ed68f526b2ec87b49d888ef7c1e5f6948eccef5e4d",
+      "input_tokens": 804,
+      "language": "en",
+      "language_validation": "passed_backend_and_assisted_review",
+      "ledger_state": "settled",
+      "maximum_reserve_usd": "0.889713000",
+      "official_translation_claim_observed": false,
+      "output_tokens": 86,
+      "provider_status": "completed",
+      "question": "Explain how to publish an object",
+      "references": [
+        {
+          "content_hash": "ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "evidence_hashes": [
+            "036165fe9923303c70d04b876bca73cac6901f3841a51cbe88cabc5c7c4e3b84"
+          ],
+          "public_url": "/faq/#faq-question-10",
+          "source_id": "faq:10",
+          "source_type": "faq",
+          "source_version": "knowledge-1:ced3728180b1d7b6204317f30e8606212a97f4f1fec039e8bc7299535aa47f74",
+          "supported_text": "Inicia sesión y abre la opción de publicación. Completa los datos del objeto y añade fotografías. Envía la propuesta al equipo para su revisión.",
+          "title": "¿Cómo publicar un objeto y añadir fotografías?"
+        }
+      ],
+      "references_valid": true,
+      "rejected_model_sentence_count": null,
+      "reply": "Log in and open the publishing option. Fill in the object details and add photographs. Submit the proposal to the team for review.",
+      "reply_origin": "validated_provider_generation",
+      "status": "accepted",
+      "usage": {
+        "input_tokens": 804,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 86,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 890
+      },
+      "validation_diagnostic": null,
+      "visible_sentence_count": 3
+    }
+  ],
+  "run_id": "10d8c14e-9adb-4749-9f39-9027999814b5",
+  "status": "completed_with_validation_failures",
+  "tag": "trueca-candidate:chatbot-amd64-20261109-scope",
+  "tariff_profile": {
+    "approved": true,
+    "billing_coverage": "all_text_input_output_cache_writes_long_context_and_surcharges",
+    "bound_strategy": "documented_full_context_ceiling",
+    "context_tokens": 1050000,
+    "coverage_approved": true,
+    "currency": "USD",
+    "fixed_request_usd": "0",
+    "input_usd_per_million": "0.22",
+    "model": "gpt-6-luna",
+    "model_source": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+    "notes": "Operator approved this newly verified tariff profile and the previous private project on 2026-11-09. This approval prepares prices/project only and does not authorize execution.",
+    "output_usd_per_million": "0.825",
+    "rate_scope": "maximum_across_entire_context_window",
+    "response_models": [
+      "gpt-6-luna"
+    ],
+    "safety_margin": "1.10",
+    "service_tier": "default",
+    "source": "https://developers.openai.com/api/docs/pricing",
+    "special_input_usd_per_million": "0.55",
+    "verified_on": "2026-11-09"
+  },
+  "tariffs_approved": true,
+  "technical_api_errors": 0,
+  "three_sentence_case_passes": 0,
+  "timeout_seconds": 30,
+  "unknown_reservations": 0,
+  "validation_incidents": 2,
+  "operational_preflight_recheck_20261109": {
+    "date": "2026-11-09",
+    "status": "stopped_before_evaluator_existing_run_already_consumed",
+    "authorized_run_id": "10d8c14e-9adb-4749-9f39-9027999814b5",
+    "authorized_candidate": "trueca-candidate@sha256:8ca2925a0e9b7a5216891e811bd5d380ee6e83649d2a9e90fea7bb2246325477",
+    "evidence": "preserved_authorization_single_invocation_guard_final_summary_and_ledger_reconciliation_no_database_restart",
+    "preflight_complete": false,
+    "blockers": [
+      "authorized_uuid_has_four_prior_attempts_at_four_request_cap",
+      "remaining_budget_not_one_usd",
+      "authorized_frozen_candidate_predates_offline_e34_fix"
+    ],
+    "previous_provider_requests": 4,
+    "previous_accounted_cost_ceiling_usd": "0.002758635",
+    "preserved_budget_remaining_usd": "0.997241365",
+    "preserved_ledger_reconciled": true,
+    "preserved_all_attempts_settled": true,
+    "preserved_unknown_reservations": 0,
+    "additional_evaluator_invocations": 0,
+    "additional_provider_requests": 0,
+    "additional_cost_usd": "0",
+    "resources_started": false,
+    "code_changed": false,
+    "production_actions": false,
+    "timings": {
+      "persisted_evidence_read_commands_wall_seconds_approx": 2,
+      "evaluator_start_seconds": null,
+      "openai_calls_seconds": null,
+      "new_response_evaluation_seconds": null,
+      "resource_cleanup_seconds": null,
+      "note": "No runtime phases executed; read timing excludes request reading and report writing."
+    },
+    "historical_results_unchanged": true,
+    "production_recommendation_unchanged": true
+  }
+}

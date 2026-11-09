@@ -61,3 +61,24 @@ Thumbs.db
 
 deploy
 **.md
+
+# Ship the independent chatbot schema and API documentation.
+!chatbot/migrations/*.py
+!chatbot/README.md
+
+# Versioned evaluation specification and validation report; outputs stay outside Git.
+!docs/chatbot/phase2_final_validation.md
+!docs/chatbot/phase2_review_template.md
+!chatbot/evaluation/RUBRIC.md
+chatbot/evaluation/results/
+!docs/chatbot/staging_and_budget_review.md
+!docs/chatbot/pilot_20261107.md
+!docs/chatbot/candidate_validation_20261108.md
+!docs/chatbot/openai_style_micropilot_20261109.md
+!docs/chatbot/e34_offline_fix_20261109.md
+!docs/chatbot/e34_release_candidate_validation.md
+!deploy/
+deploy/*
+!deploy/staging/
+deploy/staging/*.env
+deploy/staging/secrets/

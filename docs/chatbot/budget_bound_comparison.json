@@ -1,0 +1,113 @@
+{
+  "status": "offline_only_no_tariff_approval",
+  "platform": "linux/amd64",
+  "illustrative_rates": {
+    "input_usd_per_million": ".20",
+    "special_input_usd_per_million": ".50",
+    "output_usd_per_million": ".75",
+    "margin": "1.10",
+    "fixed": "0"
+  },
+  "rows": [
+    {
+      "scenario": "Pregunta breve",
+      "context_chars": 218,
+      "fragments": 1,
+      "bound": {
+        "method": "documented_full_context_ceiling",
+        "input_tokens": 1050000,
+        "output_tokens": 400,
+        "payload_hash": "faa602c00c1481453813b1ba9f66bc347462638ff257d61baf468ed59e0bb7aa",
+        "payload_bytes": 2685,
+        "component_bytes": {
+          "instructions": 1723,
+          "input": 401,
+          "text": 389
+        },
+        "adjusted_bound_available": false,
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "version": "responses-text-window-v1"
+      },
+      "illustrative_unapproved_reserve_usd": "0.808830000",
+      "verified_adjusted_reserve_usd": null,
+      "real_usage_tokens": null,
+      "unknown_usage_arithmetic_capacity": 1,
+      "actual_admission_with_current_missing_prices": 0
+    },
+    {
+      "scenario": "FAQ corta",
+      "context_chars": 246,
+      "fragments": 1,
+      "bound": {
+        "method": "documented_full_context_ceiling",
+        "input_tokens": 1050000,
+        "output_tokens": 400,
+        "payload_hash": "4acbe2037a538e26c552a6861b4c9c5e39866ac31c4aca0956706c607092515a",
+        "payload_bytes": 2712,
+        "component_bytes": {
+          "instructions": 1723,
+          "input": 428,
+          "text": 389
+        },
+        "adjusted_bound_available": false,
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "version": "responses-text-window-v1"
+      },
+      "illustrative_unapproved_reserve_usd": "0.808830000",
+      "verified_adjusted_reserve_usd": null,
+      "real_usage_tokens": null,
+      "unknown_usage_arithmetic_capacity": 1,
+      "actual_admission_with_current_missing_prices": 0
+    },
+    {
+      "scenario": "FAQ extensa",
+      "context_chars": 961,
+      "fragments": 1,
+      "bound": {
+        "method": "documented_full_context_ceiling",
+        "input_tokens": 1050000,
+        "output_tokens": 400,
+        "payload_hash": "a524c68d63f8911602039a50b0774a96ded23fcb618776f612a584f7ffad091b",
+        "payload_bytes": 3477,
+        "component_bytes": {
+          "instructions": 1723,
+          "input": 1193,
+          "text": 389
+        },
+        "adjusted_bound_available": false,
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "version": "responses-text-window-v1"
+      },
+      "illustrative_unapproved_reserve_usd": "0.808830000",
+      "verified_adjusted_reserve_usd": null,
+      "real_usage_tokens": null,
+      "unknown_usage_arithmetic_capacity": 1,
+      "actual_admission_with_current_missing_prices": 0
+    },
+    {
+      "scenario": "Contexto máximo admisible",
+      "context_chars": 5873,
+      "fragments": 5,
+      "bound": {
+        "method": "documented_full_context_ceiling",
+        "input_tokens": 1050000,
+        "output_tokens": 400,
+        "payload_hash": "abb19fef67d0d47920b8f166082ecc34cb0ce7156016dcccfd3c82c6a278b66a",
+        "payload_bytes": 8485,
+        "component_bytes": {
+          "instructions": 1723,
+          "input": 6169,
+          "text": 421
+        },
+        "adjusted_bound_available": false,
+        "fallback_reason": "local_framing_and_schema_overhead_not_verified",
+        "version": "responses-text-window-v1"
+      },
+      "illustrative_unapproved_reserve_usd": "0.808830000",
+      "verified_adjusted_reserve_usd": null,
+      "real_usage_tokens": null,
+      "unknown_usage_arithmetic_capacity": 1,
+      "actual_admission_with_current_missing_prices": 0
+    }
+  ]
+}

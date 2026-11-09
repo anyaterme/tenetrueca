@@ -1,0 +1,181 @@
+{
+  "date": "2026-11-07",
+  "candidate": {
+    "id": "sha256:0c9c1ceeeef14f9f7006b769c3c0d27bdae7b3468837f99ffc3244c9a0fb36cf",
+    "reference": "trueca-candidate@sha256:0c9c1ceeeef14f9f7006b769c3c0d27bdae7b3468837f99ffc3244c9a0fb36cf",
+    "platform": "linux/amd64",
+    "running_image_id": "sha256:0c9c1ceeeef14f9f7006b769c3c0d27bdae7b3468837f99ffc3244c9a0fb36cf",
+    "target_confirmed_by_operator": "Ubuntu VPS AMD64",
+    "validation_host": "Docker linux/aarch64; AMD64 under emulation",
+    "runtime_image_id": "sha256:2a2af441329a94ca4d5ec928acaddbb1817a20d081bc81b5aa1c9b9f1c08be9a"
+  },
+  "postgres_candidate": {
+    "total": 841,
+    "passed": 841,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 73.324
+  },
+  "budget_token_isolation_postgres": {
+    "total": 50,
+    "passed": 50,
+    "failed": 0,
+    "skipped": 0,
+    "included_in": "postgres_candidate"
+  },
+  "javascript": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0
+  },
+  "staging_smoke": {
+    "checks": [
+      "CSRF rejects missing token",
+      "Origin rejects external host",
+      "anonymous quota 1",
+      "deterministic description",
+      "anonymous quota 2",
+      "deterministic description",
+      "anonymous quota 3",
+      "deterministic description",
+      "anonymous quota 4",
+      "deterministic description",
+      "anonymous quota 5",
+      "deterministic description",
+      "anonymous quota 6",
+      "deterministic description",
+      "rate limit enforced",
+      "anonymous quota 7",
+      "deterministic description",
+      "anonymous quota 8",
+      "deterministic description",
+      "anonymous quota 9",
+      "deterministic description",
+      "anonymous quota 10",
+      "deterministic description",
+      "question 11 blocked",
+      "history and sources recovered",
+      "reset preserves quota",
+      "public categories",
+      "public centers",
+      "conversation ownership",
+      "extractive mock and authenticated quota",
+      "extractive references",
+      "duplicate accepted without a new message",
+      "grounded mock and authenticated quota",
+      "grounded references",
+      "duplicate accepted without a new message",
+      "duplicates persist once",
+      "unpublished FAQ excluded",
+      "dry-run no SDK or ledger writes",
+      "withdrawn references unavailable",
+      "synthetic data rolled back"
+    ],
+    "passed": 40,
+    "real_openai_calls": 0,
+    "data_rolled_back": true,
+    "preview": "/app/evaluation_reports/preview.json"
+  },
+  "http": [
+    {
+      "path": "/health/",
+      "status": 200,
+      "bytes": 59
+    },
+    {
+      "path": "/static/css/chatbot.css",
+      "status": 200,
+      "bytes": 11950,
+      "sha256_matches_source": true
+    },
+    {
+      "path": "/static/js/chatbot.js",
+      "status": 200,
+      "bytes": 22778,
+      "sha256_matches_source": true
+    },
+    {
+      "path": "/static/img/brand/trueca-icon.png",
+      "status": 200,
+      "bytes": 9403,
+      "sha256_matches_source": true
+    }
+  ],
+  "migrations_manifest_files": 63,
+  "backup_restore": {
+    "chatbot_migrations": 3,
+    "evaluation_run_rows": 0,
+    "isolated_database_only": true,
+    "bytes": 219886,
+    "validated_for": "AMD64 candidate staging"
+  },
+  "openai_calls": 0,
+  "production_deployment": false,
+  "operational_containers_modified": false,
+  "sqlite_candidate": {
+    "total": 841,
+    "passed": 800,
+    "failed": 0,
+    "skipped": 41,
+    "seconds": 43.507
+  },
+  "configuration_files": {
+    "compose.candidate.yml": "9debb227cd1a4f3591bffe534ebd8cc05b931827f46cfc0ffbf1d94e73e9650c",
+    "compose.staging.yml": "74f8f1453b7ce046d74dbe5492f3fbdf30455a9c9a4125a17f11049fe9a107ea",
+    "compose.staging.ephemeral.yml": "97b7f8e71e210db678eb5ff2957f9191e0ecdbd64669dd43ef2f9803d394d1b6",
+    "compose.staging.pilot.yml": "81202affaf34751f4a50b152bb076635f7cb08e643573637367687952f556288",
+    "deploy/staging/nginx.conf": "e89cf15e4a1d32b2075d1f0b64bc486d17d1030bd3d1723eb345fd04f44cd2a2",
+    "Dockerfile.candidate": "3235091b8c476cf2f379baa01fb923f03640ab80b964e9346814663699b5fba2",
+    "Dockerfile.runtime": "f7197e7ed54b5e7a108ff4ae92dfe9b41083b951090bbdfe0f6eb86854b34128",
+    "deploy/staging/runtime-requirements.lock": "cba35cfad378186303ac4ff545fa415eaefff5e9f8cea3e1e5bf229060cd53d3",
+    ".dockerignore": "fb71216e5e6d96213930223119160fbe79bceaf06addcf222b67803e496252f1"
+  },
+  "sdk_signature": {
+    "architecture": "x86_64",
+    "python": "3.12.15",
+    "sdk": "2.54.0",
+    "django": "5.2.18",
+    "max_input_tokens_parameter": false,
+    "max_output_tokens_parameter": true,
+    "environment_neutral": true
+  },
+  "created_networks": [
+    "trueca-chatbot-validation-amd6420261107_staging_ingress",
+    "trueca-chatbot-validation-amd6420261107_staging_private"
+  ],
+  "actual_evaluation_network_created": false,
+  "mutable_candidate_tag_rejected": true,
+  "pilot_compose_syntax_validated_only": true,
+  "platform": "linux/amd64",
+  "frozen_digest_runnable_without_pull_or_rebuild": true,
+  "temporary_staging_retired": true,
+  "operational_identity_and_start_times_unchanged": true,
+  "preliminary_arm64_results_superseded": true,
+  "wrong_arm64_candidate_rejected": true,
+  "budget_comparison_platform": "linux/amd64",
+  "preliminary_checks": {
+    "sqlite_source": {
+      "total": 841,
+      "passed": 800,
+      "skipped": 41,
+      "failed": 0,
+      "seconds": 19.53
+    },
+    "chatbot_sqlite_source": {
+      "total": 307,
+      "passed": 283,
+      "skipped": 24,
+      "failed": 0,
+      "seconds": 5.196
+    },
+    "final_isolation_tests": {
+      "total": 5,
+      "passed": 5,
+      "skipped": 0,
+      "failed": 0,
+      "seconds": 3.116
+    }
+  },
+  "validation_host": "linux/aarch64",
+  "execution_mode": "AMD64 under local ARM64 emulation"
+}

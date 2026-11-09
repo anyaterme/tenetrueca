@@ -18,3 +18,7 @@ MIGRATION_MODULES = {
     app.split('.apps.', 1)[0]: None
     for app in INSTALLED_APPS if not app.startswith(('django.', 'rest_framework'))
 }
+
+# No OpenAI clients for ordinary chatbot tests; specific provider tests mock the SDK.
+CHATBOT_PROVIDER = 'mock'
+CHATBOT_RATE_LIMIT_REQUESTS = 1000
