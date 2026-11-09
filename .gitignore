@@ -82,3 +82,7 @@ deploy/*
 !deploy/staging/
 deploy/staging/*.env
 deploy/staging/secrets/
+!deploy/e34_release.py
+!deploy/E34_RELEASE.md
+!deploy/tests/
+!deploy/tests/*.py
