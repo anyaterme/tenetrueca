@@ -186,7 +186,7 @@ class GroundedConversationTests(TestCase):
         question = self.provider.respond.call_args.args[0][0].content
         self.assertEqual(question, '¿Puedo cancelarla?')
 
-    def test_mixed_question_keeps_verified_requirement_and_blocks_deadline(self):
+    def test_mixed_question_keeps_verified_requirement_and_blocks_unknown_deadline(self):
         self.faq('¿Necesito registrarme para reservar?', 'Para reservar necesitas registrarte e iniciar sesión.')
         answer = self.answer('¿Necesito registrarme para reservar y cuánto tiempo tengo para recoger?')
         self.assertEqual(answer.outcome, 'conflict')
@@ -196,21 +196,21 @@ class GroundedConversationTests(TestCase):
         self.assertLess(answer.text.index('iniciar sesión'), answer.text.index('No dispongo de una regla confirmada'))
         self.provider.respond.assert_called_once()
 
-    def test_independent_paragraphs_allow_safe_part_of_conflicting_faq(self):
+    def test_published_paragraphs_keep_requirement_and_authorized_deadline(self):
         self.faq('¿Necesito registrarme para reservar?',
                  'Para reservar necesitas iniciar sesión.\n\nEl plazo de recogida es de siete días.')
         answer = self.answer('¿Necesito registrarme para reservar?')
         self.assertIn('iniciar sesión', answer.text)
-        self.assertNotIn('siete', answer.text)
+        self.assertIn('siete', answer.text)
         self.assertTrue(answer.references)
 
-    def test_connected_exception_is_not_cut_away_to_rescue_a_fragment(self):
+    def test_connected_published_condition_is_preserved_in_full(self):
         self.faq('¿Necesito registrarme para reservar?',
                  'Para reservar necesitas iniciar sesión, pero debes recoger en siete días.')
         answer = self.answer('¿Necesito registrarme para reservar?')
-        self.assertFalse(answer.references)
-        self.assertNotIn('iniciar sesión', answer.text)
-        self.factory.assert_not_called()
+        self.assertTrue(answer.references)
+        self.assertIn('Para reservar necesitas iniciar sesión, pero debes recoger en siete días.', answer.text)
+        self.provider.respond.assert_called_once()
 
     def test_faq_edit_and_unpublish_between_turns_are_observed(self):
         faq = self.faq()
@@ -224,15 +224,16 @@ class GroundedConversationTests(TestCase):
         self.assertEqual(answer.outcome, 'no_evidence')
         self.assertEqual(self.provider.respond.call_count, 2)
 
-    def test_faq_can_become_conflicting_in_a_new_version(self):
+    def test_published_edition_can_authorize_a_numeric_rule(self):
         faq = self.faq()
         self.assertTrue(self.answer('bicicletas').references)
         faq.answer = 'Las bicicletas se recogen en 72 horas.'
         faq.save()
         answer = self.answer('bicicletas')
-        self.assertEqual(answer.outcome, 'conflict')
-        self.assertFalse(answer.references)
-        self.assertEqual(self.provider.respond.call_count, 1)
+        self.assertEqual(answer.outcome, 'grounded')
+        self.assertIn('72 horas', answer.text)
+        self.assertTrue(answer.references)
+        self.assertEqual(self.provider.respond.call_count, 2)
 
     def test_source_unpublished_during_provider_wait_is_not_cited_or_persisted_as_fact(self):
         faq = self.faq()

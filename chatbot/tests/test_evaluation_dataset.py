@@ -106,8 +106,8 @@ class EvaluationEnvironmentGuardsTests(SimpleTestCase):
             require_evaluation_access(key)
 
 @override_settings(CHATBOT_ENABLED=True)
-class ApprovedPointPolicySecurityTests(TestCase):
-    def test_public_faq_cannot_override_approved_awards_or_drop_activation_condition(self):
+class PublishedPointPolicyTests(TestCase):
+    def test_published_faq_is_authority_even_when_it_differs_from_static_fallback(self):
         from faq.models import FAQ
         from unittest.mock import Mock
         for text in ('Registrarse proporciona 999 puntos.', 'Registrarse proporciona 100 puntos.',
@@ -117,11 +117,12 @@ class ApprovedPointPolicySecurityTests(TestCase):
             FAQ.objects.create(question='¿Cómo funcionan los puntos?',answer=text)
             for mode in ('extractive','grounded'):
                 with self.subTest(text=text,mode=mode),override_settings(CHATBOT_GENERATION_MODE=mode):
-                    factory=Mock()
+                    factory=Mock(return_value=SimulatedProvider())
                     answer=ConversationAnswerer().answer('¿Cómo funcionan los puntos?',language='es',provider_factory=factory)
-                    self.assertEqual(answer.outcome,'no_evidence')
-                    self.assertNotIn(text,answer.text)
-                    factory.assert_not_called()
+                    self.assertEqual(answer.outcome,'grounded')
+                    self.assertIn(text,answer.text)
+                    self.assertEqual(answer.references[0].source_type,'faq')
+                    factory.assert_called_once()
 
     def test_exact_approved_faq_unit_can_still_be_retrieved(self):
         from faq.models import FAQ

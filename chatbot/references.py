@@ -14,9 +14,8 @@ from faq.models import FAQ
 
 from .knowledge.conflicts import conflicting_claims, unsafe_content
 from .knowledge.normalization import KnowledgeQuery
-from .knowledge.registry import APPROVED_CLAIMS, SOURCES
+from .knowledge.registry import APPROVED_CLAIMS, SOURCES, official_faq
 from .knowledge.sources import categories, centers, faq, rules
-from .knowledge.point_policy import unverified_point_policy
 
 MAX_SOURCES = 3
 MAX_HISTORY_SOURCES = 100
@@ -110,8 +109,7 @@ def current_sources(stored):
         found.extend(rules.retrieve(query, now, include_overview='business_rule:platform.overview' in identifiers)[0])
     return {f.source.source_id: f for f in found if f.source.source_id in identifiers
             and f.approval == 'approved' and not unsafe_content(f.title + '\n' + f.content)
-            and not conflicting_claims(f.title + '\n' + f.content)
-            and not unverified_point_policy(f)
+            and (official_faq(f) or not conflicting_claims(f.title + '\n' + f.content))
             and (not f.claim_ids or set(f.claim_ids).issubset(APPROVED_CLAIMS))
             and valid_public_url(f)}
 

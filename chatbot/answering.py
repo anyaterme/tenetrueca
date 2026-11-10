@@ -14,6 +14,7 @@ from .knowledge.conflicts import conflicting_claims, unsafe_content
 from .knowledge.context import KnowledgeLimits, build_context
 from .knowledge.contracts import KnowledgeBundle
 from .knowledge.normalization import fold, terms_for
+from .knowledge.registry import official_faq
 from .providers import ChatTurn
 from .safety import ProviderError
 from .generation import choose_mode, validate_grounded, without_response_style
@@ -50,7 +51,11 @@ def private_question(question):
 
 def restrict(bundle, resolved):
     fragments = bundle.fragments
-    if resolved.center_id:
+    published = tuple(f for f in fragments if official_faq(f))
+    if published:
+        # Static intent IDs cannot erase an official FAQ or override its facts.
+        fragments = published
+    elif resolved.center_id:
         fragments = tuple(f for f in fragments if f.source.source_id == resolved.center_id)
     elif resolved.intent == 'platform.overview':
         # Prefer current public explanatory FAQ; a missing/ineligible FAQ must not
@@ -103,7 +108,7 @@ class ConversationAnswerer:
                 routes.append('clarification')
                 continue
             bundle = restrict(self.knowledge.retrieve(resolved.search_query, language=language), resolved)
-            if conflicting_claims(resolved.search_query):
+            if conflicting_claims(resolved.search_query) and not any(official_faq(f) for f in bundle.fragments):
                 replies.append(local_text('conflict', language))
                 routes.append('conflict')
                 continue
@@ -125,7 +130,7 @@ class ConversationAnswerer:
                 replies.append(local_text(code, language))
                 routes.append(code)
                 continue
-            if resolved.center_id:
+            if resolved.center_id and bundle.fragments[0].source.source_type == 'center':
                 item = bundle.fragments[0]
                 data = json.loads(item.content.partition('\n')[0])
                 wanted = set(terms_for(part))

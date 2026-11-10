@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from django.conf import settings
 
 from .conflicts import conflicting_claims, unsafe_content
-from .registry import BLOCKED_CLAIMS
-from .point_policy import unverified_point_policy
+from .registry import BLOCKED_CLAIMS, official_faq
 
 
 @dataclass(frozen=True)
@@ -47,19 +46,17 @@ def build_context(candidates, *, limits, now):
     seen = set()
     seen_content = set()
     for item in sorted(candidates, key=lambda f: (
-            -f.relevance, f.authority_level,
+            not official_faq(f), -f.relevance, f.authority_level,
             -(f.updated_at.timestamp() if f.updated_at else 0), f.source.source_id)):
         text = item.title + '\n' + item.content
-        blocked = set(conflicting_claims(text)) | set(item.claim_ids).intersection(BLOCKED_CLAIMS)
+        blocked = (set() if official_faq(item) else
+                   set(conflicting_claims(text)) | set(item.claim_ids).intersection(BLOCKED_CLAIMS))
         if blocked:
             conflicts.update(blocked)
             excluded.add('conflicting_content')
             continue
         if unsafe_content(text):
             excluded.add('unsafe_content')
-            continue
-        if unverified_point_policy(item):
-            excluded.add('unverified_point_policy')
             continue
         if (item.approval != 'approved' or item.relevance <= 0
                 or item.effective_from is not None and item.effective_from > now

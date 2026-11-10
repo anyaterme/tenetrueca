@@ -1,12 +1,10 @@
 """Published FAQ only. PostgreSQL FTS and deterministic lexical SQLite fallback."""
 from django.db import connection
 from django.urls import reverse
-import re
 
 from faq.models import FAQ
 
-from ..conflicts import conflicting_claims, unsafe_content
-from ..normalization import lexical_score
+from ..normalization import lexical_score, terms_for
 from ..registry import CANDIDATE_LIMIT, SOURCES
 from .base import fragment
 
@@ -38,7 +36,23 @@ def retrieve(query, now):
         rows = rows.order_by('position', 'id').iterator(chunk_size=100)
         method = 'lexical'
     winners = []
+    wanted = set(query.terms)
     for row in rows:
+        # "Points" alone cannot make a charge FAQ authoritative for a registration
+        # award. Publication grants authority, not relevance to a different event.
+        available = set(terms_for(row['question'] + '\n' + row['answer']))
+        if 'puntos' in wanted:
+            groups = ({'registro', 'activacion'}, {'entrega', 'aceptada'}, {'publicar'})
+            point_events = [group for group in groups if wanted.intersection(group)]
+            if point_events and ('puntos' not in available or any(
+                    not available.intersection(group) for group in point_events)):
+                continue
+        # Mentioning public centers does not answer their opening hours or contact
+        # details. Keep structured public evidence as fallback for missing FAQ facts.
+        if wanted.intersection({'centro', 'limpio'}):
+            fields = wanted.intersection({'horario', 'direccion', 'telefono'})
+            if not fields.issubset(available):
+                continue
         score = lexical_score(query, row['question'], row['answer'])
         if method == 'postgres_fts':
             rank = float(row['search_rank'])
@@ -57,25 +71,13 @@ def retrieve(query, now):
 
 def fragments_for_row(row, *, now, score=1, method='public_revalidation'):
     """Same complete units for retrieval and batched historical provenance checks."""
-    found = []
-    units = [row['answer']]
-    paragraphs = re.split(r'\n\s*\n', row['answer'])
-    # Only explicit independent paragraphs can be separated. A connected sentence,
-    # exception or pronoun-dependent paragraph is never cut to rescue a partial rule.
-    if (len(paragraphs) > 1 and conflicting_claims(row['answer'])
-            and not unsafe_content(row['question'] + '\n' + row['answer'])
-            and not re.search(r'\b(excepto|salvo|unless|except|however|solo si|only if|a menos)\b', row['answer'], re.I)
-            and not any(re.match(r'\s*(excepto|salvo|pero|sin embargo|unless|except|however|eso|estos|those|it)\b', p, re.I)
-                        for p in paragraphs)):
-        units = paragraphs
-    for index, content in enumerate(units):
-        identifier = row['id'] if len(units) == 1 else f"{row['id']}:unit:{index}"
-        found.append(fragment(
-            'faq', identifier, row['question'], content,
-            url=f"{reverse('faq:public_list')}#faq-question-{row['id']}",
-            updated_at=row['updated_at'], now=now, relevance=score, method=method,
-        ))
-    return found
+    # Publication authorizes the entire answer. Never discard a paragraph, amount,
+    # deadline, condition or exception to rescue another part of an official FAQ.
+    return [fragment(
+        'faq', row['id'], row['question'], row['answer'],
+        url=f"{reverse('faq:public_list')}#faq-question-{row['id']}",
+        updated_at=row['updated_at'], now=now, relevance=score, method=method,
+    )]
 
 
 def _postgres_candidates(rows, query):

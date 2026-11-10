@@ -148,29 +148,31 @@ class KnowledgeServiceTests(TestCase):
         self.assertFalse(bundle.rules)
         self.assertFalse(bundle.fragments)
 
-    def test_blocked_questions_return_conflict_without_reading_any_database(self):
+    def test_sensitive_questions_consult_official_faq_before_abstaining(self):
         questions = ('¿Tengo 7 días para recoger?', '¿72 horas para recoger reservas?',
                      '¿Cuándo me descuentan 50 puntos?', 'When are points deducted?',
                      'Can I publish small appliances?', '¿Puedo entregar una cafetera?')
         for question in questions:
-            with self.subTest(question=question), self.assertNumQueries(0):
+            with self.subTest(question=question), CaptureQueriesContext(connection) as queries:
                 bundle = self.ask(question)
                 self.assertEqual(bundle.outcome, 'conflict')
                 self.assertTrue(set(bundle.conflict_ids).issubset(BLOCKED_CLAIMS))
                 self.assertFalse(bundle.context)
                 self.assertFalse(bundle.rules)
                 self.assertFalse(bundle.fragments)
+                self.assertTrue(queries)
+                self.assertTrue(all('faq_faq' in q['sql'].lower() for q in queries))
 
-    def test_both_versions_of_contested_faq_are_excluded_as_whole_units(self):
+    def test_published_editorial_rules_are_authorized_as_whole_units(self):
         for text in ('Recoge tu reserva en siete días y paga al reservar.',
                      'Recoge tu reserva en 72 horas y paga al completar la recogida.',
                      'Puedes entregar pequeños electrodomésticos y obtener puntos.'):
             with self.subTest(text=text):
                 faq = self.faq('Documentación oficial', text)
                 bundle = self.ask('documentación')
-                self.assertEqual(bundle.outcome, 'conflict')
-                self.assertFalse(bundle.fragments)
-                self.assertFalse(bundle.context)
+                self.assertEqual(bundle.outcome, 'grounded')
+                self.assertEqual([f.content for f in bundle.fragments], [text])
+                self.assertFalse(bundle.conflict_ids)
                 faq.delete()
 
     def test_malicious_faq_is_not_executed_or_promoted_to_context(self):
@@ -266,7 +268,7 @@ class KnowledgeServiceTests(TestCase):
     def test_database_error_propagates_without_returning_cached_or_partial_knowledge(self):
         self.faq('Bicicletas', 'Texto.')
         self.assertTrue(self.ask('bicicletas').fragments)
-        with patch('chatbot.knowledge.service.centers.retrieve', side_effect=DatabaseError('private failure')):
+        with patch('chatbot.knowledge.service.faq.retrieve', side_effect=DatabaseError('private failure')):
             with self.assertRaises(DatabaseError):
                 self.ask('bicicletas')
 
@@ -358,9 +360,9 @@ class KnowledgeContextTests(TestCase):
     def test_authority_freshness_and_source_id_break_relevance_ties(self):
         old = replace(self.item, updated_at=self.now - timedelta(days=1), content_hash='old')
         recent = replace(self.item, source=replace(self.item.source, source_id='faq:2'), content_hash='recent')
-        authoritative = replace(self.item, source=replace(self.item.source, source_id='business_rule:test'), authority_level=1, content_hash='authoritative')
+        authoritative = replace(self.item, source=replace(self.item.source, source_id='business_rule:test', source_type='business_rule'), authority_level=1, content_hash='authoritative')
         selected, _, _, _ = self.build([old, recent, authoritative])
-        self.assertEqual([i.source.source_id for i in selected], ['business_rule:test', 'faq:2', 'faq:1'])
+        self.assertEqual([i.source.source_id for i in selected], ['faq:2', 'faq:1', 'business_rule:test'])
 
     def test_validity_approval_and_duplicate_sources(self):
         items = [self.item, self.item, replace(self.item, approval='blocked'),

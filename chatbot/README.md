@@ -1,12 +1,77 @@
 # Chatbot TRUEC@ — backend, interfaz y OpenAI
 
-Estado actual — 07/11/2026: KnowledgeService está integrado en la conversación, con
+Estado actual — 09/11/2026: KnowledgeService está integrado en la conversación, con
 respuestas locales y generación fundamentada mediante Responses API o proveedor simulado.
 Consulta solo fuentes públicas autorizadas, sin tools, saldos ni reservas particulares.
 Los detalles vigentes están en «Fase 2, Prompt 5 — Evaluación final y presupuesto»
 y en la corrección de funcionamiento general al final de este documento. Las auditorías
-fechadas anteriores se conservan como historial; no aprueban los conflictos pendientes.
+fechadas anteriores se conservan como historial y no sustituyen el criterio editorial vigente.
 La integración no modifica la IA de moderación ni sus presupuestos/flags.
+
+## Política vigente: FAQ publicadas como fuente oficial prioritaria (09/11/2026)
+
+La publicación de una FAQ es la autorización editorial de todos sus hechos y normas.
+Una FAQ publicada, pertinente, segura y dentro de los límites tiene prioridad sobre los
+hechos estáticos y las demás fuentes. No necesita coincidir con una redacción estática
+ni con los importes de las constantes operativas: es información oficial, no una orden
+para cambiar reservas, puntos o decisiones de moderación.
+
+KnowledgeService consulta primero las FAQ publicadas. Si encuentra evidencia elegible,
+el contexto contiene solo esa evidencia, sin mezclar versiones de respaldo. Si no la hay,
+se conservan las reglas estáticas verificadas y las fuentes públicas existentes. Los claims
+de `BLOCKED_CLAIMS` no tienen autorización estática; una FAQ pertinente puede respaldarlos.
+Una coincidencia genérica como «puntos» no convierte un cargo de reserva en una respuesta
+sobre registro; una FAQ de requisitos tampoco establece por sí sola un premio o plazo de
+recogida. Una mención genérica a puntos limpios no sustituye sus horarios o contactos.
+
+Cada respuesta de FAQ se conserva completa, incluidos sus párrafos, importes, condiciones,
+negaciones y excepciones. Si no cabe en el contexto, se omite entera, no se recorta. Para
+contenidos críticos se conserva la selección literal y la prohibición de reformulación
+normativa libre en grounded. La autoridad factual no otorga privilegios de instrucciones:
+se mantienen filtros de prompt injection/HTML, tablas/campos públicos permitidos, CSRF,
+propiedad de historiales, cuotas, límites y validación/revalidación de citas.
+Estos controles de procedencia y pertinencia son conservadores; no constituyen una prueba
+semántica automática. La coherencia entre FAQ oficiales sigue siendo responsabilidad editorial.
+
+Las ediciones y retiradas se leen sin caché documental. Las referencias históricas a
+subpárrafos `faq:ID:unit:N` generadas bajo el criterio anterior dejan de estar disponibles
+si no representan la unidad completa actual; no se reescribe ni borra el historial.
+
+No se crea un panel/campo nuevo: las FAQ se gestionan por el backoffice existente y solo
+se consultan las publicadas. No se modifica ninguna operación real, ajuste de plazo ni
+importe. Una FAQ puede informar siete días, pero la coherencia con el valor efectivo de
+`RESERVATION_EXPIRATION_HOURS` debe revisarse operativamente: el backend conserva su
+default de 72 horas. Publicar texto no cambia ese comportamiento ni ejecuta acciones.
+
+El corpus y los datasets `phase2-v1`/`pilot-v1`, informes, presupuestos y candidatas anteriores
+se conservan como evidencia histórica. Sus expectativas de bloqueo D1/D3/D6 corresponden
+al criterio anterior y no certifican esta política nueva. La regresión vigente está en
+`tests/test_official_faq.py` y los tests de conocimiento/conversación actualizados. No se
+añaden fixtures a producción, migraciones, dependencias ni llamadas reales a OpenAI.
+
+### Validación de esta política (09/11/2026)
+
+Se añaden 20 tests de FAQ oficiales y se actualizan las expectativas anteriores de
+conocimiento, conversación y autorización editorial. Cubren ambos modos, ES/EN,
+prioridad frente al respaldo estático y horarios estructurados, pertinencia, unidades
+completas, retirada/edición, referencias, inyección, acceso privado e idempotencia/cuota.
+Los validadores de generación, grounding y formato permanecen sin cambios.
+
+Regresión completa ejecutada en runtime Docker AMD64 con el código actual montado en
+solo lectura, `CI=true`, `CHATBOT_PROVIDER=mock` y `OPENAI_API_KEY` vacía. SQLite sin red;
+PostgreSQL 17 en un contenedor efímero independiente, sin puertos publicados ni salida
+de red. Los tests que recorren el SDK lo simulan. Se ejecutaron estos comandos dentro
+de ese entorno de pruebas (nunca contra una base real):
+
+```bash
+python manage.py test --settings=tenetrueca.test_settings --noinput --verbosity 1
+python manage.py test --settings=tenetrueca.test_postgres_settings --noinput --verbosity 1
+```
+
+- SQLite: 897 tests, OK, 44 omitidos, 33,773 s.
+- PostgreSQL: 897 tests, OK, sin omisiones, 61,934 s.
+- `git diff --check`: OK. Comprobados los hashes de 89 archivos de reservas, puntos y
+  moderación: intactos. Sin llamadas reales, despliegues ni cambios de datos existentes.
 
 ## Archivos y arquitectura
 

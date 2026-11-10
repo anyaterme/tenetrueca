@@ -18,20 +18,32 @@ class KnowledgeService:
             max_chars=settings.CHATBOT_MAX_INPUT_CHARS,
         )
         query_conflicts = conflicting_claims(question)
-        # A single unresolved claim has no approved normative answer. The conversation
-        # planner handles separable mixed questions individually.
-        if query_conflicts:
-            return KnowledgeBundle(query.language, (), (), query_conflicts, 'conflict', '')
         overview = is_platform_overview(question)
         if not query.terms and not overview:
             return KnowledgeBundle(query.language, (), (), (), 'no_evidence', '')
         now = timezone.now()
+        # Published editorial evidence precedes static facts and topic vetoes.
+        # Keep fallback rules out of the context when official evidence is available.
+        official = faq.retrieve(query, now)
+        if query_conflicts:
+            # Publication authorizes facts, not relevance to every question. A generic
+            # reservation FAQ cannot establish a deadline/charge/admission exception.
+            official = [f for f in official if set(query_conflicts).intersection(
+                conflicting_claims(f.title + '\n' + f.content))]
+        fragments, context, _, exclusions = build_context(official, limits=limits, now=now)
+        covered = {claim for f in fragments for claim in conflicting_claims(f.title + '\n' + f.content)}
+        if query_conflicts and not set(query_conflicts).issubset(covered):
+            return KnowledgeBundle(query.language, (), (), query_conflicts, 'conflict', '', exclusions)
+        if fragments:
+            return KnowledgeBundle(query.language, fragments, (), (), 'grounded', context, exclusions)
+        if query_conflicts:
+            return KnowledgeBundle(query.language, (), (), query_conflicts, 'conflict', '', exclusions)
         rule_fragments, facts, drift = rules.retrieve(query, now, include_overview=overview)
         # Database exceptions intentionally propagate. Never fall back to stale data or a
         # partial "official" bundle when any source is unavailable.
-        candidates = (rule_fragments + faq.retrieve(query, now)
-                      + categories.retrieve(query, now) + centers.retrieve(query, now))
-        fragments, context, conflicts, exclusions = build_context(candidates, limits=limits, now=now)
+        candidates = rule_fragments + categories.retrieve(query, now) + centers.retrieve(query, now)
+        fragments, context, conflicts, fallback_exclusions = build_context(candidates, limits=limits, now=now)
+        exclusions = tuple(sorted(set(exclusions).union(fallback_exclusions)))
         conflicts = tuple(sorted(set(conflicts).union(drift)))
         included = {item.source.source_id for item in fragments}
         facts = tuple(fact for fact in facts if set(fact.source_ids).issubset(included))
