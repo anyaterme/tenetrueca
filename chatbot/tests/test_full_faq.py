@@ -233,6 +233,30 @@ class FullFAQTests(TestCase):
         self.assertIn('not have enough public information', reply.text)
         self.assertEqual(len(reply.references), 1)
 
+    def test_published_timetable_is_independent_of_an_item_available_today(self):
+        fixtures = json.loads((DATA / 'full-faq-v4.json').read_text())
+        arona = RecyclingCenter.objects.create(**fixtures['test_centers']['arona'])
+        timetable = 'the published timetable at Arona'
+        availability = 'do they have a spare bike on site today?'
+        question = f'What is {timetable}, and {availability}'
+        part = {'kind': 'center', 'name': arona.name, 'fields': ['schedule']}
+        output = FullOutput('en', (
+            FullIntent('answer', timetable, (part,)),
+            FullIntent('insufficient_information', availability),
+        ))
+
+        reply, _ = self.ask(question, output)
+
+        self.assertEqual(reply.outcome, 'partial')
+        self.assertIn('Published hours: Tuesday to Friday: 09:00–17:00', reply.text)
+        self.assertIn('not have enough public information', reply.text)
+        self.assertEqual([ref.source_id for ref in reply.references], [f'center:{arona.pk}'])
+
+        today_question = 'What is the timetable at Arona today?'
+        reply, _ = self.ask(today_question, self.answer(today_question, part, language='en'))
+        self.assertEqual(reply.outcome, 'no_evidence')
+        self.assertFalse(reply.references)
+
     def test_english_clarification_preserves_spanish_public_center_names(self):
         other = RecyclingCenter.objects.create(
             name='Punto Limpio de La Guancha', slug='guancha-pruebas', address='Calle de Pruebas 23',

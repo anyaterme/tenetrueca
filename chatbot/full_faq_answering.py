@@ -28,9 +28,12 @@ from .safety import ProviderError
 logger = logging.getLogger(__name__)
 
 REAL_TIME = re.compile(r'\b(?:hoy|ahora|festivos?|en este momento|today|now|currently|holidays?|at the moment)\b')
-PUBLISHED_HOURS = re.compile(r'\b(?:horario\s+(?:publicado|habitual|normal)|(?:published|regular|usual)\s+(?:opening\s+)?hours)\b')
+PUBLISHED_HOURS = re.compile(
+    r'\b(?:horario\s+(?:publicado|habitual|normal)'
+    r'|(?:published|posted|regular|usual)\s+(?:opening\s+)?(?:hours|schedule|timetable))\b'
+)
 LIVE_STATE = re.compile(r'(?:^|[?])\s*(?:is|are|esta|estan)\b[^?]{0,100}\b(?:open|closed|abiert[oa]s?|cerrad[oa]s?)\b')
-OPENING = re.compile(r'\b(?:open\w*|clos\w*|hours|abiert\w*|abre\w*|cerrad\w*|horario\w*)\b')
+OPENING = re.compile(r'\b(?:open\w*|clos\w*|hours|schedules?|timetables?|abiert\w*|abre\w*|cerrad\w*|horario\w*)\b')
 CONTEXTUAL_CENTER = re.compile(r'\b(?:alli|ese centro|esa ubicacion|there|its|that cent(?:re|er))\b|^[¿ ]*(?:y|and)\b')
 CLARIFICATION_FIELDS = re.compile(r'\b(?:horario\w*|hours|points|puntos|deadline\w*|plazo\w*)\b')
 CENTER_NAME_WORDS = {'punto', 'limpio', 'centro', 'recycling', 'center', 'centre', 'de', 'del', 'la', 'el', 'the', 'of'}
