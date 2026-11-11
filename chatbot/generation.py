@@ -10,9 +10,9 @@ from django.conf import settings
 
 from .grounding import EvidenceSelection, GeneratedAnswer, GroundedClaim, redact_question
 from .knowledge.conflicts import conflicting_claims, unsafe_content
-from .knowledge.normalization import fold
+from .knowledge.normalization import fold, words
 from .safety import ProviderError
-from .response_style import presentation_terms, sentence_count, validate_style
+from .response_style import presentation_terms, sentence_count, sentences_in, validate_style
 
 
 CRITICAL = re.compile(
@@ -43,6 +43,23 @@ def choose_mode(question, knowledge):
                 for f in knowledge.fragments)):
         return 'extractive'
     return 'grounded'
+
+
+def validate_no_faq_copy(text, fragments):
+    """Reject copied blocks even if the output schema and attribution are valid."""
+    answer = tuple(words(text))
+    answer_sentences = {tuple(words(sentence)) for sentence in sentences_in(text)}
+    window = 9
+    spans = {answer[i:i + window] for i in range(len(answer) - window + 1)}
+    for fragment in fragments:
+        if fragment.source.source_type != 'faq':
+            continue
+        source = tuple(words(fragment.content))
+        source_sentences = {tuple(words(sentence)) for sentence in sentences_in(fragment.content)}
+        copied_sentence = any(len(sentence) >= 5 for sentence in answer_sentences & source_sentences)
+        if (answer == source or copied_sentence
+                or any(source[i:i + window] in spans for i in range(len(source) - window + 1))):
+            raise ProviderError('copied_faq')
 
 
 def grounded_format(knowledge):

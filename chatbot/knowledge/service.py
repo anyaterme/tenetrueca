@@ -11,7 +11,7 @@ from .sources import categories, centers, faq, rules
 
 
 class KnowledgeService:
-    def retrieve(self, question: str, *, language: str | None = None) -> KnowledgeBundle:
+    def retrieve(self, question: str, *, language: str | None = None, preferred_title='') -> KnowledgeBundle:
         limits = KnowledgeLimits.configured()
         query = normalize_query(
             question, language=language or get_language() or settings.LANGUAGE_CODE,
@@ -24,7 +24,7 @@ class KnowledgeService:
         now = timezone.now()
         # Published editorial evidence precedes static facts and topic vetoes.
         # Keep fallback rules out of the context when official evidence is available.
-        official = faq.retrieve(query, now)
+        official = faq.retrieve(query, now, question=question, preferred_title=preferred_title)
         if query_conflicts:
             # Publication authorizes facts, not relevance to every question. A generic
             # reservation FAQ cannot establish a deadline/charge/admission exception.

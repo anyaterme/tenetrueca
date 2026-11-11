@@ -1,10 +1,12 @@
 """Published FAQ only. PostgreSQL FTS and deterministic lexical SQLite fallback."""
 from django.db import connection
+from django.db.models import Case, Q, Value, When
 from django.urls import reverse
 
 from faq.models import FAQ
 
 from ..normalization import lexical_score, terms_for
+from ..publication import admission_subject, publication_topic, relevant_faq
 from ..registry import CANDIDATE_LIMIT, SOURCES
 from .base import fragment
 
@@ -23,12 +25,18 @@ FTS_EQUIVALENTS = {
 }
 
 
-def retrieve(query, now):
+def retrieve(query, now, *, question='', preferred_title=''):
     if not query.terms:
         return []
     rows = FAQ.objects.filter(is_published=True).values(*SOURCES['faq'].fields)
+    topic = publication_topic(question)
+    subject = admission_subject(question) if topic == 'admission' else ()
     if connection.vendor == 'postgresql':
-        rows = _postgres_candidates(rows, query)
+        extra_terms = {
+            'publication': ('añadir', 'añado', 'agregar', 'subir', 'add'),
+            'admission': ('llevar', 'admitir', 'aceptar', 'entregar', 'depositar', 'bring', 'accept'),
+        }.get(topic, ())
+        rows = _postgres_candidates(rows, query, extra_terms=extra_terms, preferred_title=preferred_title)
         method = 'postgres_fts'
     else:
         # Stream all published rows so a highly relevant late-position FAQ isn't missed.
@@ -38,10 +46,13 @@ def retrieve(query, now):
     winners = []
     wanted = set(query.terms)
     for row in rows:
+        preferred = bool(preferred_title and row['question'].strip().casefold() == preferred_title.casefold())
+        if topic and not relevant_faq(topic, subject, row['question'], row['answer']):
+            continue
         # "Points" alone cannot make a charge FAQ authoritative for a registration
         # award. Publication grants authority, not relevance to a different event.
         available = set(terms_for(row['question'] + '\n' + row['answer']))
-        if 'puntos' in wanted:
+        if 'puntos' in wanted and not preferred:
             groups = ({'registro', 'activacion'}, {'entrega', 'aceptada'}, {'publicar'})
             point_events = [group for group in groups if wanted.intersection(group)]
             if point_events and ('puntos' not in available or any(
@@ -54,6 +65,12 @@ def retrieve(query, now):
             if not fields.issubset(available):
                 continue
         score = lexical_score(query, row['question'], row['answer'])
+        if preferred:
+            score += 10
+        elif topic:
+            # The route matched the purpose and, for admission, the named item
+            # or a search equivalent. Literal overlap is only a ranking bonus.
+            score += 1
         if method == 'postgres_fts':
             rank = float(row['search_rank'])
             # Native stem matches may have no exact normalized token match.
@@ -80,7 +97,7 @@ def fragments_for_row(row, *, now, score=1, method='public_revalidation'):
     )]
 
 
-def _postgres_candidates(rows, query):
+def _postgres_candidates(rows, query, *, extra_terms=(), preferred_title=''):
     from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 
     # The schema has no source language column. Search both supported dictionaries;
@@ -91,11 +108,17 @@ def _postgres_candidates(rows, query):
         part = (SearchVector('question', config=config, weight='A')
                 + SearchVector('answer', config=config, weight='B'))
         vector = part if vector is None else vector + part
-        for term in tuple(dict.fromkeys(query.terms + query.literal_terms)):
+        for term in tuple(dict.fromkeys(query.terms + query.literal_terms + extra_terms)):
             # Terms are literal text, not raw tsquery, SQL or user-selected config.
             for equivalent in FTS_EQUIVALENTS.get(term, (term,)):
                 part_query = SearchQuery(equivalent, config=config, search_type='plain')
                 search = part_query if search is None else search | part_query
-    return rows.annotate(search_rank=SearchRank(vector, search)).filter(
-        search_rank__gt=0,
-    ).order_by('-search_rank', 'position', 'id')[:CANDIDATE_LIMIT]
+    matching = Q(search_rank__gt=0)
+    ordering = ['-search_rank', 'position', 'id']
+    rows = rows.annotate(search_rank=SearchRank(vector, search))
+    if preferred_title:
+        exact = Q(question__iexact=preferred_title)
+        matching |= exact
+        rows = rows.annotate(preferred=Case(When(exact, then=Value(1)), default=Value(0)))
+        ordering.insert(0, '-preferred')
+    return rows.filter(matching).order_by(*ordering)[:CANDIDATE_LIMIT]

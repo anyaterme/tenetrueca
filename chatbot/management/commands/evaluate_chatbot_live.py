@@ -19,11 +19,11 @@ class Command(BaseCommand):
         parser.add_argument('--dry-run', action='store_true')
         parser.add_argument('--resume', action='store_true')
         parser.add_argument('--run-id', default=None)
-        parser.add_argument('--dataset', choices=['pilot-v1', 'phase2-v1'], default='pilot-v1')
+        parser.add_argument('--dataset', choices=['pilot-v1', 'phase2-v1', 'natural-v1'], default='pilot-v1')
         parser.add_argument('--case-ids', nargs='+', default=None,
                             help='Ordered IDs from the dataset. Live selection must match CHATBOT_EVAL_CASE_IDS exactly.')
         parser.add_argument('--model', default=settings.CHATBOT_OPENAI_MODEL)
-        parser.add_argument('--mode', choices=['extractive', 'grounded', 'both'], default='both')
+        parser.add_argument('--mode', choices=['natural', 'extractive', 'grounded', 'both'], default='both')
         parser.add_argument('--max-requests', type=int, default=settings.CHATBOT_EVAL_MAX_REQUESTS)
         parser.add_argument('--max-budget-usd', default=str(settings.CHATBOT_EVAL_MAX_BUDGET_USD))
         parser.add_argument('--max-input-tokens', type=int, default=settings.CHATBOT_EVAL_MAX_INPUT_TOKENS)

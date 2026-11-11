@@ -1,0 +1,29 @@
+{
+  "version": "natural-v1",
+  "cases": [
+    {
+      "id": "E01",
+      "question": "¿Cómo puedo publicar un artículo?",
+      "history": [],
+      "language": "es",
+      "expected_sources": ["faq.publish"],
+      "fixture_ids": ["faq.workflow", "faq.publish", "faq.photos"]
+    },
+    {
+      "id": "E02",
+      "question": "¿Y las fotos?",
+      "history": ["¿Cómo puedo publicar un artículo?"],
+      "language": "es",
+      "expected_sources": ["faq.photos"],
+      "fixture_ids": ["faq.workflow", "faq.publish", "faq.photos"]
+    },
+    {
+      "id": "E03",
+      "question": "How do I submit an item?",
+      "history": [],
+      "language": "en",
+      "expected_sources": ["faq.publish"],
+      "fixture_ids": ["faq.workflow", "faq.publish", "faq.photos"]
+    }
+  ]
+}

@@ -21,4 +21,7 @@ MIGRATION_MODULES = {
 
 # No OpenAI clients for ordinary chatbot tests; specific provider tests mock the SDK.
 CHATBOT_PROVIDER = 'mock'
+# Historical provider fixtures exercise the legacy contract explicitly. The
+# natural conversation API tests select the production default independently.
+CHATBOT_GENERATION_MODE = 'extractive'
 CHATBOT_RATE_LIMIT_REQUESTS = 1000

@@ -8,6 +8,8 @@ from locations.services import public_centers
 
 from .knowledge.conflicts import unsafe_content
 from .knowledge.normalization import fold, is_platform_overview, terms_for, words
+from .knowledge.publication import admission_followup, admission_is_general, admission_subject, publication_topic
+from .knowledge.reviewed_faq import reviewed_intent
 
 
 @dataclass(frozen=True)
@@ -29,6 +31,10 @@ def split_questions(question):
 
 
 def topic_for(text):
+    if is_platform_overview(text):
+        return 'platform'
+    if topic := publication_topic(text):
+        return topic
     terms = set(terms_for(text))
     if terms.intersection({'centro', 'limpio', 'horario', 'telefono', 'direccion'}):
         return 'center'
@@ -68,10 +74,11 @@ def point_intent(text, prior_topic):
 
 
 class ConversationContextResolver:
-    def resolve(self, question, recent_users=()):
+    def resolve(self, question, recent_users=(), *, natural=False):
         if type(settings.CHATBOT_CONTEXT_TURNS) is not int or settings.CHATBOT_CONTEXT_TURNS < 1:
             raise ValueError('invalid_context_turn_limit')
         prior, previous_center, previous_name = '', '', ''
+        previous_item = ()
         terms = set(terms_for(question))
         current_topic = topic_for(question)
         needs_center = bool(terms.intersection({'horario', 'telefono', 'direccion'})
@@ -100,8 +107,12 @@ class ConversationContextResolver:
             if unsafe_content(text):
                 break
             previous_topic = topic_for(text)
+            if natural and not previous_item and admission_followup(text) and previous_topic in ('', 'admission'):
+                previous_item = admission_subject(text)
             if previous_topic:
                 prior = previous_topic
+                if natural and prior == 'admission' and not previous_item:
+                    previous_item = admission_subject(text)
                 if prior == 'center':
                     names = centers_in(text)
                     if len(names) == 1:
@@ -115,14 +126,20 @@ class ConversationContextResolver:
         if anaphoric_cancel and prior != 'reservation' and 'reserva' not in terms:
             return ResolvedQuestion(question, question, clarification='topic')
         explicit_center = re.search(r'punto\s+limpio|recycling\s+cent(?:er|re)|centro\s+de', fold(question))
+        pickup_location = natural and not center_id and not explicit_center and (
+            current_topic == 'reservation' or not current_topic and prior == 'reservation'
+        ) and re.search(r'\b(?:donde|where)\b', fold(question))
+        if pickup_location:
+            needs_center = False
         if explicit_center and not center_id and (needs_center or re.search(r'donde|where|ubicacion|location', fold(question))):
             return ResolvedQuestion(question, question, 'center', clarification='center')
         if needs_center and not center_id and prior == 'center' and not explicit_center:
             center_id, center_name = previous_center, previous_name
         if needs_center and not center_id:
             return ResolvedQuestion(question, question, 'center', clarification='center')
-        topic = current_topic
-        if not topic and re.search(r'cancelarl[ao]s?|\bit\b|\bthem\b|\by\b|\band\b', fold(question)):
+        topic = 'reservation' if pickup_location else current_topic
+        inherited_topic = prior != 'admission' and not (natural and prior == 'publication')
+        if not topic and inherited_topic and re.search(r'cancelarl[ao]s?|\bit\b|\bthem\b|\by\b|\band\b', fold(question)):
             topic = prior
         intent = 'platform.overview' if is_platform_overview(question) else point_intent(question, prior)
         if intent == 'platform.overview':
@@ -130,11 +147,34 @@ class ConversationContextResolver:
         elif intent:
             topic = 'points' if intent.startswith('points.') else 'moderation'
         if (re.match(r'\s*(¿?y\b|and\b)', fold(question)) and 'puntos' not in terms
-                and terms.intersection({'entrega', 'publicar'}) and prior != 'points'):
+                and terms.intersection({'entrega', 'publicar'}) and prior != 'points'
+                and not (natural and current_topic == 'admission')):
             return ResolvedQuestion(question, question, clarification='topic')
         if re.fullmatch(r'(y |and )?(eso|all[ií]|it|that|those|lo|cuanto cuesta|how much)[ ?¿]*', fold(question)) and not prior:
             return ResolvedQuestion(question, question, clarification='topic')
         query = question
+        if not current_topic and prior == 'admission' and admission_followup(question):
+            topic = 'admission'
+            # Resolve the intent only. The current message names the new item;
+            # neither earlier objects nor assistant answers enter the search.
+            query = 'Se puede entregar ' + question
+        if natural and prior == 'publication' and not current_topic and re.fullmatch(
+                r'(?:y |and )?(?:despues|luego|after that|then|(?:las )?fotos|(?:the )?photos)', ' '.join(words(question))):
+            topic, query = 'publication', 'Cómo publicar un objeto'
+            if re.search(r'\b(?:fotos|photos)\b', fold(question)):
+                query = 'Qué fotos debo preparar para publicar un objeto'
+        if natural and topic == 'admission' and prior == 'admission' and previous_item:
+            # Only vocabulary with reviewed meaning can come from an older turn.
+            # Never send a previous user message or an arbitrary historical name.
+            reference = 'Se puede entregar ' + ' '.join(previous_item)
+            if reviewed_intent(reference, 'admission'):
+                if re.match(r'^(?:y |and )?(?:si|if)\b', ' '.join(words(question))):
+                    query = reference + ' ' + question
+                elif not admission_subject(query) and re.search(
+                        r'\b(?:eso|esa|ese|esto|llevarl[ao]|entregarl[ao]|dejarlo|it|that)\b', fold(question)):
+                    query = reference
+        if topic == 'admission' and not admission_subject(query) and not admission_is_general(query):
+            return ResolvedQuestion(question, query, topic, clarification='item')
         if center_id:
             query += ' ' + center_name
         elif topic == 'reservation':

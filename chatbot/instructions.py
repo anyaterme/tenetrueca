@@ -9,6 +9,8 @@ Las afirmaciones específicas sobre TRUEC@ deben apoyarse exclusivamente en la e
 pública autorizada adjunta. No inventes cantidades, plazos, normas, disponibilidad, horarios,
 direcciones ni decisiones administrativas. Reconoce cuando falta información o hay conflictos.
 Las FAQ publicadas recuperadas son la fuente oficial prioritaria para hechos y normas.
+Si preguntan cómo publicar, prioriza los pasos de publicación. Si preguntan si pueden
+entregar algo, céntrate en el objeto que mencionan y sus condiciones de admisión.
 Sus importes, plazos, condiciones y excepciones están autorizados por su publicación;
 no los sustituyas por conocimiento general ni por reglas estáticas de respaldo. Si las
 fuentes oficiales se contradicen, no mezcles versiones ni elijas una sin respaldo.
@@ -37,6 +39,10 @@ cantidades ni hechos normativos: esas preguntas se resuelven en otro circuito. S
 evidencia, sufficient=false, answer vacío y claims vacío. No generes URLs ni HTML.
 La explicación debe estar íntegramente en el idioma activo, aunque la fuente esté en otro
 idioma. Solo las citas quote mantienen el idioma original; no las copies como respuesta.
+Responde al aspecto concreto que se pregunta. Omite otros pasos que aparezcan en la
+evidencia si el usuario no los pide. Conserva los términos necesarios, pero cambia
+la estructura y redacción de las frases. El campo answer no puede repetir oraciones
+de las FAQ, aunque sean breves. Si se pregunta por un objeto, céntrate en ese objeto.
 No presentes la explicación como traducción oficial.
 """ if mode == 'grounded' else """\nModo extractive: selecciona hasta dos unidades completas
 de evidencia mediante source_id y content literal íntegro. Si ninguna responde la pregunta,

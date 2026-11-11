@@ -5,6 +5,7 @@ import re
 from hashlib import sha256
 from dataclasses import replace
 
+from django.conf import settings
 from django.utils import timezone
 
 from .conversation_context import ConversationContextResolver, split_questions
@@ -13,13 +14,14 @@ from .knowledge import KnowledgeService
 from .knowledge.conflicts import conflicting_claims, unsafe_content
 from .knowledge.context import KnowledgeLimits, build_context
 from .knowledge.contracts import KnowledgeBundle
-from .knowledge.normalization import fold, terms_for
+from .knowledge.normalization import fold, is_platform_overview, terms_for, words
 from .knowledge.registry import official_faq
+from .knowledge.reviewed_faq import definition, reviewed_answer, reviewed_intent
 from .providers import ChatTurn
 from .safety import ProviderError
-from .generation import choose_mode, validate_grounded, without_response_style
+from .generation import critical, choose_mode, validate_grounded, validate_no_faq_copy, without_response_style
 from .references import valid_public_url
-from .response_style import needs_display_text, requested_sentences, validate_display_text, validate_style, with_response_style
+from .response_style import needs_display_text, requested_sentences, sentence_count, validate_display_text, validate_style, with_response_style
 from .sentence_planning import plan_three_sentences
 
 logger = logging.getLogger(__name__)
@@ -29,13 +31,18 @@ TEXT = {
     'no_evidence': ('No dispongo de información pública suficiente para responder a esa pregunta.',
                     'I do not have enough public information to answer that question.'),
     'topic': ('¿Sobre qué aspecto de TRUEC@ quieres consultar?', 'Which aspect of TRUEC@ would you like to ask about?'),
+    'item': ('¿Qué objeto quieres dejar? Así puedo orientarte sobre si se admite.',
+             'What item would you like to drop off? Tell me what it is so I can check whether the FAQ covers it.'),
+    'admission_unknown': ('No tengo información suficiente para confirmar si ese objeto se puede entregar. Consulta al equipo de TRUEC@ antes de llevarlo.',
+                          'I do not have enough information to confirm whether that item can be dropped off. Check with TRUEC@ staff before taking it in.'),
     'center': ('¿De qué punto limpio quieres consultar la información?', 'Which recycling center would you like information about?'),
     'conflict': ('No dispongo de una regla confirmada para esa afirmación. Consulta al personal de TRUEC@.',
                  'I do not have a confirmed rule for that statement. Please ask TRUEC@ staff.'),
-    'original': ('Según la información pública, en su idioma original:', 'According to the public information, in its original language:'),
     'category': ('La existencia de una categoría no garantiza la admisión de un objeto.',
                  'The existence of a category does not guarantee an object will be accepted.'),
     'privacy': ('No puedo consultar datos privados de tu cuenta.', 'I cannot access private information from your account.'),
+    'source_help': ('No puedo confirmar la respuesta con suficiente precisión. Puedes consultar la FAQ enlazada.',
+                    'I cannot confirm the answer precisely enough. You can check the linked FAQ.'),
 }
 
 
@@ -64,6 +71,10 @@ def restrict(bundle, resolved):
         fragments = public_faq or tuple(f for f in fragments if 'platform.overview' in f.claim_ids)
     elif resolved.intent:
         fragments = tuple(f for f in fragments if resolved.intent in f.claim_ids)
+    elif resolved.topic in ('publication', 'admission'):
+        # The existence of a category or a general rule about points doesn't
+        # answer whether a particular object can be brought in.
+        fragments = ()
     elif resolved.topic == 'category':
         fragments = tuple(f for f in fragments if f.source.source_type in ('faq', 'category'))
     elif resolved.topic in ('points', 'moderation', 'reservation'):
@@ -101,13 +112,30 @@ class ConversationAnswerer:
                                   route='no_evidence', outcome='no_evidence')
         replies, records, pending, routes = [], [], [], []
         locally_formatted = False
-        for part in parts:
-            resolved = self.resolver.resolve(part, recent_users)
+        check_presentation = False
+        natural = settings.CHATBOT_GENERATION_MODE == 'natural'
+        preferred_titles = {}
+
+        def retrieve(resolved, preferred_title):
+            if preferred_title:
+                bundle = self.knowledge.retrieve(resolved.search_query, language=language, preferred_title=preferred_title)
+            else:
+                bundle = self.knowledge.retrieve(resolved.search_query, language=language)
+            return restrict(bundle, resolved)
+
+        for index, part in enumerate(parts):
+            context_users = (*recent_users, *parts[:index]) if natural else recent_users
+            resolved = self.resolver.resolve(part, context_users, natural=natural)
             if resolved.clarification:
                 replies.append(local_text(resolved.clarification, language))
                 routes.append('clarification')
                 continue
-            bundle = restrict(self.knowledge.retrieve(resolved.search_query, language=language), resolved)
+            key = reviewed_intent(resolved.search_query, resolved.topic, intent=resolved.intent,
+                                  original=resolved.original) if natural else ''
+            approved = definition(key)
+            preferred_title = approved.title if approved else ''
+            preferred_titles[resolved] = preferred_title
+            bundle = retrieve(resolved, preferred_title)
             if conflicting_claims(resolved.search_query) and not any(official_faq(f) for f in bundle.fragments):
                 replies.append(local_text('conflict', language))
                 routes.append('conflict')
@@ -116,7 +144,7 @@ class ConversationAnswerer:
                 fact = next((r for r in bundle.rules if r.claim_id == resolved.intent and r.validation == 'verified'), None)
                 if fact is not None:
                     text = dict(fact.localized_content).get('en' if language.startswith('en') else 'es')
-                    if text:
+                    if text and (not natural or all(f.source.public_url for f in bundle.fragments if f.source.source_id in fact.source_ids)):
                         replies.append(text)
                         used = tuple(f for f in bundle.fragments if f.source.source_id in fact.source_ids)
                         records.append((resolved, used, text))
@@ -127,7 +155,8 @@ class ConversationAnswerer:
                 # Direct blocked questions were handled above; rule drift still fails closed.
                 code = 'conflict' if (bundle.conflict_ids and resolved.topic != 'points' or
                                       any(c.startswith('approved_rule_drift:') for c in bundle.conflict_ids)) else 'no_evidence'
-                replies.append(local_text(code, language))
+                replies.append(local_text('admission_unknown' if code == 'no_evidence' and
+                                          resolved.topic == 'admission' else code, language))
                 routes.append(code)
                 continue
             if resolved.center_id and bundle.fragments[0].source.source_type == 'center':
@@ -150,21 +179,57 @@ class ConversationAnswerer:
                     replies.append(local_text('no_evidence', language))
                     routes.append('no_evidence')
                 continue
+            if natural:
+                reviewed = reviewed_answer(key, bundle.fragments, language)
+                sentences = requested_sentences(question)
+                if reviewed and (not sentences or len(parts) == 1 and sentence_count(reviewed[0]) == sentences):
+                    text, source = reviewed
+                    replies.append(text)
+                    records.append((resolved, (source,), source.content))
+                    routes.append('deterministic')
+                    continue
+                direct = tuple(f for f in bundle.fragments if official_faq(f) and (
+                    (preferred_title and fold(f.title) == fold(preferred_title))
+                    or words(f.title) == words(resolved.original)
+                ))
+                candidates = direct or bundle.fragments
+                usable = tuple(f for f in candidates if official_faq(f)
+                               and (resolved.topic == 'platform' or not is_platform_overview(f.title))
+                               and not critical(f.title + '\n' + f.content))
+                if not usable or critical(without_response_style(resolved.search_query)):
+                    if direct:
+                        replies.append(local_text('source_help', language))
+                        records.extend((resolved, (source,), source.content) for source in direct[:2])
+                    else:
+                        replies.append(local_text('admission_unknown' if resolved.topic == 'admission' else 'no_evidence', language))
+                    routes.append('no_evidence')
+                    continue
+                bundle = replace(bundle, fragments=usable)
             pending.append((resolved, bundle, len(replies)))
             replies.append('')
         if pending:
             fragments, context, conflicts, excluded = build_context(
                 [f for _, b, _ in pending for f in b.fragments], limits=KnowledgeLimits.configured(), now=timezone.now())
             knowledge = KnowledgeBundle(language, fragments, (), conflicts, 'grounded', context, excluded)
-            knowledge = replace(knowledge, generation_mode=choose_mode(question, knowledge))
+            knowledge = replace(knowledge, generation_mode='grounded' if natural else choose_mode(question, knowledge))
             knowledge = with_response_style(knowledge, question, language)
             try:
-                generated = plan_three_sentences(question, knowledge)
+                generated = None if natural else plan_three_sentences(question, knowledge)
                 locally_formatted = generated is not None
                 if generated is None:
-                    generated = provider_factory().respond([ChatTurn('user', question)], language=language, knowledge=knowledge)
+                    prompt = question
+                    if natural:
+                        # Give the provider the resolved question, never raw chat history.
+                        prompt = '\n'.join(r.search_query for r, _, _ in pending)
+                    elif len(parts) == 1 and pending[0][0].topic == 'admission':
+                        resolved = pending[0][0]
+                        if resolved.search_query != resolved.original:
+                            prompt = resolved.search_query
+                    generated = provider_factory().respond([ChatTurn('user', prompt)], language=language, knowledge=knowledge)
                 if knowledge.generation_mode == 'grounded':
                     generated = validate_grounded(generated, knowledge)
+                    if natural and generated.sufficient:
+                        validate_no_faq_copy(generated.text, fragments)
                 elif isinstance(generated, GeneratedAnswer) and (generated.text or generated.claims):
                     raise ProviderError('invalid_grounding')
                 elif isinstance(generated, str):
@@ -188,13 +253,19 @@ class ConversationAnswerer:
                     validate_style('\n\n'.join(s.display_text for s in generated.selections), language=language,
                                    sentences=knowledge.response_sentences)
             except ProviderError as error:
-                if error.code != 'invalid_grounding':
+                if error.code != 'invalid_grounding' and not (natural and error.code in ('invalid_response_style', 'copied_faq')):
                     raise
                 # Validation is not a technical outage. One safe, counted answer, no retry.
-                logger.warning('Chatbot generation rejected reason=invalid_grounding')
-                generated = (GeneratedAnswer((), '', (), False) if needs_display_text(knowledge) else
-                             GeneratedAnswer(tuple(EvidenceSelection(f.source.source_id, f.content) for f in fragments[:2])))
-                knowledge = replace(knowledge, generation_mode='extractive')
+                logger.warning('Chatbot generation rejected reason=%s', error.code)
+                if natural:
+                    generated = GeneratedAnswer((), '', (), False)
+                else:
+                    generated = (GeneratedAnswer((), '', (), False) if needs_display_text(knowledge) else
+                                 GeneratedAnswer(tuple(EvidenceSelection(f.source.source_id, f.content) for f in fragments[:2])))
+                    knowledge = replace(knowledge, generation_mode='extractive')
+            # Literal selections retain the source's language. Apply language and
+            # sentence-count checks to generated prose and requested presentations.
+            check_presentation = knowledge.generation_mode == 'grounded' or needs_display_text(knowledge)
             if knowledge.generation_mode == 'grounded':
                 slot = pending[0][2]
                 replies[slot] = generated.text if generated.sufficient else local_text('no_evidence', language)
@@ -218,9 +289,8 @@ class ConversationAnswerer:
                                                        if needs_display_text(knowledge) else item.content)
                     records.append((resolved, (item,), item.content))
                 for _, _, slot in pending:
-                    replies[slot] = (('' if needs_display_text(knowledge) else local_text('original', language) + '\n')
-                                     + '\n\n'.join(grouped[slot])
-                                     if slot in grouped else local_text('no_evidence', language))
+                    replies[slot] = ('\n\n'.join(grouped[slot]) if slot in grouped
+                                     else local_text('no_evidence', language))
                 routes.append(('deterministic' if locally_formatted else 'generation') if output else 'no_evidence')
         references = []
         revalidated = {}
@@ -228,7 +298,7 @@ class ConversationAnswerer:
             # Requery before exposing/persisting the answer. A changed/deleted/unpublished
             # source invalidates the selection; no old norm is read from the chat history.
             if resolved not in revalidated:
-                revalidated[resolved] = restrict(self.knowledge.retrieve(resolved.search_query, language=language), resolved)
+                revalidated[resolved] = retrieve(resolved, preferred_titles[resolved])
             fresh = revalidated[resolved]
             current = {f.source.source_id: f for f in fresh.fragments}
             for item in used:
@@ -242,8 +312,9 @@ class ConversationAnswerer:
                     now.source.source_type, now.title, now.source.source_version,
                     (sha256(text.encode('utf-8')).hexdigest(),)))
         route = routes[0] if len(set(routes)) == 1 else 'mixed'
-        outcome = 'conflict' if 'conflict' in routes else 'clarification' if 'clarification' in routes else 'grounded' if records else 'no_evidence'
+        outcome = ('conflict' if 'conflict' in routes else 'clarification' if 'clarification' in routes
+                   else 'grounded' if any(r in ('deterministic', 'generation') for r in routes) else 'no_evidence')
         text = '\n\n'.join(r for r in replies if r)
-        if 'generation' in routes or locally_formatted:
+        if check_presentation and ('generation' in routes or locally_formatted):
             validate_style(text, language=language, sentences=requested_sentences(question))
         return AssistantReply(text, tuple(dict.fromkeys(references)), route, outcome)

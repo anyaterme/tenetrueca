@@ -144,7 +144,8 @@ def evaluate(options):
                 'pricing_admission_blocker': pricing_reason,
                 'worst_case_preview_only': {'admitted': preview_admitted, 'committed_usd': str(preview_committed)},
                 'results': results}
-    if options['dataset'] != 'pilot-v1':
+    if (options['dataset'] not in ('pilot-v1', 'natural-v1')
+            or options['dataset'] == 'natural-v1' and modes != ['natural']):
         raise EvaluationStopped('live_dataset_not_allowed')
     run_id = options.get('run_id')
     require_evaluation_access(run_id)

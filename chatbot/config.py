@@ -6,8 +6,8 @@ RESERVATION_SECONDS = 120
 
 def provider_configuration_errors():
     errors = []
-    if settings.CHATBOT_GENERATION_MODE not in ('extractive', 'grounded'):
-        errors.append('CHATBOT_GENERATION_MODE must be extractive or grounded.')
+    if settings.CHATBOT_GENERATION_MODE not in ('natural', 'extractive', 'grounded'):
+        errors.append('CHATBOT_GENERATION_MODE must be natural, extractive or grounded.')
     if settings.CHATBOT_PROVIDER not in ('mock', 'openai'):
         errors.append('CHATBOT_PROVIDER must be mock or openai.')
     if not isinstance(settings.CHATBOT_OPENAI_MODEL, str) or not settings.CHATBOT_OPENAI_MODEL.strip():

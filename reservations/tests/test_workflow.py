@@ -109,6 +109,11 @@ class ReservationWorkflowTests(TestCase):
             validated_by=self.validator,
         )
 
+    def test_new_reservation_expires_after_seven_days_by_default(self):
+        item = self.create_item()
+        reservation = create_reservation(inventory_item_id=item.pk, user=self.requester)
+        self.assertEqual(reservation.expires_at - reservation.reserved_at, timedelta(days=7))
+
     @override_settings(RESERVATION_EXPIRATION_HOURS=24)
     def test_create_reservation_uses_session_user_and_removes_item_from_catalog(self):
         item = self.create_item()

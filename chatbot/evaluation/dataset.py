@@ -6,7 +6,7 @@ from .errors import EvaluationStopped
 from .pricing import digest
 
 DATA = Path(__file__).parent / 'data'
-ALLOWED = {'phase2-v1', 'pilot-v1'}
+ALLOWED = {'phase2-v1', 'pilot-v1', 'natural-v1'}
 
 
 def load_dataset(name):
@@ -18,6 +18,8 @@ def load_dataset(name):
         pilot = json.loads((DATA / 'pilot-v1.json').read_text())
         mapping = {c['id']: c for c in cases}
         cases = [mapping[key] for key in pilot['case_ids']]
+    elif name == 'natural-v1':
+        cases = json.loads((DATA / 'natural-v1.json').read_text())['cases']
     ids = [c['id'] for c in cases]
     if len(ids) != len(set(ids)) or any(c['language'] not in ('es', 'en') for c in cases):
         raise EvaluationStopped('dataset_invalid')

@@ -14,7 +14,7 @@ def conflicting_claims(text):
     # Block claims, not the reservation topic. Requirements/cancellation can be public
     # evidence without authorizing a deadline or charging event.
     if (terms.intersection({'plazo', 'caducidad', 'expire', 'expires', 'expired', 'expiration'})
-            or re.search(r'cuanto\s+(tiempo|tardo)|how\s+long|no\s+(recojo|recoger)|don.t\s+(collect|pick)', normalized)
+            or re.search(r'cuanto\s+(tiempo|tardo)|how\s+long|no\s+(?:(?:lo|la)\s+)?(recojo|recoger)|don.t\s+(collect|pick)', normalized)
             or reservation_domain and re.search(r'\b(?:7|siete|seven|72)\s+(dias|days|horas|hours)\b', normalized)):
         found.add('reservation.pickup_window')
     if (terms.intersection({'cargo', 'cobro', 'cobrar', 'descontar'})

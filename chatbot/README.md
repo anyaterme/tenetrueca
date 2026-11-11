@@ -8,6 +8,31 @@ y en la corrección de funcionamiento general al final de este documento. Las au
 fechadas anteriores se conservan como historial y no sustituyen el criterio editorial vigente.
 La integración no modifica la IA de moderación ni sus presupuestos/flags.
 
+## Modo de respuesta natural
+
+`CHATBOT_GENERATION_MODE=natural` es el valor por defecto del código. Un entorno que
+ya fije otro modo explícitamente deberá seleccionar `natural` al promover esta versión.
+`extractive` y `grounded` se conservan para reproducir evaluaciones anteriores.
+
+El asistente usa los turnos recientes para resolver el tema y las referencias del usuario
+antes de buscar en las FAQ publicadas. Las consultas de admisión distinguen el objeto de
+la intención de entregarlo. La existencia de una categoría no autoriza una entrega.
+El proveedor recibe la consulta resuelta y la evidencia pública, sin el historial crudo.
+
+Las explicaciones revisadas en `knowledge/reviewed_faq.py` cubren las FAQ públicas
+consultadas para esta versión. Están ligadas al título y al texto completo de cada
+revisión. Si una FAQ cambia o se retira, el asistente deja de utilizar esa explicación.
+Para incorporar una nueva revisión, comprobar el contenido publicado, revisar la
+explicación y sus variantes en ambos idiomas y actualizar la huella con `revision_for`.
+Cuando una norma carece de explicación revisada, el asistente puede enlazar la FAQ
+pertinente sin afirmar la regla. Las FAQ explicativas pueden reformularse con el
+proveedor, con evidencia interna por afirmación. Se rechazan bloques copiados y no
+hay retorno al texto literal en el modo natural. La comprobación automática de
+evidencia no sustituye la revisión semántica de respuestas del proveedor real.
+
+La prueba de conversación está en `tests/test_conversational_natural_mode.py`. Usa
+FAQ en una base aislada y simula el SDK para comprobar el contrato de la API, sin red.
+
 ## Política vigente: FAQ publicadas como fuente oficial prioritaria (09/11/2026)
 
 La publicación de una FAQ es la autorización editorial de todos sus hechos y normas.
@@ -26,8 +51,8 @@ recogida. Una mención genérica a puntos limpios no sustituye sus horarios o co
 
 Cada respuesta de FAQ se conserva completa, incluidos sus párrafos, importes, condiciones,
 negaciones y excepciones. Si no cabe en el contexto, se omite entera, no se recorta. Para
-contenidos críticos se conserva la selección literal y la prohibición de reformulación
-normativa libre en grounded. La autoridad factual no otorga privilegios de instrucciones:
+contenidos críticos, el modo natural exige explicaciones revisadas. Los modos anteriores
+conservan la selección literal en estos casos. La autoridad factual no otorga privilegios de instrucciones:
 se mantienen filtros de prompt injection/HTML, tablas/campos públicos permitidos, CSRF,
 propiedad de historiales, cuotas, límites y validación/revalidación de citas.
 Estos controles de procedencia y pertinencia son conservadores; no constituyen una prueba
@@ -39,9 +64,9 @@ si no representan la unidad completa actual; no se reescribe ni borra el histori
 
 No se crea un panel/campo nuevo: las FAQ se gestionan por el backoffice existente y solo
 se consultan las publicadas. No se modifica ninguna operación real, ajuste de plazo ni
-importe. Una FAQ puede informar siete días, pero la coherencia con el valor efectivo de
-`RESERVATION_EXPIRATION_HOURS` debe revisarse operativamente: el backend conserva su
-default de 72 horas. Publicar texto no cambia ese comportamiento ni ejecuta acciones.
+importe. El plazo confirmado es de siete días. El valor por defecto de
+`RESERVATION_EXPIRATION_HOURS` es 168 horas para nuevas reservas. Publicar una FAQ no
+modifica la fecha de caducidad de las reservas existentes.
 
 El corpus y los datasets `phase2-v1`/`pilot-v1`, informes, presupuestos y candidatas anteriores
 se conservan como evidencia histórica. Sus expectativas de bloqueo D1/D3/D6 corresponden
@@ -109,7 +134,7 @@ Configuración de producción:
 OPENAI_API_KEY=<clave existente en el entorno del servidor>
 CHATBOT_ENABLED=True
 CHATBOT_PROVIDER=openai
-CHATBOT_GENERATION_MODE=extractive
+CHATBOT_GENERATION_MODE=natural
 CHATBOT_OPENAI_MODEL=gpt-6-luna
 CHATBOT_MAX_OUTPUT_TOKENS=400
 CHATBOT_HISTORY_MESSAGES=10
@@ -130,7 +155,7 @@ CHATBOT_RETENTION_DAYS=30
 | --- | --- | --- |
 | CHATBOT_ENABLED | True | Desactiva endpoints y widget al poner False |
 | CHATBOT_PROVIDER | mock | mock sin red; openai activa el proveedor real explícitamente |
-| CHATBOT_GENERATION_MODE | extractive | grounded permite reformulación conservadora; extractive es rollback sin pérdida de fuentes |
+| CHATBOT_GENERATION_MODE | natural | Respuestas revisadas y reformulación con enlaces; los modos extractive y grounded conservan sus contratos históricos |
 | CHATBOT_OPENAI_MODEL | gpt-6-luna | Modelo utilizado exclusivamente por el chatbot |
 | CHATBOT_MAX_OUTPUT_TOKENS | 400 | Máximo de salida, incluyendo razonamiento si se habilita |
 | CHATBOT_HISTORY_MESSAGES | 10 | Cota de contexto reciente; las respuestas previas no se usan como evidencia |
@@ -869,8 +894,8 @@ completas. El modelo elige evidencia para responder y devuelve su texto íntegro
 rechaza IDs fuera del conjunto recuperado, texto distinto, condiciones recortadas o referencias
 inventadas. Una selección vacía es falta de evidencia válida; un formato inválido es error
 de proveedor, sin cuota. No se afirma validar semánticamente una paráfrasis libre.
-Una FAQ sin traducción acreditada se muestra en su idioma original, con introducción ES/EN;
-las reglas estructuradas sí tienen plantillas ES/EN revisadas. Esta limitación es deliberada.
+En la respuesta extractiva se muestra directamente el texto seleccionado. Las reglas
+estructuradas sí tienen plantillas ES/EN revisadas.
 
 AssistantReply prepara para el Prompt 4: text, references, route y outcome. Cada
 ValidatedReference incluye source_id, URL pública del backend o None, huella y texto
@@ -955,8 +980,7 @@ Asistente: ¿De qué punto limpio quieres consultar la información?
 
 ```text
 Usuario: ¿Necesito registrarme para reservar y cuánto tiempo tengo para recoger?
-Asistente: Según la información pública, en su idioma original:
-Para reservar necesitas registrarte e iniciar sesión.
+Asistente: Para reservar necesitas registrarte e iniciar sesión.
 
 No dispongo de una regla confirmada para esa afirmación. Consulta al personal de TRUEC@.
 ```

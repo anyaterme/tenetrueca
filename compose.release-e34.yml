@@ -1,0 +1,64 @@
+# Merge ONLY with the destination docker-compose.yml, never compose.openai.yml.
+# Requires Docker Compose >= 2.24.4 (!override). No worker service is defined.
+services:
+  app:
+    image: ${TRUECA_E34_IMAGE:-trueca-candidate@sha256:dd28d44c918e3359c1d5b83ce64ec5be2447929641f798b957d60dd7f51814a4}
+    platform: linux/amd64
+    pull_policy: never
+    build: !reset null
+    user: "10001:10001"
+    working_dir: /app
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:uid=10001,gid=10001,mode=1777"]
+    environment:
+      DJANGO_SETTINGS_MODULE: tenetrueca.settings
+      # Initial promotion is inert. Enabling billable traffic is a separate decision.
+      CHATBOT_ENABLED: "False"
+      CHATBOT_PROVIDER: mock
+      CHATBOT_GENERATION_MODE: extractive
+      CHATBOT_EVAL_ALLOW_LIVE: "False"
+      TRUECA_E34_HEALTH_HOST: ${TRUECA_E34_HEALTH_HOST:?Set the destination hostname}
+    volumes: !override
+      - type: bind
+        source: ./app/tenetrueca/local_settings.py
+        target: /app/tenetrueca/local_settings.py
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ./app/media
+        target: /app/media
+        bind: {create_host_path: false}
+      - type: bind
+        source: ./app/private_media
+        target: /app/private_media
+        bind: {create_host_path: false}
+      - type: bind
+        source: ./app/staticfiles
+        target: /app/staticfiles
+        bind: {create_host_path: false}
+    # Migrations are explicit, backed-up operations of the deployment script.
+    command:
+      - gunicorn
+      - tenetrueca.wsgi:application
+      - --bind
+      - 0.0.0.0:8000
+      - --workers
+      - ${GUNICORN_WORKERS:-2}
+      - --timeout
+      - ${GUNICORN_TIMEOUT:-120}
+      - --access-logfile
+      - "-"
+      - --error-logfile
+      - "-"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os,http.client; c=http.client.HTTPConnection('127.0.0.1',8000,timeout=5); c.request('GET','/health/',headers={'Host':os.environ['TRUECA_E34_HEALTH_HOST'],'X-Forwarded-Proto':'https'}); assert c.getresponse().status==200"
+      interval: 5s
+      timeout: 6s
+      start_period: 15s
+      retries: 12

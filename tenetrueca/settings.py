@@ -126,7 +126,7 @@ PUBLICATION_PAGE_SIZE = 10
 PUBLICATION_DAILY_LIMIT = 5
 MODERATION_PAGE_SIZE = 20
 RECEPTION_PAGE_SIZE = 20
-RESERVATION_EXPIRATION_HOURS = 72
+RESERVATION_EXPIRATION_HOURS = 7 * 24
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -169,7 +169,7 @@ CHATBOT_HISTORY_MESSAGES = int(os.getenv('CHATBOT_HISTORY_MESSAGES', '10'))
 CHATBOT_CONTEXT_TURNS = int(os.getenv('CHATBOT_CONTEXT_TURNS', '4'))
 CHATBOT_PROVIDER = os.getenv('CHATBOT_PROVIDER', 'mock').strip().lower()
 # Conservative production default until a real-model fidelity evaluation is authorized.
-CHATBOT_GENERATION_MODE = os.getenv('CHATBOT_GENERATION_MODE', 'extractive').strip().lower()
+CHATBOT_GENERATION_MODE = os.getenv('CHATBOT_GENERATION_MODE', 'natural').strip().lower()
 CHATBOT_OPENAI_MODEL = os.getenv('CHATBOT_OPENAI_MODEL', 'gpt-6-luna').strip()
 CHATBOT_MAX_OUTPUT_TOKENS = int(os.getenv('CHATBOT_MAX_OUTPUT_TOKENS', '400'))
 CHATBOT_REQUEST_TIMEOUT = float(os.getenv('CHATBOT_REQUEST_TIMEOUT', '30'))

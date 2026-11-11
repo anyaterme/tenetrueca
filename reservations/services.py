@@ -24,8 +24,7 @@ class InvalidReservationToken(ValidationError):
 
 
 def reservation_duration():
-    hours = getattr(settings, 'RESERVATION_EXPIRATION_HOURS', 72)
-    return timedelta(hours=hours)
+    return timedelta(hours=settings.RESERVATION_EXPIRATION_HOURS)
 
 
 def _reservation_reference(reservation, action):
