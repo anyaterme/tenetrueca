@@ -54,5 +54,6 @@ class KnowledgeBundle:
     context: str
     # Safe reason codes only. Never document content, private IDs or exception details.
     exclusions: tuple[str, ...] = ()
-    generation_mode: Literal['extractive', 'grounded'] = 'extractive'
+    generation_mode: Literal['extractive', 'grounded', 'full_faq'] = 'extractive'
     response_sentences: int = 0
+    context_version: str = ''

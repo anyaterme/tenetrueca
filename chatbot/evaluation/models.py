@@ -55,7 +55,7 @@ class ChatEvaluationAttempt(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['run', 'case_id', 'mode'], name='chat_eval_case_mode'),
-            models.CheckConstraint(condition=Q(mode__in=['extractive', 'grounded', 'natural']), name='chat_eval_mode'),
+            models.CheckConstraint(condition=Q(mode__in=['extractive', 'grounded', 'natural', 'full_faq']), name='chat_eval_mode'),
             models.CheckConstraint(condition=Q(state__in=['reserved', 'sent', 'settled', 'unknown']), name='chat_eval_state'),
             models.CheckConstraint(condition=Q(reserved_usd__gt=0, charged_usd__gte=0, charged_usd__lte=F('reserved_usd')),
                                    name='chat_eval_charge_cap'),

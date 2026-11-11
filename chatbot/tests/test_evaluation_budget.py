@@ -144,6 +144,21 @@ class LedgerTests(TestCase):
         self.assertEqual(attempt.state,'settled')
         self.assertLess(attempt.charged_usd,attempt.reserved_usd)
 
+    def test_provider_counted_run_requires_the_verified_count_and_retains_unknown_usage(self):
+        run = open_run(uuid4(), {**self.config, 'modes': ['full_faq'], 'max_input_tokens': 8192,
+                                 'token_bound_method': 'provider_counted'})
+        arguments = {'tariff': self.tariff, 'input_ceiling': 3512, 'output_ceiling': 400,
+                     'payload_hash': 'a'*64, 'source_hash': 'b'*64}
+        with self.assertRaisesRegex(EvaluationStopped, 'unreliable_cost_bound'):
+            reserve(run.pk, 'E01', 'full_faq', **arguments)
+        attempt = reserve(run.pk, 'E01', 'full_faq', **arguments, measured_input_tokens=3000)
+        self.assertEqual(attempt.reserved_usd, self.tariff.cost(3512, 400, margin=True))
+        mark_sent(attempt.pk)
+        settle(attempt.pk, tariff=self.tariff)
+        run.refresh_from_db()
+        self.assertEqual(run.committed_usd, attempt.reserved_usd)
+        self.assertEqual(run.stop_reason, 'usage_unreliable')
+
     def test_twenty_attempts_maximum_even_after_all_usage_releases(self):
         for i in range(1,21):
             attempt=self.admit(f'E{i:02d}'); mark_sent(attempt.pk)

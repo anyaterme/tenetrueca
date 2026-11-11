@@ -11,6 +11,14 @@ DELIVER = (
 )
 ACCEPT = r'acept\w*|admi(?:t|s)\w*|permitid\w*|apt[oa]s?|accept\w*|allow\w*|eligib\w*'
 PROCEDURE = re.compile(rf'\b(?:como|how)\b.{{0,35}}\b(?:{PUBLISH})\b')
+PROCEDURE_STEPS = re.compile(
+    r'\b(?:'
+    r'(?:que (?:tengo que hacer|hay que hacer|debo hacer|hago|necesito(?: hacer)?)|cuales son los pasos) '
+    r'para (?:poder )?'
+    r'|what (?:do i need(?: to do)?|should i do|must i do|are the steps) to (?:be able to )?'
+    rf')(?:{PUBLISH}) (?:un[ao]? |el |la |mi |an? |the |my )?'
+    r'(?:objetos?|articulos?|productos?|items?|objects?|products?)\b'
+)
 ADMISSION = re.compile(
     rf'\b(?:{ACCEPT})\b|\b(?:pued[oaen]+|quiero|quisiera|podria|para|can|could|want to)\s+(?:i\s+|you\s+|to\s+)?(?:{DELIVER})\b'
     rf'|\b(?:have|got)\b.{{0,70}}\bto\s+(?:{DELIVER})\b'
@@ -54,7 +62,8 @@ def publication_topic(question):
     text = ' '.join(words(question))
     if OTHER_TOPIC.search(text):
         return ''
-    if PROCEDURE.search(text) or re.match(rf'(?:{PUBLISH})\s+(?:un |una |an? )?(?:objeto|articulo|producto|item|object)\b', text):
+    if (PROCEDURE.search(text) or PROCEDURE_STEPS.search(text)
+            or re.match(rf'(?:{PUBLISH})\s+(?:un |una |an? )?(?:objeto|articulo|producto|item|object)\b', text)):
         return 'publication'
     if ADMISSION.search(text):
         return 'admission'

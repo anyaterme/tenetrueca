@@ -14,6 +14,7 @@ from django.utils import timezone
 from chatbot.checks import chatbot_configuration
 from chatbot.models import ChatConversation, ChatMessage, ChatSessionUsage
 from chatbot.providers import ChatTurn, SimulatedProvider
+from chatbot.safety import ProviderError
 from chatbot.tests.fixtures import ProviderEvidenceMixin
 from chatbot.services import (Owner, finish_message, get_session, reap_expired_reservations,
                               reserve_message, send_message)
@@ -165,6 +166,23 @@ class ChatbotAPITests(ProviderEvidenceMixin, TestCase):
             factory.assert_not_called()
         self.assertEqual(response.json()['usage']['remaining'], 10)
         self.assertEqual(response.json()['usage']['pending'], 0)
+
+    @override_settings(CHATBOT_GENERATION_MODE='full_faq')
+    def test_full_faq_timeout_and_duplicate_leave_quota_uncharged(self):
+        conversation = self.bootstrap()
+        key = uuid4()
+        provider = Mock()
+        provider.respond.side_effect = ProviderError('timeout')
+        with patch('chatbot.services.get_provider', return_value=provider):
+            first = self.post(conversation, '¿Cuántos puntos recibo?', request_id=key)
+            duplicate = self.post(conversation, '¿Cuántos puntos recibo?', request_id=key)
+        self.assertEqual((first.status_code, duplicate.status_code), (502, 502))
+        self.assertEqual(first.json(), duplicate.json())
+        self.assertEqual(first.json()['error'], 'response_failed')
+        self.assertEqual(first.json()['usage']['consumed'], 0)
+        self.assertEqual(first.json()['usage']['pending'], 0)
+        self.assertFalse(ChatMessage.objects.filter(role='assistant').exists())
+        provider.respond.assert_called_once()
 
     def test_private_history_responses_cannot_be_cached(self):
         conversation = self.bootstrap()
@@ -340,7 +358,7 @@ class ChatbotAPITests(ProviderEvidenceMixin, TestCase):
             self.post(conversation, content='Last')
         args, kwargs = factory.return_value.respond.call_args
         self.assertEqual(args[0], [ChatTurn('user', 'Last')])
-        self.assertEqual(kwargs['language'], 'es-es')
+        self.assertEqual(kwargs['language'], 'es')
         self.assertTrue(kwargs['knowledge'].context)
         # Full persisted history is independent of the provider context window.
         self.assertEqual(ChatMessage.objects.count(), 8)

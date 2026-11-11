@@ -20,6 +20,7 @@ class ResolvedQuestion:
     center_id: str = ''
     intent: str = ''
     clarification: str = ''
+    provider_question: str = ''
 
 
 def split_questions(question):
@@ -74,7 +75,7 @@ def point_intent(text, prior_topic):
 
 
 class ConversationContextResolver:
-    def resolve(self, question, recent_users=(), *, natural=False):
+    def resolve(self, question, recent_users=(), *, natural=False, language='es'):
         if type(settings.CHATBOT_CONTEXT_TURNS) is not int or settings.CHATBOT_CONTEXT_TURNS < 1:
             raise ValueError('invalid_context_turn_limit')
         prior, previous_center, previous_name = '', '', ''
@@ -153,6 +154,7 @@ class ConversationContextResolver:
         if re.fullmatch(r'(y |and )?(eso|all[ií]|it|that|those|lo|cuanto cuesta|how much)[ ?¿]*', fold(question)) and not prior:
             return ResolvedQuestion(question, question, clarification='topic')
         query = question
+        provider_question = ''
         if not current_topic and prior == 'admission' and admission_followup(question):
             topic = 'admission'
             # Resolve the intent only. The current message names the new item;
@@ -163,6 +165,8 @@ class ConversationContextResolver:
             topic, query = 'publication', 'Cómo publicar un objeto'
             if re.search(r'\b(?:fotos|photos)\b', fold(question)):
                 query = 'Qué fotos debo preparar para publicar un objeto'
+                if language.startswith('en'):
+                    provider_question = 'What photos should I prepare to publish an item?'
         if natural and topic == 'admission' and prior == 'admission' and previous_item:
             # Only vocabulary with reviewed meaning can come from an older turn.
             # Never send a previous user message or an arbitrary historical name.
@@ -182,4 +186,5 @@ class ConversationContextResolver:
         elif intent and intent != 'platform.overview':
             query += ' ' + {'points.registration': 'registro puntos', 'points.accepted_delivery': 'entrega puntos',
                             'points.publication': 'publicar puntos', 'moderation.human_decision': 'moderacion humana'}[intent]
-        return ResolvedQuestion(question, query[:settings.CHATBOT_MAX_INPUT_CHARS], topic, center_id, intent)
+        return ResolvedQuestion(question, query[:settings.CHATBOT_MAX_INPUT_CHARS], topic, center_id, intent,
+                                provider_question=provider_question)

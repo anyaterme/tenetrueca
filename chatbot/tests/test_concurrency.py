@@ -26,7 +26,7 @@ class ProviderTransactionTests(ProviderEvidenceMixin, TransactionTestCase):
         owner = Owner(session_key='knowledge-transaction-check')
         conversation = get_session(owner)['conversation']['id']
         with patch('chatbot.answering.KnowledgeService.retrieve', side_effect=retrieve) as recorded:
-            result, status = send_message(owner, conversation, uuid4(), 'Hello', provider=Mock(respond=Mock(return_value='Answer')))
+            result, status = send_message(owner, conversation, uuid4(), 'Hola', provider=Mock(respond=Mock(return_value='Answer')))
         self.assertEqual(status, 200)
         self.assertEqual(recorded.call_count, 2)
 
@@ -40,7 +40,7 @@ class ProviderTransactionTests(ProviderEvidenceMixin, TransactionTestCase):
             self.assertEqual((usage.questions_consumed, usage.pending_requests), (0, 1))
             return 'Answer'
 
-        result, status = send_message(owner, conversation, uuid4(), 'Hi', provider=Mock(respond=respond))
+        result, status = send_message(owner, conversation, uuid4(), 'Hola', provider=Mock(respond=respond))
         self.assertEqual(status, 200)
         self.assertEqual(result['usage']['consumed'], 1)
 
@@ -55,7 +55,7 @@ class ProviderTransactionTests(ProviderEvidenceMixin, TransactionTestCase):
 
             with patch('chatbot.services.get_provider', return_value=Mock(respond=respond)):
                 response = self.client.post('/chatbot/api/messages/', {
-                    'conversation_id': conversation, 'request_id': str(uuid4()), 'content': 'Hello',
+                    'conversation_id': conversation, 'request_id': str(uuid4()), 'content': 'Hola',
                 }, content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
@@ -88,7 +88,7 @@ class ChatbotConcurrencyTests(ProviderEvidenceMixin, TransactionTestCase):
 
     def attempt(self, owner, conversation, key=None, provider=None):
         try:
-            return send_message(owner, conversation, key or uuid4(), 'Hello', provider=provider)[1]
+            return send_message(owner, conversation, key or uuid4(), 'Hola', provider=provider)[1]
         except ChatError as error:
             return error.status
 

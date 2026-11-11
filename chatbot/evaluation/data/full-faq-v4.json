@@ -1,0 +1,63 @@
+{
+  "test_centers": {
+    "adeje": {
+      "name": "Punto Limpio de Adeje",
+      "slug": "adeje-pruebas",
+      "address": "Calle de Pruebas 12, Adeje",
+      "schedule": "Lunes a viernes, de 08:00 a 15:00",
+      "latitude": "28.120000",
+      "longitude": "-16.720000",
+      "show_on_public_map": true,
+      "phone": "922 000 001"
+    },
+    "guancha": {
+      "name": "Punto Limpio de La Guancha",
+      "slug": "guancha-pruebas",
+      "address": "Calle de Pruebas 23, La Guancha",
+      "schedule": "Lunes: 08:00–16:00. Sábados: 09:00–13:00.",
+      "phone": "922 000 002",
+      "latitude": "28.373000",
+      "longitude": "-16.649000",
+      "show_on_public_map": true
+    },
+    "arona": {
+      "name": "Punto Limpio de Arona",
+      "slug": "arona-pruebas",
+      "address": "Calle de Pruebas 35, Arona",
+      "schedule": "Martes a viernes: 09:00–17:00. Domingos: cerrado.",
+      "phone": "922 000 003",
+      "latitude": "28.100000",
+      "longitude": "-16.650000",
+      "show_on_public_map": true
+    }
+  },
+  "cases": [
+    {"id": "E01", "language": "es", "question": "¿Cómo doy de alta mi cuenta y en qué momento se descuentan puntos al llevarme una reserva?", "tags": ["multiple"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Formulario y confirmación por correo.", "source": "registration"}, {"status": "answer", "criterion": "50 puntos al retirar.", "source": "points"}]},
+    {"id": "E02", "language": "en", "question": "Where do I look for an item to reserve, and may I pick it up at a different recycling point?", "tags": ["multiple"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Catalogue is where items are found and reserved.", "source": "reservation"}, {"status": "answer", "criterion": "Collection at its assigned centre or warehouse.", "source": "pickup_center"}]},
+    {"id": "E03", "language": "es", "question": "¿Qué tengo que subir al anunciar un juguete y quién lo comprueba después de la entrega?", "tags": ["multiple"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Foto y descripción en Añadir productos.", "source": "publication"}, {"status": "answer", "criterion": "El personal del centro valida al entregar.", "source": "publication"}]},
+    {"id": "E04", "language": "en", "question": "If I drop off a matching set of dishes, does it count as one, and what is my monthly drop-off cap?", "tags": ["multiple"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "A set counts as one unit.", "source": "delivery_limit"}, {"status": "answer", "criterion": "Ten monthly, with any relevant condition preserved.", "source": "delivery_limit"}]},
+    {"id": "E05", "language": "es", "question": "Si anulo la reserva y el objeto sigue disponible, ¿cuántas veces puedo volver a apartarlo? ¿A partir de cuándo cuentan los días para recogerlo?", "tags": ["multiple"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Solo una vez por objeto si sigue disponible.", "source": "cancel"}, {"status": "answer", "criterion": "Siete días naturales desde la reserva.", "source": "pickup_deadline"}]},
+    {"id": "E06", "language": "en", "question": "Does TRUEC@ let people exchange items directly, and which section of the site lists the recycling points?", "tags": ["multiple"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "No direct trade; use a centre.", "source": "exchange_locations"}, {"status": "answer", "criterion": "Locations section lists the centres.", "source": "exchange_locations"}]},
+    {"id": "E07", "language": "es", "question": "Necesito la calle y el número del centro de Arona que aparece en el mapa de TRUEC@.", "tags": ["operations"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Calle y número exactos de la ficha sintética de Arona.", "source": "center:arona"}]},
+    {"id": "E08", "language": "en", "question": "What contact telephone is published for the Adeje recycling point?", "tags": ["operations"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Synthetic Adeje phone.", "source": "center:adeje"}]},
+    {"id": "E09", "language": "es", "question": "¿Cuál es el horario habitual que figura para La Guancha y podéis asegurar que esté abierto en este minuto?", "tags": ["mixed"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Horario publicado de La Guancha.", "source": "center:guancha"}, {"status": "insufficient_information", "criterion": "Sin garantía de apertura en tiempo real."}]},
+    {"id": "E10", "language": "en", "question": "Do I have to pay a fee to use the platform, and could you give me the phone number for the recycling point?", "tags": ["mixed"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "No fee in money.", "source": "payment"}, {"status": "clarification", "criterion": "Ask which recycling point."}]},
+    {"id": "E11", "language": "es", "question": "¿Se puede llevar ropa usada? Si voy a descargar algo permitido, ¿puedo entrar con mi vehículo?", "tags": ["multiple"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "La ropa no se admite.", "source": "exclusions"}, {"status": "answer", "criterion": "Acceso solo para carga o descarga y el tiempo necesario.", "source": "vehicle"}]},
+    {"id": "E12", "language": "en", "question": "What is the published timetable at Arona, and do they have a spare bike on site today?", "tags": ["mixed"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Synthetic Arona schedule, including Sunday closure.", "source": "center:arona"}, {"status": "insufficient_information", "criterion": "No live product availability claim."}]},
+    {"id": "E13", "language": "es", "question": "¿Y cuándo tengo que ir a recogerla, contando desde que la reservé?", "tags": ["switch"], "interface_language": "en", "history": ["I set aside a board game through the catalogue."], "transcript": [{"role": "user", "content": "I set aside a board game through the catalogue."}, {"role": "assistant", "content": "The item listing identifies the collection centre."}], "expected_intents": [{"status": "answer", "criterion": "Siete días naturales desde la reserva.", "source": "pickup_deadline"}]},
+    {"id": "E14", "language": "en", "question": "Does the ad already earn anything, or do the points come later?", "tags": ["switch"], "interface_language": "es", "history": ["Acabo de publicar un juego en Añadir productos."], "transcript": [{"role": "user", "content": "Acabo de publicar un juego en Añadir productos."}, {"role": "assistant", "content": "El centro debe validar el objeto cuando lo entregues."}], "expected_intents": [{"status": "answer", "criterion": "Posting alone earns no points; points awarded at physical drop-off.", "source": "points"}]},
+    {"id": "E15", "language": "es", "question": "¿Cuánto gano por entregar un artículo y cuántos puntos suma el alta en la web?", "tags": ["multiple"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "100 al entregar.", "source": "points"}, {"status": "answer", "criterion": "100 al registrarse.", "source": "points"}]},
+    {"id": "E16", "language": "en", "question": "Can I reserve six items in one month at the same recycling point, and what is the network-wide cap?", "tags": ["multiple"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Five per centre per month.", "source": "reservation_limit"}, {"status": "answer", "criterion": "Ten monthly across the network.", "source": "reservation_limit"}]},
+    {"id": "E17", "language": "es", "question": "¿Me pasáis el número para llamar al centro?", "tags": ["ambiguity"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "clarification", "criterion": "Pregunta qué centro."}]},
+    {"id": "E18", "language": "en", "question": "Can a visitor convert points into a voucher for a different programme?", "tags": ["unavailable"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "insufficient_information", "criterion": "No conversion rule without an official source."}]},
+    {"id": "E19", "language": "es", "question": "¿Sabéis si queda ahora mismo una raqueta en el punto limpio de Adeje?", "tags": ["unavailable"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "insufficient_information", "criterion": "Sin disponibilidad en tiempo real."}]},
+    {"id": "E20", "language": "en", "question": "Which street is the recycling point located on?", "tags": ["ambiguity"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "clarification", "criterion": "Ask which recycling point."}]},
+    {"id": "E21", "language": "es", "question": "¿Qué identificación me piden al ir a por una reserva? ¿Qué pasa si dejo pasar el plazo sin cancelarla ni recogerla?", "tags": ["multiple"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "DNI en la recogida.", "source": "pickup"}, {"status": "answer", "criterion": "Siete días sin nuevas reservas y objeto disponible.", "source": "missed_pickup"}]},
+    {"id": "E22", "language": "en", "question": "Please tell me the published street address for La Guancha’s recycling centre.", "tags": ["operations"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Exact synthetic La Guancha address.", "source": "center:guancha"}]},
+    {"id": "E23", "language": "es", "question": "¿Dónde están los centros en la web y se puede entregar un artículo en cualquiera de ellos?", "tags": ["multiple"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Apartado Localizaciones.", "source": "exchange_locations"}, {"status": "answer", "criterion": "Entrega en cualquiera de los ocho centros TRUEC@.", "source": "exchange_locations"}]},
+    {"id": "E24", "language": "en", "question": "Can I have the contact number and the published opening hours for Arona?", "tags": ["operations"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Synthetic Arona phone.", "source": "center:arona"}, {"status": "answer", "criterion": "Synthetic Arona schedule.", "source": "center:arona"}]},
+    {"id": "E25", "language": "es", "question": "Ya reservé una lámpara en el catálogo. ¿Qué tengo que llevar para recogerla?", "tags": ["session"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Identificación con DNI.", "source": "pickup"}], "session": "pickup-followups"},
+    {"id": "E26", "language": "en", "question": "And can I collect it at any recycling centre?", "tags": ["session"], "interface_language": "es", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "The reserved lamp must be collected at the centre or warehouse shown in its listing.", "source": "pickup_center"}], "session": "pickup-followups"},
+    {"id": "E27", "language": "es", "question": "Si no me da tiempo a ir y tampoco cancelo, ¿qué ocurre?", "tags": ["session"], "interface_language": "en", "history": [], "transcript": [], "expected_intents": [{"status": "answer", "criterion": "Siete días sin nuevas reservas y artículo disponible.", "source": "missed_pickup"}], "session": "pickup-followups"}
+  ]
+}

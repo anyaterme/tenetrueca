@@ -68,9 +68,9 @@ FAQS = {
         'before making another reservation. Other users will be able to reserve the item.'),
     'exchange_locations': ReviewedFAQ(
         '¿Dónde puedo intercambiar mis productos?', '56c31aa6a38dfc3c58625ff70ec0883a8bf28aec470622659193d1eff6e735d2',
-        'Puedes hacer la entrega en cualquiera de los 8 centros TRUEC@ de los puntos limpios de Tenerife. '
-        'Busca el más cercano en «Localizaciones». El centro recibe el artículo y te asigna puntos para el catálogo. '
-        'El intercambio no requiere un trato ni un pago entre particulares.',
+        'Para entregar un objeto, elige uno de los 8 centros TRUEC@ situados en los puntos limpios de la isla. '
+        'En «Localizaciones» puedes encontrar el que te quede más cerca. Allí recibirán el objeto y te darán puntos '
+        'para usar en el catálogo. El intercambio se gestiona a través del centro, sin pagos ni entregas entre particulares.',
         'You can drop items off at any of the 8 TRUEC@ centres at Tenerife’s recycling points. '
         'Find the nearest one under “Locations”. The centre takes the item and assigns points you can use in the catalogue. '
         'There is no direct trade or payment between individuals.'),
@@ -138,6 +138,24 @@ VARIANTS = {
                               'fijos de Tenerife. Allí, muestra tu DNI o NIE para que el personal pueda validar el artículo.',
                               'After posting it, take it to one of the 8 TRUEC@ centres at Tenerife’s fixed recycling points. '
                               'Show your DNI or NIE so staff can validate the item.'),
+    'publication_validation': ('publication',
+                               'El personal del punto limpio revisa y valida el artículo cuando lo entregas.',
+                               'Staff at the recycling point check and validate the item when you drop it off.'),
+    'reservation_catalogue': ('reservation',
+                             'Busca el artículo en el catálogo de objetos y haz la reserva desde allí.',
+                             'Find the item in the item catalogue and reserve it there.'),
+    'exchange_directory': ('exchange_locations',
+                           'Abre «Localizaciones» para consultar el mapa de centros TRUEC@.',
+                           'Open “Locations” to view the map of TRUEC@ centres.'),
+    'exchange_direct': ('exchange_locations',
+                        'El centro se encarga del intercambio. No hace falta quedar ni pagar a otro usuario.',
+                        'The centre handles the exchange. You do not need to meet or pay another user.'),
+    'delivery_unit': ('delivery_limit',
+                      'Una vajilla o colección que se entrega como conjunto cuenta como un producto.',
+                      'A set of dishes or collection dropped off as one set counts as one item.'),
+    'reservation_unit': ('reservation_limit',
+                         'Una vajilla o colección que se ofrece como conjunto cuenta como un producto.',
+                         'A set of dishes or collection offered as one set counts as one item.'),
     'bicycle': ('admission',
                 'Una bicicleta puede encajar como material deportivo. El personal del punto limpio confirma si es apta.',
                 'A bicycle can fall under sports equipment. Staff at the recycling point confirm whether it is suitable.'),
@@ -157,7 +175,34 @@ VARIANTS = {
                   'Authorised staff handle it outside the catalogue.'),
     'charge': ('points', 'El descuento de 50 puntos se aplica al retirar el artículo.',
                'The 50 points are deducted when you collect the item.'),
+    'reservation_points': ('points',
+                           'Reservar no descuenta puntos. Los 50 puntos se descuentan al retirar el artículo.',
+                           'Making a reservation does not deduct points. The 50 points are deducted when you collect the item.'),
 }
+
+# Approved clauses can select a revision-bound variant without displaying a
+# generated paraphrase of the policy. Each key still has to match the cited FAQ.
+UNIT_CLAUSE = 'Se considera unidad un único objeto o conjunto de objetos que formen una unidad, como una colección de libros o una vajilla'
+REVIEWED_CLAUSES = {
+    'delivery_unit': UNIT_CLAUSE,
+    'reservation_unit': UNIT_CLAUSE,
+    'exchange_directory': 'Consulta la sección de Localizaciones para encontrar el punto limpio más cercano.',
+    'publication_validation': 'Identifícate con tu DNI/NIE al gestor del punto limpio que validará el objeto',
+    'reservation_catalogue': '1. Ir a Catálogo de objetos.',
+}
+
+
+def reviewed_clause(quote, source, fragments, language):
+    # Only a complete, curated clause may select an approved answer.
+    normalized = ' '.join(quote.split()).rstrip('.')
+    if not quote.strip() or quote not in source.content:
+        return None
+    for key, clause in REVIEWED_CLAUSES.items():
+        if normalized == clause.rstrip('.'):
+            answer = reviewed_answer(key, fragments, language)
+            if answer and answer[1].source.source_id == source.source.source_id:
+                return answer[0]
+    return None
 
 
 def reviewed_intent(question, topic, *, intent='', original=''):

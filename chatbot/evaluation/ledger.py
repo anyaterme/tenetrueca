@@ -8,6 +8,7 @@ from django.utils import timezone
 from .errors import EvaluationStopped
 from .models import ChatEvaluationRun, ChatEvaluationAttempt
 from .pricing import decimal, digest, money
+from .token_budget import COUNTED_LIMIT, COUNTED_METHOD, COUNT_HEADROOM
 
 
 @contextmanager
@@ -51,13 +52,21 @@ def open_run(run_id, configuration, *, resume=False):
     return run
 
 
-def reserve(run_id, case_id, mode, *, tariff, input_ceiling, output_ceiling, payload_hash, source_hash):
-    if input_ceiling != tariff.input_ceiling or type(output_ceiling) is not int or not 1 <= output_ceiling <= 400:
+def reserve(run_id, case_id, mode, *, tariff, input_ceiling, output_ceiling, payload_hash, source_hash,
+            faq_version=None, measured_input_tokens=None):
+    if type(output_ceiling) is not int or not 1 <= output_ceiling <= 400:
         raise EvaluationStopped('unreliable_cost_bound')
     reservation = tariff.cost(input_ceiling, output_ceiling, margin=True)
     with transaction.atomic():
         run = ChatEvaluationRun.objects.select_for_update().get(pk=run_id)
         config = run.configuration
+        if config.get('token_bound_method') == COUNTED_METHOD:
+            if (mode != 'full_faq' or type(measured_input_tokens) is not int
+                    or not 0 < measured_input_tokens <= COUNTED_LIMIT - COUNT_HEADROOM
+                    or input_ceiling != measured_input_tokens + COUNT_HEADROOM):
+                raise EvaluationStopped('unreliable_cost_bound')
+        elif input_ceiling != tariff.input_ceiling or measured_input_tokens is not None:
+            raise EvaluationStopped('unreliable_cost_bound')
         if (tariff.model != config.get('model') or tariff.signature != config.get('tariff_hash')
                 or input_ceiling > config.get('max_input_tokens', 0)
                 or output_ceiling > config.get('max_output_tokens', 0)
@@ -71,13 +80,17 @@ def reserve(run_id, case_id, mode, *, tariff, input_ceiling, output_ceiling, pay
             raise EvaluationStopped('request_limit')
         if run.committed_usd + reservation > run.max_budget_usd:
             raise EvaluationStopped('budget_insufficient')
-        # The two modes of a question must use identical public versions.
-        other = run.attempts.filter(case_id=case_id).first()
-        if other is not None and other.source_hash != source_hash:
-            raise EvaluationStopped('source_versions_changed')
-        previous = [value for key, value in run.results.items() if key.startswith(case_id + ':')]
-        if any(value.get('input_source_hash', source_hash) != source_hash for value in previous):
-            raise EvaluationStopped('source_versions_changed')
+        if config.get('faq_version'):
+            # Retrieval and the complete snapshot deliberately send different
+            # evidence. Their shared database snapshot is pinned separately.
+            if config['faq_version'] != faq_version:
+                raise EvaluationStopped('source_versions_changed')
+        else:
+            other = run.attempts.filter(case_id=case_id).first()
+            previous = [value for key, value in run.results.items() if key.startswith(case_id + ':')]
+            if ((other is not None and other.source_hash != source_hash)
+                    or any(value.get('input_source_hash', source_hash) != source_hash for value in previous)):
+                raise EvaluationStopped('source_versions_changed')
         attempt = run.attempts.create(case_id=case_id, mode=mode, input_ceiling=input_ceiling,
             output_ceiling=output_ceiling, reserved_usd=reservation, charged_usd=reservation,
             payload_hash=payload_hash, source_hash=source_hash)
@@ -115,9 +128,15 @@ def known_usage(usage, model, tariff, attempt):
     for name, fields, total in [('input_tokens_details', {'cached_tokens', 'cache_write_tokens'}, inputs),
                                 ('output_tokens_details', {'reasoning_tokens'}, outputs)]:
         details = usage.get(name) or {}
-        if (not isinstance(details, dict) or set(details) - fields
+        optional = {'cache_write_tokens_details'} if name == 'input_tokens_details' and attempt.mode == 'full_faq' else set()
+        if (not isinstance(details, dict) or set(details) - fields - optional
                 or any(type(details.get(field, 0)) is not int or not 0 <= details.get(field, 0) <= total for field in fields)):
             raise EvaluationStopped('unknown_usage_component')
+        if optional and (writes := details.get('cache_write_tokens_details')) is not None:
+            if (not isinstance(writes, dict) or set(writes) - {'ttl_30m_tokens', 'ttl_12h_tokens'}
+                    or any(type(count) is not int or count < 0 for count in writes.values())
+                    or sum(writes.values()) != details.get('cache_write_tokens', 0)):
+                raise EvaluationStopped('unknown_usage_component')
     # Full uncached rates + approved worst special rates: a usage-based ceiling, not invoice.
     return tariff.cost(inputs, outputs)
 

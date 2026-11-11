@@ -32,7 +32,7 @@ def select_cases(cases, options):
     live = options.get('allow_live') and not options.get('dry_run')
     if live and not approved:
         raise EvaluationStopped('case_selection_not_authorized')
-    modes = 2 if options['mode'] == 'both' else 1
+    modes = 2 if options['mode'] in ('both', 'faq_compare') else 1
     if options['max_requests'] > len(requested) * modes:
         raise EvaluationStopped('case_selection_request_limit')
     return [known[key] for key in requested]

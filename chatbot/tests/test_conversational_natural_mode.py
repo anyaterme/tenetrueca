@@ -10,6 +10,7 @@ from django.utils import translation
 from catalog.models import Category
 from faq.models import FAQ
 
+from chatbot.grounding import EvidenceSelection, GeneratedAnswer, GroundedClaim
 from chatbot.tests.test_openai_provider import response
 
 
@@ -108,6 +109,23 @@ class NaturalModeAPITests(TestCase):
         self.assertIn('No tengo información suficiente', unknown['content'])
         self.assertFalse(unknown['sources'])
 
+    def test_colloquial_publication_questions_find_the_same_official_procedure(self):
+        publication = self.faq('publication')
+        expected = self.ask('¿Cómo puedo publicar un artículo?')['content']
+        for question in (
+            'qué tengo que hacer para poder subir un artículo?',
+            '¿Qué necesito para añadir un producto?',
+            '¿Cuáles son los pasos para publicar un objeto?',
+        ):
+            with self.subTest(question=question):
+                answer = self.ask(question)
+                self.assertEqual(answer['content'], expected)
+                self.assert_source(answer, publication)
+        english = self.ask('What do I need to do to submit an item?')
+        self.assertIn('photo and description', english['content'])
+        self.assert_source(english, publication)
+        self.assertFalse(self.ask('¿Qué tengo que hacer para subir de nivel?')['sources'])
+
     def test_followup_can_refer_to_an_earlier_question_in_the_same_message(self):
         exclusions = self.faq('exclusions')
         answer = self.ask('¿Puedo llevar ropa? ¿Y una cafetera pequeña?')
@@ -176,3 +194,50 @@ class NaturalModeAPITests(TestCase):
         answer = self.ask('And clothes?', language='en')
         self.assertEqual(answer['content'], 'TRUEC@ does not accept clothing.')
         self.assert_source(answer, exclusions)
+
+    def test_switches_language_per_message_while_keeping_publication_context(self):
+        publication = self.faq('publication')
+        opening = self.ask('How do I submit an item?', language='es')
+        self.assertIn('photo and description', opening['content'])
+        self.assert_source(opening, publication)
+
+        spanish = self.ask('¿Y las fotos?', language='en')
+        self.assertIn('una foto y una descripción', spanish['content'])
+        self.assert_source(spanish, publication)
+
+        english = self.ask('And the photos?', language='es')
+        self.assertIn('include a photo and description', english['content'])
+        self.assert_source(english, publication)
+
+    def test_ambiguous_turn_uses_last_clear_language_then_interface(self):
+        initial = self.ask('iPhone?', language='es')
+        self.assertIn('No dispongo de información', initial['content'])
+
+        clarification = self.ask('I have an item to drop off', language='es')
+        self.assertIn('What item would you like to drop off?', clarification['content'])
+
+        followup = self.ask('iPhone?', language='es')
+        self.assertIn('I do not have enough', followup['content'])
+
+    def test_other_language_extract_is_replaced_by_a_localized_source_link(self):
+        faq = FAQ.objects.create(question='¿Qué guías ofrece TRUEC@?', answer='You can read guides about the exchange.')
+        with override_settings(CHATBOT_GENERATION_MODE='extractive'):
+            answer = self.ask(faq.question, language='en')
+        self.assertEqual(answer['content'], 'Puedes consultar la información publicada en la fuente enlazada.')
+        self.assert_source(answer, faq)
+
+    def test_english_photo_followup_reaches_the_provider_as_a_contextual_question_in_english(self):
+        faq = FAQ.objects.create(question='¿Cómo preparar fotografías para publicar?',
+                                 answer='Prepara fotografías claras del objeto para presentar la propuesta.')
+        evidence = (EvidenceSelection(f'faq:{faq.pk}', faq.answer),)
+        text = 'Use clear photographs of the object for your proposal.'
+        with patch('chatbot.services.get_provider') as factory:
+            provider = factory.return_value
+            provider.respond.return_value = GeneratedAnswer(evidence, text, (GroundedClaim(text, evidence),))
+            self.ask('¿Cómo puedo publicar un artículo?')
+            answer = self.ask('And the photos?')
+        history = provider.respond.call_args.args[0]
+        self.assertEqual(history[-1].content, 'What photos should I prepare to publish an item?')
+        self.assertEqual(provider.respond.call_args.kwargs['language'], 'en')
+        self.assertEqual(answer['content'], text)
+        self.assert_source(answer, faq)

@@ -8,6 +8,34 @@ y en la corrección de funcionamiento general al final de este documento. Las au
 fechadas anteriores se conservan como historial y no sustituyen el criterio editorial vigente.
 La integración no modifica la IA de moderación ni sus presupuestos/flags.
 
+## Modo con las FAQ completas
+
+`CHATBOT_GENERATION_MODE=full_faq` activa en pruebas el modo de FAQ completas.
+Django consulta las FAQ públicas, reutiliza el bloque serializado mientras su
+contenido coincida y envía las FAQ antes del historial reciente y la pregunta.
+GPT Luna interpreta la consulta en una llamada estructurada. Django valida las
+fuentes vigentes y crea los enlaces. Para las reglas críticas usa textos
+revisados en ambos idiomas y para los centros consulta los datos públicos.
+Un punto de caché explícito de 30 minutos termina en el bloque público. El
+historial y el mensaje actual quedan fuera del prefijo escrito en caché.
+
+El bloque completo tiene un límite de 10.000 caracteres
+(`CHATBOT_FULL_FAQ_MAX_CHARS`), el historial un límite de 1.800 caracteres
+(`CHATBOT_FULL_FAQ_HISTORY_CHARS`) y la solicitud un límite de 24.576 bytes
+(`CHATBOT_FULL_FAQ_REQUEST_BYTES`). Si las FAQ o la solicitud exceden el límite,
+el servicio devuelve una respuesta segura y registra la incidencia.
+
+En un entorno aislado, aplica las migraciones y configura el modo en el servicio
+web. Para revertir, restaura el valor anterior de `CHATBOT_GENERATION_MODE`
+(por defecto `natural`) y reinicia el servicio. El cambio de modo conserva
+las conversaciones y la cuota. La migración 0005 amplía los modos del registro
+de evaluación y puede permanecer aplicada tras revertir el modo.
+
+El comando `evaluate_chatbot_live --dataset full-faq-v1 --mode faq_compare --dry-run`
+utiliza las FAQ cargadas en la base de pruebas. El corpus reproducible y los
+casos están en `chatbot/evaluation/data/`. Una ejecución con el proveedor real
+requiere el entorno aislado y los límites y credenciales del piloto existente.
+
 ## Modo de respuesta natural
 
 `CHATBOT_GENERATION_MODE=natural` es el valor por defecto del código. Un entorno que

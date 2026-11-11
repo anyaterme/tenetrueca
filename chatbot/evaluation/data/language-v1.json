@@ -1,0 +1,32 @@
+{
+  "version": "language-v1",
+  "cases": [
+    {
+      "id": "E01",
+      "question": "How do I submit an item?",
+      "history": [],
+      "interface_language": "es",
+      "language": "en",
+      "expected_sources": ["faq.publish"],
+      "fixture_ids": ["faq.workflow", "faq.publish", "faq.photos"]
+    },
+    {
+      "id": "E02",
+      "question": "¿Y las fotos?",
+      "history": ["How do I submit an item?"],
+      "interface_language": "es",
+      "language": "es",
+      "expected_sources": ["faq.photos"],
+      "fixture_ids": ["faq.workflow", "faq.publish", "faq.photos"]
+    },
+    {
+      "id": "E03",
+      "question": "And the photos?",
+      "history": ["How do I submit an item?", "¿Y las fotos?"],
+      "interface_language": "es",
+      "language": "en",
+      "expected_sources": ["faq.photos"],
+      "fixture_ids": ["faq.workflow", "faq.publish", "faq.photos"]
+    }
+  ]
+}

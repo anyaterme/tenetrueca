@@ -1,0 +1,494 @@
+{
+  "test_centers": {
+    "adeje": {
+      "name": "Punto Limpio de Adeje",
+      "slug": "adeje-pruebas",
+      "address": "Calle de Pruebas 12, Adeje",
+      "schedule": "Lunes a viernes, de 08:00 a 15:00",
+      "latitude": "28.120000",
+      "longitude": "-16.720000",
+      "show_on_public_map": true,
+      "phone": "922 000 001"
+    },
+    "guancha": {
+      "name": "Punto Limpio de La Guancha",
+      "slug": "guancha-pruebas",
+      "address": "Calle de Pruebas 23, La Guancha",
+      "schedule": "Lunes: 08:00–16:00. Sábados: 09:00–13:00.",
+      "phone": "922 000 002",
+      "latitude": "28.373000",
+      "longitude": "-16.649000",
+      "show_on_public_map": true
+    }
+  },
+  "cases": [
+    {
+      "id": "E01",
+      "language": "en",
+      "question": "How do I create an account, and how many points do I get when I sign up?",
+      "tags": [
+        "multiple"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "registration",
+          "criterion": "Registration form followed by email confirmation."
+        },
+        {
+          "status": "answer",
+          "source": "points",
+          "criterion": "100 points for signing up."
+        }
+      ]
+    },
+    {
+      "id": "E02",
+      "language": "es",
+      "question": "¿En qué apartado aparto una bici y cuándo me restan puntos por llevármela?",
+      "tags": [
+        "multiple"
+      ],
+      "interface_language": "en",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "reservation",
+          "criterion": "La reserva se realiza desde el catálogo."
+        },
+        {
+          "status": "answer",
+          "source": "points",
+          "criterion": "Se descuentan 50 puntos al retirar el objeto."
+        }
+      ]
+    },
+    {
+      "id": "E03",
+      "language": "en",
+      "question": "Could I collect the reserved lamp from any centre, and what ID should I bring?",
+      "tags": [
+        "multiple"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "pickup_center",
+          "criterion": "Use the centre or warehouse assigned to the item listing."
+        },
+        {
+          "status": "answer",
+          "source": "pickup",
+          "criterion": "Show DNI to the staff at collection."
+        }
+      ]
+    },
+    {
+      "id": "E04",
+      "language": "es",
+      "question": "¿Cuántos días naturales tengo para recoger una reserva y cuántas veces puedo volver a reservar el mismo objeto si la cancelo?",
+      "tags": [
+        "multiple"
+      ],
+      "interface_language": "en",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "pickup_deadline",
+          "criterion": "7 días naturales desde la reserva."
+        },
+        {
+          "status": "answer",
+          "source": "cancel",
+          "criterion": "Se puede volver a reservar una vez por objeto si sigue disponible."
+        }
+      ]
+    },
+    {
+      "id": "E05",
+      "language": "en",
+      "question": "Does uploading a product photo earn me points, and can I swap the product directly with someone?",
+      "tags": [
+        "multiple"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "points",
+          "criterion": "Uploading alone earns no points; points apply at drop-off."
+        },
+        {
+          "status": "answer",
+          "source": "exchange_locations",
+          "criterion": "The exchange is through a centre, with no direct trade between people."
+        }
+      ]
+    },
+    {
+      "id": "E06",
+      "language": "es",
+      "question": "¿Me das la dirección y el teléfono del Punto Limpio de La Guancha?",
+      "tags": [
+        "multiple",
+        "operations"
+      ],
+      "interface_language": "en",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "center:guancha",
+          "criterion": "Dirección exacta de la ficha sintética de La Guancha."
+        },
+        {
+          "status": "answer",
+          "source": "center:guancha",
+          "criterion": "Teléfono exacto de la ficha sintética de La Guancha."
+        }
+      ]
+    },
+    {
+      "id": "E07",
+      "language": "en",
+      "question": "What’s the published timetable for the Adeje recycling centre?",
+      "tags": [
+        "operations"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "center:adeje",
+          "criterion": "Published schedule Monday to Friday, 08:00 to 15:00."
+        }
+      ]
+    },
+    {
+      "id": "E08",
+      "language": "es",
+      "question": "¿En qué calle está el Punto Limpio de La Guancha?",
+      "tags": [
+        "operations"
+      ],
+      "interface_language": "en",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "center:guancha",
+          "criterion": "Dirección exacta de La Guancha, sin sustituir el centro."
+        }
+      ]
+    },
+    {
+      "id": "E09",
+      "language": "en",
+      "question": "What’s the contact number for the La Guancha recycling centre?",
+      "tags": [
+        "operations"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "center:guancha",
+          "criterion": "Phone number from the La Guancha record."
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "language": "es",
+      "question": "¿Qué horario publicado tiene La Guancha y está abierto en este momento?",
+      "tags": [
+        "multiple",
+        "operations",
+        "mixed"
+      ],
+      "interface_language": "en",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "center:guancha",
+          "criterion": "Horario publicado de La Guancha con ambos días y horas."
+        },
+        {
+          "status": "insufficient_information",
+          "criterion": "Declara que no puede verificar la apertura actual."
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "language": "en",
+      "question": "Can I get the Adeje recycling centre’s address, and is it open right now?",
+      "tags": [
+        "multiple",
+        "operations",
+        "mixed"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "center:adeje",
+          "criterion": "Street address from the Adeje record."
+        },
+        {
+          "status": "insufficient_information",
+          "criterion": "Does not infer current opening from the published schedule."
+        }
+      ]
+    },
+    {
+      "id": "E12",
+      "language": "es",
+      "question": "¿Y el teléfono de allí?",
+      "tags": [
+        "operations",
+        "followup",
+        "en_to_es"
+      ],
+      "interface_language": "en",
+      "history": [
+        "Where is the La Guancha recycling centre?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "Where is the La Guancha recycling centre?"
+        },
+        {
+          "role": "assistant",
+          "content": "It is on Calle de Pruebas 23."
+        }
+      ],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "center:guancha",
+          "criterion": "Teléfono de La Guancha en español."
+        }
+      ]
+    },
+    {
+      "id": "E13",
+      "language": "en",
+      "question": "And when do I need to pick it up?",
+      "tags": [
+        "followup",
+        "es_to_en"
+      ],
+      "interface_language": "es",
+      "history": [
+        "He reservado una vajilla. ¿Tengo que llevar identificación?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "He reservado una vajilla. ¿Tengo que llevar identificación?"
+        },
+        {
+          "role": "assistant",
+          "content": "Sí. Lleva el DNI para que el personal compruebe tu identidad."
+        }
+      ],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "pickup_deadline",
+          "criterion": "7 calendar days from reservation."
+        }
+      ]
+    },
+    {
+      "id": "E14",
+      "language": "es",
+      "question": "¿Y qué pasa si no voy ni cancelo a tiempo?",
+      "tags": [
+        "followup",
+        "en_to_es"
+      ],
+      "interface_language": "en",
+      "history": [
+        "I reserved a book in the catalogue. How long have I got to collect it?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "I reserved a book in the catalogue. How long have I got to collect it?"
+        },
+        {
+          "role": "assistant",
+          "content": "You have seven calendar days from the reservation."
+        }
+      ],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "missed_pickup",
+          "criterion": "7 días sin nuevas reservas y el objeto vuelve a quedar disponible."
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "language": "en",
+      "question": "What are the rules for rebooking after cancellation, and what is the centre’s address?",
+      "tags": [
+        "multiple",
+        "mixed",
+        "ambiguity"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "cancel",
+          "criterion": "Once per item if still available."
+        },
+        {
+          "status": "clarification",
+          "criterion": "Asks for the centre name for its street address."
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "language": "es",
+      "question": "¿Cuál es el teléfono del centro?",
+      "tags": [
+        "ambiguity"
+      ],
+      "interface_language": "en",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "clarification",
+          "criterion": "Pide identificar el centro."
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "language": "en",
+      "question": "Can the staff deliver my reserved item to my home this evening?",
+      "tags": [
+        "unavailable"
+      ],
+      "interface_language": "es",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "insufficient_information",
+          "criterion": "No claim about home delivery or a specific reservation."
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "language": "es",
+      "question": "¿Está abierto ahora mismo el Punto Limpio de La Guancha?",
+      "tags": [
+        "operations",
+        "unavailable"
+      ],
+      "interface_language": "en",
+      "history": [],
+      "transcript": [],
+      "expected_intents": [
+        {
+          "status": "insufficient_information",
+          "criterion": "Se abstiene sobre la apertura real."
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "language": "en",
+      "question": "Actually, do they take shoes?",
+      "tags": [
+        "topic_change",
+        "es_to_en"
+      ],
+      "interface_language": "es",
+      "history": [
+        "¿Cómo confirmo el registro?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Cómo confirmo el registro?"
+        },
+        {
+          "role": "assistant",
+          "content": "Usa el enlace del correo de confirmación."
+        }
+      ],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "exclusions",
+          "criterion": "Footwear is excluded."
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "language": "es",
+      "question": "Cambio de tema, ¿tengo que pagar en euros para usar TRUEC@?",
+      "tags": [
+        "topic_change",
+        "en_to_es"
+      ],
+      "interface_language": "en",
+      "history": [
+        "How do I post an item?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "How do I post an item?"
+        },
+        {
+          "role": "assistant",
+          "content": "Open Add products and include a photo and description."
+        }
+      ],
+      "expected_intents": [
+        {
+          "status": "answer",
+          "source": "payment",
+          "criterion": "No se paga con dinero y el programa funciona con puntos."
+        }
+      ]
+    }
+  ]
+}

@@ -31,6 +31,7 @@
   "chatbot/migrations/0002_chatmessage_sources.py": "f07f48fdc2627b56e3b2ad0d849a17888fabfc7023a6baf5eb81b6a3fdaf3405",
   "chatbot/migrations/0003_evaluation_budget.py": "c0b701ca2bcc125fb447c0e320f98735b78794ffcb73e936d67114bff5701126",
   "chatbot/migrations/0004_natural_evaluation_mode.py": "d3f5ad34ef977616806a1f9e1ecfd70d8d80ddd9faa717d2cf1e05afc30422c8",
+  "chatbot/migrations/0005_full_faq_evaluation_mode.py": "6d3c5d02c7846cf19679c0c201de46b6083ed3fd4cccaf2a3b00258caad46d8d",
   "chatbot/migrations/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "configuration/migrations/0001_initial.py": "6693848555bda5e407b575fdc623211122d09ec3a2aa751376491873819ea321",
   "configuration/migrations/0002_emailconfiguration.py": "c6604b868314be99d41c17b4a216613395f40d17317a7778b18d4aab5d194257",

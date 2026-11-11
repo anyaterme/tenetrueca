@@ -17,7 +17,7 @@ from openai.types.responses.response_create_params import ResponseCreateParamsNo
 
 from chatbot.checks import chatbot_configuration
 from chatbot.instructions import SYSTEM_INSTRUCTIONS
-from chatbot.providers import ChatTurn, OpenAIProvider, SimulatedProvider, get_provider
+from chatbot.providers import ChatTurn, OpenAIProvider, RequestTrace, SimulatedProvider, get_provider
 from chatbot.safety import ProviderError
 from chatbot.tests.fixtures import knowledge_fixture, selection_json
 from chatbot.grounding import GeneratedAnswer, EvidenceSelection
@@ -166,6 +166,65 @@ class OpenAIProviderTests(SimpleTestCase):
             self.ask()
         self.assertEqual(cancelled, [True])
         self.create.assert_awaited_once()
+
+    def test_full_faq_retries_a_connect_failure_before_any_request_was_sent(self):
+        req = httpx.Request('POST', 'https://api.openai.com/v1/responses')
+
+        async def create(**_kwargs):
+            transport = self.factory.call_args.kwargs['http_client']
+            await transport.event_hooks['request'][0](req)
+            trace = req.extensions['trace']
+            if self.create.await_count == 1:
+                await trace('connection.connect_tcp.started', {})
+                await trace('connection.connect_tcp.failed', {})
+                raise APIConnectionError(request=req) from httpx.ConnectError('test failure')
+            await trace('http11.send_request_headers.started', {})
+            return response()
+
+        self.create.side_effect = create
+        asyncio.run(self.provider._full_faq_request({}, 1))
+        self.assertEqual(self.provider.last_transport['transport_attempts'], 2)
+        self.assertEqual(self.provider.last_transport['http_sends'], 1)
+        self.assertEqual(self.create.await_count, 2)
+
+    def test_a_stalled_sent_request_cancels_while_another_request_completes(self):
+        sent = asyncio.Event()
+        cancelled = []
+        req = httpx.Request('POST', 'https://api.openai.com/v1/responses')
+
+        async def create(**kwargs):
+            transport = self.factory.call_args.kwargs['http_client']
+            request = httpx.Request(req.method, req.url)
+            await transport.event_hooks['request'][0](request)
+            trace = request.extensions['trace']
+            await trace('http11.send_request_headers.started', {})
+            await trace('http11.receive_response_headers.started', {})
+            if kwargs.get('stall'):
+                sent.set()
+                try:
+                    await asyncio.Future()
+                finally:
+                    cancelled.append(True)
+            await trace('http11.receive_response_headers.complete', {})
+            return response()
+
+        self.create.side_effect = create
+        other = OpenAIProvider()
+
+        async def exercise():
+            stalled = asyncio.create_task(self.provider._full_faq_request({'stall': True}, .05))
+            await sent.wait()
+            result = await other._full_faq_request({}, 1)
+            self.assertEqual(result.status, 'completed')
+            with self.assertRaises(TimeoutError):
+                await stalled
+
+        asyncio.run(exercise())
+        self.assertEqual(cancelled, [True])
+        self.assertEqual(self.create.await_count, 2)
+        self.assertEqual(self.provider.last_transport['phase'], 'wait_headers')
+        self.assertEqual(self.provider.last_transport['http_sends'], 1)
+        self.assertEqual(other.last_transport['http_sends'], 1)
 
     def test_empty_refused_partial_and_failed_responses_are_not_success(self):
         for result in (response(''), response('  '), response('partial', 'incomplete'), response('bad', 'failed'),

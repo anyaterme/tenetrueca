@@ -1,0 +1,1511 @@
+{
+  "cases": [
+    {
+      "id": "E01",
+      "category": "paraphrase",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Qué tengo que hacer para poder subir un artículo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E02",
+      "category": "paraphrase",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cómo puedo publicar un artículo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E03",
+      "category": "colloquial",
+      "language": "es",
+      "interface_language": "en",
+      "question": "Tengo un juguete que ya no utilizo, ¿cómo lo pongo en TRUEC@?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E04",
+      "category": "typo",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cómo se cuelga un prodcto que quiero dar?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E05",
+      "category": "paraphrase",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What do I need to do to list something I no longer use?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E06",
+      "category": "colloquial",
+      "language": "en",
+      "interface_language": "es",
+      "question": "I've got a spare toy. How do I put it up on TRUEC@?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E07",
+      "category": "typo",
+      "language": "en",
+      "interface_language": "es",
+      "question": "How do I uplod an itme for someone else to take?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E08",
+      "category": "paraphrase",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Where do I post a description of a thing I want to give away?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication"
+      ]
+    },
+    {
+      "id": "E09",
+      "category": "followup",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Y las fotos?",
+      "history": [
+        "¿Cómo puedo publicar un artículo?",
+        "¿Ya aparece en el catálogo?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Cómo puedo publicar un artículo?"
+        },
+        {
+          "role": "assistant",
+          "content": "Abre Añadir productos y prepara una foto y una descripción."
+        },
+        {
+          "role": "user",
+          "content": "¿Ya aparece en el catálogo?"
+        },
+        {
+          "role": "assistant",
+          "content": "El personal lo valida después de la entrega."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication_photos"
+      ]
+    },
+    {
+      "id": "E10",
+      "category": "followup",
+      "language": "en",
+      "interface_language": "es",
+      "question": "And what about the photos?",
+      "history": [
+        "How do I list my old board game?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "How do I list my old board game?"
+        },
+        {
+          "role": "assistant",
+          "content": "Open Add products and post a photo and description."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication_photos"
+      ]
+    },
+    {
+      "id": "E11",
+      "category": "followup",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Do I need to add a picture too?",
+      "history": [
+        "¿Cómo puedo publicar un artículo?",
+        "¿Ya aparece en el catálogo?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Cómo puedo publicar un artículo?"
+        },
+        {
+          "role": "assistant",
+          "content": "Abre Añadir productos y prepara una foto y una descripción."
+        },
+        {
+          "role": "user",
+          "content": "¿Ya aparece en el catálogo?"
+        },
+        {
+          "role": "assistant",
+          "content": "El personal lo valida después de la entrega."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication_photos"
+      ]
+    },
+    {
+      "id": "E12",
+      "category": "followup",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Y luego dónde lo llevo?",
+      "history": [
+        "How do I list my old board game?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "How do I list my old board game?"
+        },
+        {
+          "role": "assistant",
+          "content": "Open Add products and post a photo and description."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication"
+      ],
+      "expected_facts": [
+        "publication_delivery"
+      ]
+    },
+    {
+      "id": "E13",
+      "category": "followup",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cuántos puntos me dan al llevarlo?",
+      "history": [
+        "¿Cómo puedo publicar un artículo?",
+        "¿Ya aparece en el catálogo?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Cómo puedo publicar un artículo?"
+        },
+        {
+          "role": "assistant",
+          "content": "Abre Añadir productos y prepara una foto y una descripción."
+        },
+        {
+          "role": "user",
+          "content": "¿Ya aparece en el catálogo?"
+        },
+        {
+          "role": "assistant",
+          "content": "El personal lo valida después de la entrega."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "delivery_points"
+      ]
+    },
+    {
+      "id": "E14",
+      "category": "followup",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Do I get anything just for putting it online?",
+      "history": [
+        "How do I list my old board game?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "How do I list my old board game?"
+        },
+        {
+          "role": "assistant",
+          "content": "Open Add products and post a photo and description."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "publication_points"
+      ]
+    },
+    {
+      "id": "E15",
+      "category": "followup",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Ese tipo de artículo entra en el programa?",
+      "history": [
+        "¿Puedo dejar un carrito?",
+        "Me refiero a uno de bebé."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Puedo dejar un carrito?"
+        },
+        {
+          "role": "assistant",
+          "content": "¿Te refieres a un carrito infantil o a otro tipo de objeto?"
+        },
+        {
+          "role": "user",
+          "content": "Me refiero a uno de bebé."
+        },
+        {
+          "role": "assistant",
+          "content": "Los accesorios infantiles son una categoría admitida."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "admission"
+      ],
+      "expected_facts": [
+        "admission"
+      ]
+    },
+    {
+      "id": "E16",
+      "category": "followup",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Does that use up my points already?",
+      "history": [
+        "I put a hold on the bookshelf."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "I put a hold on the bookshelf."
+        },
+        {
+          "role": "assistant",
+          "content": "Collect it from the centre listed for the item."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "reservation_points"
+      ]
+    },
+    {
+      "id": "E17",
+      "category": "followup",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cuánto tiempo me dejan para ir a por ella?",
+      "history": [
+        "He reservado una vajilla."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "He reservado una vajilla."
+        },
+        {
+          "role": "assistant",
+          "content": "Consulta en la ficha el centro asignado para recogerla."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup_deadline"
+      ],
+      "expected_facts": [
+        "pickup_deadline"
+      ]
+    },
+    {
+      "id": "E18",
+      "category": "followup",
+      "language": "en",
+      "interface_language": "es",
+      "question": "How much time do I have to get it?",
+      "history": [
+        "I put a hold on the bookshelf."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "I put a hold on the bookshelf."
+        },
+        {
+          "role": "assistant",
+          "content": "Collect it from the centre listed for the item."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup_deadline"
+      ],
+      "expected_facts": [
+        "pickup_deadline"
+      ]
+    },
+    {
+      "id": "E19",
+      "category": "followup",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can I collect that from a different location?",
+      "history": [
+        "He reservado una vajilla."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "He reservado una vajilla."
+        },
+        {
+          "role": "assistant",
+          "content": "Consulta en la ficha el centro asignado para recogerla."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup_center"
+      ],
+      "expected_facts": [
+        "pickup_center"
+      ]
+    },
+    {
+      "id": "E20",
+      "category": "followup",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Qué identificación me van a pedir allí?",
+      "history": [
+        "I put a hold on the bookshelf."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "I put a hold on the bookshelf."
+        },
+        {
+          "role": "assistant",
+          "content": "Collect it from the centre listed for the item."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup"
+      ],
+      "expected_facts": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "E21",
+      "category": "multi",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cómo me doy de alta y cuántos puntos me dan por eso?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "registration",
+        "points"
+      ],
+      "expected_facts": [
+        "registration",
+        "registration_points"
+      ]
+    },
+    {
+      "id": "E22",
+      "category": "multi",
+      "language": "en",
+      "interface_language": "es",
+      "question": "How do I list a toy, and does posting it alone earn points?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "publication",
+        "points"
+      ],
+      "expected_facts": [
+        "publication",
+        "publication_points"
+      ]
+    },
+    {
+      "id": "E23",
+      "category": "multi",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cómo lo aparto en la web y cuántos días naturales me dan para recogerlo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "reservation",
+        "pickup_deadline"
+      ],
+      "expected_facts": [
+        "reservation",
+        "pickup_deadline"
+      ]
+    },
+    {
+      "id": "E24",
+      "category": "multi",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can I collect it anywhere and when are points deducted?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup_center",
+        "points"
+      ],
+      "expected_facts": [
+        "pickup_center",
+        "charge"
+      ]
+    },
+    {
+      "id": "E25",
+      "category": "topic_change",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Switching topics, how can I create a TRUEC@ account?",
+      "history": [
+        "¿Cómo puedo publicar un artículo?",
+        "¿Ya aparece en el catálogo?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Cómo puedo publicar un artículo?"
+        },
+        {
+          "role": "assistant",
+          "content": "Abre Añadir productos y prepara una foto y una descripción."
+        },
+        {
+          "role": "user",
+          "content": "¿Ya aparece en el catálogo?"
+        },
+        {
+          "role": "assistant",
+          "content": "El personal lo valida después de la entrega."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "registration"
+      ],
+      "expected_facts": [
+        "registration"
+      ]
+    },
+    {
+      "id": "E26",
+      "category": "topic_change",
+      "language": "es",
+      "interface_language": "en",
+      "question": "Cambiando de tema, ¿admitís zapatos?",
+      "history": [
+        "I put a hold on the bookshelf."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "I put a hold on the bookshelf."
+        },
+        {
+          "role": "assistant",
+          "content": "Collect it from the centre listed for the item."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "exclusions"
+      ],
+      "expected_facts": [
+        "footwear"
+      ]
+    },
+    {
+      "id": "E27",
+      "category": "topic_change",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Different question. Can I drive in to unload my stuff?",
+      "history": [
+        "I want to donate a tennis racket."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "I want to donate a tennis racket."
+        },
+        {
+          "role": "assistant",
+          "content": "Sports equipment can be considered at drop-off."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "vehicle"
+      ],
+      "expected_facts": [
+        "vehicle"
+      ]
+    },
+    {
+      "id": "E28",
+      "category": "topic_change",
+      "language": "es",
+      "interface_language": "en",
+      "question": "Otra cosa, ¿cuántas cosas puedo dejar cada mes?",
+      "history": [
+        "¿Tengo que pagar dinero?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Tengo que pagar dinero?"
+        },
+        {
+          "role": "assistant",
+          "content": "TRUEC@ funciona con puntos."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "delivery_limit"
+      ],
+      "expected_facts": [
+        "delivery_limit"
+      ]
+    },
+    {
+      "id": "E29",
+      "category": "ambiguity",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Y eso cómo funciona?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "clarification",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E30",
+      "category": "ambiguity",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can I do that at the other one?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "clarification",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E31",
+      "category": "ambiguity",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿A qué hora abren?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "clarification",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E32",
+      "category": "ambiguity",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Could you tell me the address?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "clarification",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E33",
+      "category": "ambiguity",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Dónde puedo recogerlo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "clarification",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E34",
+      "category": "ambiguity",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can I bring it in, or is it too big?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "clarification",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E35",
+      "category": "unknown",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Me podéis entregar un artículo a domicilio mañana?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E36",
+      "category": "unknown",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Does TRUEC@ offer an extended warranty on second-hand bikes?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E37",
+      "category": "unknown",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Puedo convertir los puntos en euros y enviarlos a mi banco?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E38",
+      "category": "unknown",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What’s the next Tenerife weather forecast?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E39",
+      "category": "unknown",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Qué bicicletas siguen disponibles ahora mismo en el catálogo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E40",
+      "category": "unknown",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can I change the owner of a completed reservation online?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E41",
+      "category": "points",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cuánto me abonan al abrir una cuenta?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "registration_points"
+      ]
+    },
+    {
+      "id": "E42",
+      "category": "points",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What do I earn if I physically drop something off?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "delivery_points"
+      ]
+    },
+    {
+      "id": "E43",
+      "category": "points",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Si aparto algo del catálogo me quitan puntos ya, o al ir a por él?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "reservation_points"
+      ]
+    },
+    {
+      "id": "E44",
+      "category": "points",
+      "language": "en",
+      "interface_language": "es",
+      "question": "When exactly do those fifty points come off?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "charge"
+      ]
+    },
+    {
+      "id": "E45",
+      "category": "points",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can you explain how to earn and spend points?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "points"
+      ]
+    },
+    {
+      "id": "E46",
+      "category": "points",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Con solo subir el anuncio ya me suman puntos?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "publication_points"
+      ]
+    },
+    {
+      "id": "E47",
+      "category": "points",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Is there a points charge when I click reserve?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "points"
+      ],
+      "expected_facts": [
+        "reservation_points"
+      ]
+    },
+    {
+      "id": "E48",
+      "category": "points",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Me toca sacar la cartera para llevarme algo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "payment"
+      ],
+      "expected_facts": [
+        "payment"
+      ]
+    },
+    {
+      "id": "E49",
+      "category": "deadlines",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cuentan los findes en el plazo para pasar a recogerlo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup_deadline"
+      ],
+      "expected_facts": [
+        "pickup_deadline"
+      ]
+    },
+    {
+      "id": "E50",
+      "category": "deadlines",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Is the collection window counted in calendar days?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup_deadline"
+      ],
+      "expected_facts": [
+        "pickup_deadline"
+      ]
+    },
+    {
+      "id": "E51",
+      "category": "deadlines",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Qué pasa si se me vence la reserva y ni lo recojo ni la cancelo?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "missed_pickup"
+      ],
+      "expected_facts": [
+        "missed_pickup"
+      ]
+    },
+    {
+      "id": "E52",
+      "category": "deadlines",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What happens if I just don't show up to collect my reservation?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "missed_pickup"
+      ],
+      "expected_facts": [
+        "missed_pickup"
+      ]
+    },
+    {
+      "id": "E53",
+      "category": "exceptions",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Puedo volver a apartar lo mismo si anulo la reserva?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "cancel"
+      ],
+      "expected_facts": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "E54",
+      "category": "exceptions",
+      "language": "en",
+      "interface_language": "es",
+      "question": "How many times can I rebook the same item after cancelling?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "cancel"
+      ],
+      "expected_facts": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "E55",
+      "category": "limits",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cuántos artículos me dejan reservar entre todos los centros al mes?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "reservation_limit"
+      ],
+      "expected_facts": [
+        "reservation_limit"
+      ]
+    },
+    {
+      "id": "E56",
+      "category": "limits",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Is there a cap on how much I can drop off each month?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "delivery_limit"
+      ],
+      "expected_facts": [
+        "delivery_limit"
+      ]
+    },
+    {
+      "id": "E57",
+      "category": "limits",
+      "language": "es",
+      "interface_language": "en",
+      "question": "Si otra persona se lleva algo que dejé, ¿cuenta para mi límite mensual de entregas?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "delivery_limit"
+      ],
+      "expected_facts": [
+        "delivery_limit"
+      ]
+    },
+    {
+      "id": "E58",
+      "category": "limits",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Does a set of dishes count as several products when I reserve it?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "reservation_limit"
+      ],
+      "expected_facts": [
+        "reservation_limit"
+      ]
+    },
+    {
+      "id": "E59",
+      "category": "admission",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Una bici usada os vale?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "admission"
+      ],
+      "expected_facts": [
+        "bicycle"
+      ]
+    },
+    {
+      "id": "E60",
+      "category": "admission",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Could I drop off some tennis gear?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "admission"
+      ],
+      "expected_facts": [
+        "sport"
+      ]
+    },
+    {
+      "id": "E61",
+      "category": "admission",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cogéis juguetes de segunda mano?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "admission"
+      ],
+      "expected_facts": [
+        "toy"
+      ]
+    },
+    {
+      "id": "E62",
+      "category": "admission",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What kinds of things can I bring in?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "admission"
+      ],
+      "expected_facts": [
+        "admission"
+      ]
+    },
+    {
+      "id": "E63",
+      "category": "restrictions",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Me cogeríais unas camisetas que no uso?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "exclusions"
+      ],
+      "expected_facts": [
+        "clothing"
+      ]
+    },
+    {
+      "id": "E64",
+      "category": "restrictions",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can I give away some food through TRUEC@?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "exclusions"
+      ],
+      "expected_facts": [
+        "food"
+      ]
+    },
+    {
+      "id": "E65",
+      "category": "restrictions",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Hay alguna medida a partir de la cual no puedo depositar el objeto?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "exclusions"
+      ],
+      "expected_facts": [
+        "exclusions"
+      ]
+    },
+    {
+      "id": "E66",
+      "category": "exceptions",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What happens if I drop off a small kitchen appliance?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "exclusions"
+      ],
+      "expected_facts": [
+        "appliance"
+      ]
+    },
+    {
+      "id": "E67",
+      "category": "operations",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Cuál es la dirección del Punto Limpio de Adeje?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "center"
+      ],
+      "expected_facts": [
+        "address"
+      ]
+    },
+    {
+      "id": "E68",
+      "category": "operations",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What's the street address of the Adeje recycling centre?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "center"
+      ],
+      "expected_facts": [
+        "address"
+      ]
+    },
+    {
+      "id": "E69",
+      "category": "operations",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Qué horario publicado tiene el Punto Limpio de Adeje?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "center"
+      ],
+      "expected_facts": [
+        "schedule"
+      ]
+    },
+    {
+      "id": "E70",
+      "category": "operations",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Where can I check the official hours for the Adeje recycling centre?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "center"
+      ],
+      "expected_facts": [
+        "schedule"
+      ]
+    },
+    {
+      "id": "E71",
+      "category": "operations",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Está abierto ahora mismo el Punto Limpio de Adeje?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E72",
+      "category": "operations",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Is the Adeje recycling centre open right now?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "insufficient_information",
+      "expected_sources": [],
+      "expected_facts": []
+    },
+    {
+      "id": "E73",
+      "category": "followup",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Y el horario de allí?",
+      "history": [
+        "¿Dónde está el Punto Limpio de Adeje?"
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "¿Dónde está el Punto Limpio de Adeje?"
+        },
+        {
+          "role": "assistant",
+          "content": "La dirección del centro figura en el mapa público."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "center"
+      ],
+      "expected_facts": [
+        "schedule"
+      ]
+    },
+    {
+      "id": "E74",
+      "category": "followup",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What's its street address?",
+      "history": [
+        "I am going to the Adeje recycling centre."
+      ],
+      "transcript": [
+        {
+          "role": "user",
+          "content": "I am going to the Adeje recycling centre."
+        },
+        {
+          "role": "assistant",
+          "content": "You can check the published details for that centre."
+        }
+      ],
+      "expected_status": "answer",
+      "expected_sources": [
+        "center"
+      ],
+      "expected_facts": [
+        "address"
+      ]
+    },
+    {
+      "id": "E75",
+      "category": "procedure",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Me lo mandan a otro punto limpio o recojo en el que sale en la ficha?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup_center"
+      ],
+      "expected_facts": [
+        "pickup_center"
+      ]
+    },
+    {
+      "id": "E76",
+      "category": "procedure",
+      "language": "en",
+      "interface_language": "es",
+      "question": "What do I have to show staff when I collect my reservation?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "pickup"
+      ],
+      "expected_facts": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "E77",
+      "category": "procedure",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Tengo que quedar con la otra persona para intercambiar el objeto?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "exchange_locations"
+      ],
+      "expected_facts": [
+        "exchange_locations"
+      ]
+    },
+    {
+      "id": "E78",
+      "category": "procedure",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Can I pull in with my van just to unload?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "vehicle"
+      ],
+      "expected_facts": [
+        "vehicle"
+      ]
+    },
+    {
+      "id": "E79",
+      "category": "overview",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Qué se hace aquí en TRUEC@?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "overview"
+      ],
+      "expected_facts": [
+        "overview"
+      ]
+    },
+    {
+      "id": "E80",
+      "category": "overview",
+      "language": "en",
+      "interface_language": "es",
+      "question": "Could you tell me what the TRUEC@ programme is for?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "overview"
+      ],
+      "expected_facts": [
+        "overview"
+      ]
+    },
+    {
+      "id": "E81",
+      "category": "procedure",
+      "language": "es",
+      "interface_language": "en",
+      "question": "¿Qué hago después de que llegue el correo para activar la cuenta?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "registration"
+      ],
+      "expected_facts": [
+        "registration"
+      ]
+    },
+    {
+      "id": "E82",
+      "category": "procedure",
+      "language": "en",
+      "interface_language": "es",
+      "question": "How do I set aside something I find in the catalogue?",
+      "history": [],
+      "transcript": [],
+      "expected_status": "answer",
+      "expected_sources": [
+        "reservation"
+      ],
+      "expected_facts": [
+        "reservation"
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@ from .config import RESERVATION_SECONDS
 from .rate_limits import reset_retry_after, retry_after_for
 from .safety import ProviderError
 from .models import ChatConversation, ChatMessage, ChatSessionUsage
-from .providers import get_provider
+from .providers import ChatTurn, get_provider
 from .answering import ConversationAnswerer
 from .grounding import AssistantReply
 from .references import present_sources, reference_payload
@@ -238,14 +238,26 @@ def send_message(owner, conversation_id, request_id, content, *, provider=None):
     if not claimed:
         return result
     try:
-        previous = list(message.conversation.messages.filter(status='completed', role='user').order_by('-created_at', '-pk')[
-            :min(settings.CHATBOT_CONTEXT_TURNS, max(0, settings.CHATBOT_HISTORY_MESSAGES - 1))])
-        # Only completed user turns orient local continuity. Previous assistant text is
-        # deliberately excluded from both evidence and the provider request.
-        recent = [m.content for m in reversed(previous)]
-        reply = ConversationAnswerer().answer(content, recent,
-            language=get_language() or settings.LANGUAGE_CODE,
-            provider_factory=(lambda: provider) if provider is not None else get_provider)
+        previous = message.conversation.messages.filter(status='completed').order_by('-created_at', '-pk')
+        limit = max(0, settings.CHATBOT_HISTORY_MESSAGES - 1)
+        context_turns = settings.CHATBOT_CONTEXT_TURNS
+        options = {}
+        if settings.CHATBOT_GENERATION_MODE == 'full_faq':
+            rows = list(reversed(previous[:min(context_turns * 2, limit)]))
+            assistants = {row.request_id: row.content for row in rows if row.role == 'assistant'}
+            recent, history = [], []
+            for row in rows:
+                if row.role == 'user':
+                    recent.append(row.content)
+                    history.append(ChatTurn('user', row.content))
+                    if row.request_id in assistants:
+                        history.append(ChatTurn('assistant', assistants[row.request_id]))
+            options['history'] = history
+        else:
+            recent = [row.content for row in reversed(previous.filter(role='user')[:min(context_turns, limit)])]
+        reply = ConversationAnswerer().answer_message(content, recent,
+            interface_language=get_language() or settings.LANGUAGE_CODE,
+            provider_factory=(lambda: provider) if provider is not None else get_provider, **options)
         answer = reply
         if not isinstance(reply.text, str) or not reply.text.strip():
             raise ValueError('Provider returned an empty or invalid response')

@@ -1,0 +1,115 @@
+{
+  "faqs": {
+    "overview": {
+      "question": "¿Qué es TRUEC@?",
+      "answer": "TRUEC@ es una iniciativa del Cabildo Insular de Tenerife que promueve la economía circular mediante el intercambio de objetos entre ciudadanos. Puedes dejar los artículos que ya no uses y conseguir otros que te interesen. A través de la plataforma, podrás consultar el catálogo, reservar productos disponibles y añadir nuevos objetos.",
+      "is_published": true,
+      "position": 0
+    },
+    "registration": {
+      "question": "¿Cómo me registro?",
+      "answer": "Ir a Regístrate y rellena el formulario con tus datos. Recibirás un email con un enlace de confirmación. Debes hacer clic en ese enlace para validar tu correo electrónico. Una vez validado, podrás reservar productos en el Catálogo de objetos y también Añadir productos.",
+      "is_published": true,
+      "position": 1
+    },
+    "payment": {
+      "question": "¿Tengo que pagar algo?",
+      "answer": "No. TRUEC@ funciona con un sistema de puntos. Los usuarios registrados acumularán puntos que luego podrán canjear por objetos.",
+      "is_published": true,
+      "position": 2
+    },
+    "points": {
+      "question": "¿Cómo consigo puntos?",
+      "answer": "1. Al realizar el registro en la web recibirás 100 puntos. 2. Al entregar un objeto recibirás 100 puntos. 3. Al retirar un objeto restarás 50 puntos.",
+      "is_published": true,
+      "position": 3
+    },
+    "publication": {
+      "question": "¿Cómo añado un producto?",
+      "answer": "1. Ir a añadir productos. 2. Sube una foto y descripción del objeto que quieras depositar y publícalo. 3. Lleva el objeto a uno de los 8 Centros TRUEC@ de los puntos limpios fijos de la isla de Tenerife. 4. Identifícate con tu DNI/NIE al gestor del punto limpio que validará el objeto y quedará disponible para otro usuario.",
+      "is_published": true,
+      "position": 4
+    },
+    "reservation": {
+      "question": "¿Cómo reservo un objeto?",
+      "answer": "1. Ir a Catálogo de objetos. 2. Reserva el objeto deseado. 3. Acude al punto limpio donde se encuentre el objeto reservado en un plazo de 7 días.",
+      "is_published": true,
+      "position": 5
+    },
+    "pickup_deadline": {
+      "question": "¿cuánto tiempo tengo para recoger un objeto reservado?",
+      "answer": "Dispones de 7 días naturales desde la reserva para recoger el objeto en el centro o almacén TRUEC@ correspondiente.",
+      "is_published": true,
+      "position": 6
+    },
+    "missed_pickup": {
+      "question": "¿Qué sucede si no recojo el objeto reservado?",
+      "answer": "Si no recoges el objeto ni cancelas la reserva dentro del plazo establecido, serás penalizado con 7 días sin poder realizar nuevas reservas, y el objeto quedará disponible para otros usuarios.",
+      "is_published": true,
+      "position": 7
+    },
+    "exchange_locations": {
+      "question": "¿Dónde puedo intercambiar mis productos?",
+      "answer": "Puedes intercambiar* productos en cualquiera de los 8 centros TRUEC@, ubicados en los puntos limpios de Tenerife. Consulta la sección de Localizaciones para encontrar el punto limpio más cercano. *El intercambio no es directo entre personas, ni implica ningún tipo de contraprestación entre particulares. Los objetos deben entregarse en los puntos limpios, donde se te asignarán puntos por el gesto sostenible. Estos puntos podrán usarse para seleccionar otros productos disponibles en el catálogo.",
+      "is_published": true,
+      "position": 8
+    },
+    "pickup_center": {
+      "question": "¿Puedo recoger un producto en cualquier centro TRUEC@?",
+      "answer": "No. Cada producto tiene asignado un centro específico, que se indica en su ficha. Deberás acudir al centro indicado (o almacén) en el horario correspondiente para recogerlo.",
+      "is_published": true,
+      "position": 9
+    },
+    "reservation_limit": {
+      "question": "¿Puedo reservar varios objetos?",
+      "answer": "Sí, puedes reservar y retirar hasta 5 productos al mes por punto limpio y un máximo de 10 en toda la red. *Se considera unidad un único objeto o conjunto de objetos que formen una unidad, como una colección de libros o una vajilla",
+      "is_published": true,
+      "position": 10
+    },
+    "delivery_limit": {
+      "question": "¿Cuántos objetos puedo depositar?",
+      "answer": "Puedes depositar hasta 10 productos al mes. Este límite no tiene en cuenta productos que sean retirados por otros usuarios para favorecer el intercambio de productos con mayor utilidad. *Se considera unidad un único objeto o conjunto de objetos que formen una unidad, como una colección de libros o una vajilla",
+      "is_published": true,
+      "position": 11
+    },
+    "vehicle": {
+      "question": "¿Puedo acceder al punto limpio con mi vehículo?",
+      "answer": "Sí, puedes acceder con tu vehículo únicamente para cargar y descargar productos, asegurándote de permanecer en el centro solo el tiempo estrictamente necesario para ello.",
+      "is_published": true,
+      "position": 12
+    },
+    "admission": {
+      "question": "¿Qué productos puedo llevar al centro TRUEC@?",
+      "answer": "Puedes llevar artículos deportivos, juguetes y accesorios infantiles, artículos para el hogar, entre otros. Consulta las categorías para tener una idea de los productos que se aceptan. Los operarios de los puntos limpios te indicarán si un proudcto es apto para la red de intercambio sostenible.",
+      "is_published": true,
+      "position": 13
+    },
+    "exclusions": {
+      "question": "¿Qué productos NO puedo llevar al centro TRUEC@?",
+      "answer": "No se aceptarán ropa, calzado, objetos eléctricos RAEEs, electrodomésticos grandes, alimentos, bebidas ni plantas. Sin embargo, sí podrás obtener puntos por la entrega de pequeños electrodomésticos, que serán gestionados por personal autorizado aunque no entrarán a formar parte del catálogo. También están prohibidos los objetos superiores a 50cmx50cmx50cm, por limitaciones en el espacio disponible para transporte y almacenamiento.",
+      "is_published": true,
+      "position": 14
+    },
+    "cancel": {
+      "question": "¿Puedo cancelar una reserva y volver a reservar?",
+      "answer": "Sí, si no puedes recoger el objeto en el plazo de 7 días, podrás cancelar tu reserva. Si el objeto sigue disponible, podrás volver a reservarlo. Esta opción solo puede utilizarse una vez por objeto.",
+      "is_published": true,
+      "position": 15
+    },
+    "pickup": {
+      "question": "¿Cómo recoger un producto reservado?",
+      "answer": "Cuando recibas el correo de confirmación con la reserva, dirígete al Punto Limpio o almacén donde se encuentra el objeto. Allí, muestra tu DNI al personal, quien verificará tu identidad antes de entregarte el producto reservado.",
+      "is_published": true,
+      "position": 16
+    }
+  },
+  "test_center": {
+    "name": "Punto Limpio de Adeje",
+    "slug": "adeje-pruebas",
+    "address": "Calle de Pruebas 12, Adeje",
+    "schedule": "Lunes a viernes, de 08:00 a 15:00",
+    "latitude": "28.120000",
+    "longitude": "-16.720000",
+    "show_on_public_map": true
+  }
+}

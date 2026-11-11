@@ -58,4 +58,9 @@ preámbulos, hechos, recomendaciones ni afirmaciones sobre una traducción ofici
              'hechos ni eliminar condiciones. En grounded, cada claim.text debe ser una frase '
              'y debe haber exactamente tres claims respaldados. Si la evidencia no permite '
              'cumplirlo fielmente, devuelve una respuesta insuficiente/vacía según el esquema.' if sentences else '')
-    return SYSTEM_INSTRUCTIONS + modality + presentation + style + ('\nResponde en inglés (English).' if english else '\nResponde en español.')
+    output_language = (
+        '\nResponde en inglés (English). Write all user-visible prose in English, even if the sources '
+        'are in Spanish. Keep evidence quotes in their source language.'
+        if english else '\nResponde en español.'
+    )
+    return SYSTEM_INSTRUCTIONS + modality + presentation + style + output_language

@@ -82,6 +82,23 @@ class TokenBudgetTests(SimpleTestCase):
             with self.subTest(change=change), self.assertRaises(EvaluationStopped):
                 self.bound({**arguments(), **change})
 
+    @override_settings(CHATBOT_EVAL_TOKEN_BOUND_METHOD='provider_counted')
+    def test_provider_count_reduces_only_a_verified_full_faq_bound(self):
+        from chatbot.full_faq_protocol import CACHE_BREAKPOINT, CACHE_OPTIONS
+
+        payload = arguments()
+        payload['input'][0]['content'] = [{'type': 'input_text', 'text': 'Evidence',
+                                           'prompt_cache_breakpoint': CACHE_BREAKPOINT}]
+        payload['prompt_cache_options'] = CACHE_OPTIONS
+        preview = self.bound(payload, limit=8192)
+        measured = input_bound(payload, max_input_tokens=8192, measured_input_tokens=3000)
+        self.assertEqual(preview.method, 'provider_count_required')
+        self.assertEqual(preview.payload_hash, measured.payload_hash)
+        self.assertEqual(measured.input_tokens, 3512)
+        self.assertEqual(measured.measured_input_tokens, 3000)
+        with self.assertRaisesRegex(EvaluationStopped, 'provider_count_outside_budget'):
+            input_bound(payload, max_input_tokens=8192, measured_input_tokens=8192)
+
     def test_input_and_output_caps_and_oversized_payload_fail_before_sdk(self):
         for limit in (1000, 1049999, 1050001):
             with self.subTest(limit=limit), self.assertRaises(EvaluationStopped):

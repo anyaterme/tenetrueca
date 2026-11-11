@@ -17,11 +17,12 @@ from .knowledge.contracts import KnowledgeBundle
 from .knowledge.normalization import fold, is_platform_overview, terms_for, words
 from .knowledge.registry import official_faq
 from .knowledge.reviewed_faq import definition, reviewed_answer, reviewed_intent
+from .language import detect_language, message_language
 from .providers import ChatTurn
 from .safety import ProviderError
 from .generation import critical, choose_mode, validate_grounded, validate_no_faq_copy, without_response_style
 from .references import valid_public_url
-from .response_style import needs_display_text, requested_sentences, sentence_count, validate_display_text, validate_style, with_response_style
+from .response_style import needs_display_text, requested_sentences, sentence_count, sentences_in, validate_display_text, validate_style, with_response_style
 from .sentence_planning import plan_three_sentences
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,8 @@ TEXT = {
     'privacy': ('No puedo consultar datos privados de tu cuenta.', 'I cannot access private information from your account.'),
     'source_help': ('No puedo confirmar la respuesta con suficiente precisión. Puedes consultar la FAQ enlazada.',
                     'I cannot confirm the answer precisely enough. You can check the linked FAQ.'),
+    'source_language': ('Puedes consultar la información publicada en la fuente enlazada.',
+                        'You can check the published information at the linked source.'),
 }
 
 
@@ -103,7 +106,24 @@ class ConversationAnswerer:
         self.knowledge = knowledge or KnowledgeService()
         self.resolver = ConversationContextResolver()
 
+    def answer_message(self, question, recent_users, *, interface_language, provider_factory, history=()):
+        if settings.CHATBOT_GENERATION_MODE == 'full_faq':
+            from .full_faq_answering import answer_full
+            return answer_full(question, history or tuple(ChatTurn('user', text) for text in recent_users),
+                               interface_language=interface_language, provider_factory=provider_factory)
+        language = message_language(question, recent_users, interface_language)
+        reply = self.answer(question, recent_users, language=language, provider_factory=provider_factory)
+        # A legacy extract or a center's free-form details can still be in the
+        # source language. Keep the link and use a localized response instead.
+        if any(detect_language(sentence) not in (None, language) for sentence in sentences_in(reply.text)):
+            code = 'source_language' if any(ref.public_url for ref in reply.references) else 'no_evidence'
+            return replace(reply, text=local_text(code, language), route='no_evidence', outcome='no_evidence')
+        return reply
+
     def answer(self, question, recent_users=(), *, language, provider_factory):
+        if settings.CHATBOT_GENERATION_MODE == 'full_faq':
+            return self.answer_message(question, recent_users, interface_language=language,
+                                       provider_factory=provider_factory)
         parts = split_questions(question)
         if not parts or unsafe_content(question):
             return AssistantReply(local_text('topic', language), route='clarification', outcome='clarification')
@@ -125,7 +145,7 @@ class ConversationAnswerer:
 
         for index, part in enumerate(parts):
             context_users = (*recent_users, *parts[:index]) if natural else recent_users
-            resolved = self.resolver.resolve(part, context_users, natural=natural)
+            resolved = self.resolver.resolve(part, context_users, natural=natural, language=language)
             if resolved.clarification:
                 replies.append(local_text(resolved.clarification, language))
                 routes.append('clarification')
@@ -220,7 +240,7 @@ class ConversationAnswerer:
                     prompt = question
                     if natural:
                         # Give the provider the resolved question, never raw chat history.
-                        prompt = '\n'.join(r.search_query for r, _, _ in pending)
+                        prompt = '\n'.join(r.provider_question or r.search_query for r, _, _ in pending)
                     elif len(parts) == 1 and pending[0][0].topic == 'admission':
                         resolved = pending[0][0]
                         if resolved.search_query != resolved.original:

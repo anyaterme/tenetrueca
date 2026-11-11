@@ -4,24 +4,29 @@ from pathlib import Path
 from time import perf_counter
 import hashlib
 import platform
+from unittest.mock import patch
+from uuid import uuid4
 import openai
 import django
 
 from django.conf import settings
-from django.test import override_settings
+from django.test import Client, override_settings
 
 from chatbot.answering import ConversationAnswerer
-from chatbot.providers import SimulatedProvider, request_arguments
+from chatbot.grounding import AssistantReply, ValidatedReference
+from chatbot.knowledge.full_faq import load_snapshot
+from chatbot.models import ChatMessage
+from chatbot.providers import ChatTurn, SimulatedProvider, request_arguments
 from chatbot.safety import ProviderError
 from .access import limits, require_evaluation_access
-from .dataset import load_dataset
+from .dataset import FULL_FAQ_DATASETS, NATURAL_DATASETS, load_dataset
 from .errors import EvaluationStopped
 from .ledger import execution_lock, open_run, record_result, stop
 from .models import ChatEvaluationRun
 from .pricing import digest, load_tariff
 from .pricing import decimal
 from .provider import BudgetedProvider
-from .token_budget import BOUND_VERSION, input_bound
+from .token_budget import BOUND_VERSION, COUNTED_METHOD, input_bound
 from .selection import select_cases, execution_pairs
 
 
@@ -47,11 +52,18 @@ def configuration(options, dataset_hash, cases, tariff):
     code = Path(__file__).resolve().parent.parent
     files = sorted(str(p.relative_to(code)) for p in code.rglob('*.py')
                    if not {'tests', 'migrations', '__pycache__'}.intersection(p.relative_to(code).parts))
-    return {'dataset': options['dataset'], 'dataset_hash': dataset_hash, 'model': options['model'],
-            'modes': ['extractive', 'grounded'] if options['mode'] == 'both' else [options['mode']],
+    modes = {'both': ['extractive', 'grounded'], 'faq_compare': ['natural', 'full_faq']}.get(
+        options['mode'], [options['mode']])
+    full_faq = {}
+    if options['dataset'] in FULL_FAQ_DATASETS:
+        full_faq = {'faq_version': load_snapshot('es').context_version,
+                    'trace_structured_output': bool(options.get('trace_structured_output')),
+                    'full_faq_limits': [settings.CHATBOT_FULL_FAQ_MAX_CHARS, settings.CHATBOT_FULL_FAQ_HISTORY_CHARS,
+                                        settings.CHATBOT_FULL_FAQ_REQUEST_BYTES]}
+    return {**full_faq, 'dataset': options['dataset'], 'dataset_hash': dataset_hash, 'model': options['model'],
+            'modes': modes,
             'cases': [c['id'] for c in cases], 'approved_case_ids': list(settings.CHATBOT_EVAL_CASE_IDS),
-            'execution_order': [f'{c["id"]}:{mode}' for c, mode in execution_pairs(cases,
-                ['extractive', 'grounded'] if options['mode'] == 'both' else [options['mode']],
+            'execution_order': [f'{c["id"]}:{mode}' for c, mode in execution_pairs(cases, modes,
                 scoped=options.get('case_ids') is not None)], 'max_requests': options['max_requests'],
             'max_budget_usd': str(limits(options)), 'max_input_tokens': options['max_input_tokens'],
             'max_output_tokens': options['max_output_tokens'], 'timeout': min(settings.CHATBOT_REQUEST_TIMEOUT, 30),
@@ -90,6 +102,57 @@ def snapshot_run(run_id):
                                                      'usage', 'diagnostic', 'input_ceiling', 'output_ceiling')]}
 
 
+def answer_case(case, provider):
+    answerer = ConversationAnswerer()
+    if 'transcript' in case:
+        return answerer.answer_message(case['question'], case['history'],
+                                       interface_language=case['interface_language'], provider_factory=lambda: provider,
+                                       history=tuple(ChatTurn(**turn) for turn in case['transcript']))
+    if 'interface_language' in case:
+        return answerer.answer_message(case['question'], case['history'],
+                                       interface_language=case['interface_language'], provider_factory=lambda: provider)
+    return answerer.answer(case['question'], case['history'], language=case['language'],
+                           provider_factory=lambda: provider)
+
+
+def session_answer(case, provider, sessions):
+    """Exercise the real API and stored history with a budgeted synthetic session."""
+    group = case['session']
+    language = {'HTTP_ACCEPT_LANGUAGE': case['interface_language']}
+    if group not in sessions:
+        client = Client(enforce_csrf_checks=True, HTTP_HOST='localhost')
+        bootstrap = client.get('/chatbot/api/session/', **language)
+        if bootstrap.status_code != 200:
+            raise EvaluationStopped('session_bootstrap_failed')
+        sessions[group] = client, bootstrap.json()['conversation']['id']
+    client, conversation_id = sessions[group]
+    csrf = client.cookies[settings.CSRF_COOKIE_NAME].value
+    payload = {'conversation_id': conversation_id, 'request_id': str(uuid4()), 'content': case['question']}
+    with patch('chatbot.services.get_provider', return_value=provider) as factory:
+        response = client.post('/chatbot/api/messages/', payload, content_type='application/json',
+                               HTTP_X_CSRFTOKEN=csrf, **language)
+        if response.status_code != 200:
+            if provider.attempt is None:
+                raise EvaluationStopped('session_generation_not_admitted')
+            raise ProviderError('session_response_failed')
+        duplicate = client.post('/chatbot/api/messages/', payload, content_type='application/json',
+                                HTTP_X_CSRFTOKEN=csrf, **language)
+    body = response.json()
+    if duplicate.status_code != 200 or body != duplicate.json() or factory.call_count != 1:
+        raise EvaluationStopped('session_duplicate_failed')
+    message = body['messages'][-1]
+    stored = ChatMessage.objects.only('sources').get(pk=message['id']).sources
+    references = tuple(
+        ValidatedReference(item['source_id'], item['url'], item['content_hash'], '', item['type'],
+                           item['title'], item['version'], tuple(item['evidence_hashes']))
+        for item, public in zip(stored, message['sources'], strict=True) if public['available']
+    )
+    provider.session_metrics = {'group': group, 'messages': len(body['messages']),
+                                'questions_consumed': body['usage']['consumed'], 'duplicate_uncharged': True}
+    return AssistantReply(message['content'], references, 'session',
+                          getattr(provider, 'last_processing', {}).get('outcome', 'grounded'))
+
+
 def evaluate(options):
     limits(options)
     cases, dataset_hash = load_dataset(options['dataset'])
@@ -104,6 +167,17 @@ def evaluate(options):
             raise
     config = configuration(options, dataset_hash, cases, tariff)
     modes = config['modes']
+    full_faq_dataset = options['dataset'] in FULL_FAQ_DATASETS
+    counted = settings.CHATBOT_EVAL_TOKEN_BOUND_METHOD == COUNTED_METHOD
+    session_cases = any('session' in case for case in cases)
+    if session_cases and (not full_faq_dataset or modes != ['full_faq'] or options.get('resume')):
+        raise EvaluationStopped('session_evaluation_requires_fresh_full_faq')
+    if counted and (not full_faq_dataset or modes != ['full_faq']):
+        raise EvaluationStopped('provider_count_requires_full_faq')
+    if options.get('trace_structured_output') and (not full_faq_dataset or modes != ['full_faq']):
+        raise EvaluationStopped('trace_requires_synthetic_full_faq')
+    if 'full_faq' in modes and (not full_faq_dataset or not config.get('faq_version')):
+        raise EvaluationStopped('full_faq_corpus_required')
     if dry:
         results = []
         preview_committed = decimal('0')
@@ -112,11 +186,10 @@ def evaluate(options):
             preview = PreviewProvider(options['max_input_tokens'])
             with override_settings(CHATBOT_GENERATION_MODE=mode, CHATBOT_OPENAI_MODEL=options['model'],
                                    CHATBOT_MAX_OUTPUT_TOKENS=options['max_output_tokens']):
-                reply = ConversationAnswerer().answer(case['question'], case['history'], language=case['language'],
-                                                     provider_factory=lambda: preview)
-            cost = (tariff.cost(tariff.input_ceiling, options['max_output_tokens'], margin=True)
-                    if tariff is not None and preview.calls else None)
+                reply = answer_case(case, preview)
             bound = preview.calls[0]['input_bound'] if preview.calls else None
+            cost = (tariff.cost(bound['input_tokens'], options['max_output_tokens'], margin=True)
+                    if tariff is not None and bound is not None else None)
             can_bound = tariff is not None and bound is not None
             admission = bool(preview.calls and can_bound and preview_admitted < options['max_requests']
                              and preview_committed + cost <= decimal(options['max_budget_usd']))
@@ -136,39 +209,48 @@ def evaluate(options):
                 'actual_run_budget': 'not_read_or_reset',
                 'planned_questions': len(cases), 'planned_question_modes': len(cases) * len(modes),
                 'maximum_possible_provider_calls': min(options['max_requests'], sum(r['would_generate'] for r in results)),
-                'token_bound_method': 'documented_full_context_ceiling', 'adjusted_bound_available': False,
-                'warnings': ['No local verified bound for Responses framing and Structured Outputs overhead.',
+                'token_bound_method': 'provider_count_required' if counted else 'documented_full_context_ceiling',
+                'adjusted_bound_available': False,
+                'warnings': ['Live input counting is required before generation.' if counted
+                             else 'The full documented context window is reserved.',
                              'Byte sizes are diagnostics, not tokens. No remote counting endpoint was invoked.',
                              'Preview admissibility is hypothetical; live access requires separate authorization.',
                              'Unknown usage stops live execution; this preview is not permission to continue after it.'],
                 'pricing_admission_blocker': pricing_reason,
                 'worst_case_preview_only': {'admitted': preview_admitted, 'committed_usd': str(preview_committed)},
                 'results': results}
-    if (options['dataset'] not in ('pilot-v1', 'natural-v1')
-            or options['dataset'] == 'natural-v1' and modes != ['natural']):
+    if (options['dataset'] not in NATURAL_DATASETS | FULL_FAQ_DATASETS | {'pilot-v1'}
+            or options['dataset'] in NATURAL_DATASETS and modes != ['natural']
+            or full_faq_dataset and any(mode not in ('natural', 'full_faq') for mode in modes)):
         raise EvaluationStopped('live_dataset_not_allowed')
     run_id = options.get('run_id')
     require_evaluation_access(run_id)
-    if tariff.input_ceiling > options['max_input_tokens']:
+    if not counted and tariff.input_ceiling > options['max_input_tokens']:
         raise EvaluationStopped('unreliable_cost_bound')
     with execution_lock(run_id):
         run = open_run(run_id, config, resume=options.get('resume', False))
         halted = False
+        sessions = {}
         for case, mode in execution_pairs(cases, modes, scoped=options.get('case_ids') is not None):
             key = f'{case["id"]}:{mode}'
             run.refresh_from_db()
             if key in run.results or run.attempts.filter(case_id=case['id'], mode=mode).exists():
                 continue  # Includes unknown attempts whose result export was interrupted.
+            if full_faq_dataset and load_snapshot('es').context_version != config['faq_version']:
+                stop(run_id, 'source_versions_changed')
+                halted = True
+                break
             provider = BudgetedProvider(run_id=run_id, case_id=case['id'], mode=mode, tariff=tariff,
-                max_input_tokens=options['max_input_tokens'], max_output_tokens=options['max_output_tokens'])
+                max_input_tokens=options['max_input_tokens'], max_output_tokens=options['max_output_tokens'],
+                faq_version=config.get('faq_version'))
             started = perf_counter()
             try:
                 # Overrides are process-local to this management command, never public API settings.
                 with override_settings(CHATBOT_GENERATION_MODE=mode, CHATBOT_OPENAI_MODEL=options['model'],
                                        CHATBOT_MAX_OUTPUT_TOKENS=options['max_output_tokens'],
                                        CHATBOT_REQUEST_TIMEOUT=min(settings.CHATBOT_REQUEST_TIMEOUT, 30)):
-                    reply = ConversationAnswerer().answer(case['question'], case['history'], language=case['language'],
-                                                         provider_factory=lambda: provider)
+                    reply = (session_answer(case, provider, sessions) if 'session' in case
+                             else answer_case(case, provider))
                 result = {'question': case['question'], 'language': case['language'], 'mode': mode,
                           'reply': reply.text, 'route': reply.route, 'outcome': reply.outcome,
                           'sources': [asdict(r) for r in reply.references], 'error': None}
@@ -188,7 +270,22 @@ def evaluate(options):
             previous = [value for name, value in run.results.items() if name.startswith(case['id'] + ':')]
             result['comparison_sources_equal'] = (all(v.get('input_source_hash') == result['input_source_hash'] for v in previous)
                                                    if previous else None)
-            if result['comparison_sources_equal'] is False:
+            if full_faq_dataset:
+                result['faq_version'] = config['faq_version']
+                result['usage_metrics'] = getattr(provider, 'last_usage', {})
+                result['transport'] = getattr(provider, 'last_transport', {})
+                result['processing'] = getattr(provider, 'last_processing', {})
+                result['input_count_ms'] = provider.counter_ms
+                if hasattr(provider, 'session_metrics'):
+                    result['session'] = provider.session_metrics
+                if config['trace_structured_output'] and provider.response is not None:
+                    raw = provider.response.output_text
+                    if isinstance(raw, str):
+                        result['structured_output'] = raw[:8192]
+                sources_changed = load_snapshot('es').context_version != config['faq_version']
+            else:
+                sources_changed = result['comparison_sources_equal'] is False
+            if sources_changed:
                 stop(run_id, 'source_versions_changed')
             # An export or result failure cannot erase the durable send/reservation.
             record_result(run_id, key, result)
